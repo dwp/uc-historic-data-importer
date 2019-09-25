@@ -14,6 +14,10 @@ repositories {
         mavenCentral()
 }
 
+tasks.bootJar {
+    launchScript()
+}
+
 dependencies {
         implementation("org.springframework.boot:spring-boot-starter-batch")
         implementation("org.jetbrains.kotlin:kotlin-reflect")

@@ -1,9 +1,44 @@
 version: '3'
 
 services:
+
+  dks:
+    image: dks
+    ports:
+      - 8091:8443
+      - 8101:8080
+    build:
+      context: docker
+      dockerfile: Dockerfile_dks
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
+      - SPRING_CONFIG_LOCATION=application-dks-secure.properties
+    container_name: dks
+
+  hbase:
+    image: harisekhon/hbase:1.4
+    ports:
+      - 9090:9090
+      - 9095:9095
+      - 2181:2181
+      - 16201:16201
+    container_name: hbase
+
+  aws-s3:
+    image: localstack/localstack:latest
+    ports:
+      - '4563-4584:4563-4584'
+      - '8055:8080'
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DATA_DIR=/data/s3
+    container_name: aws-s3
+
   uc-historic-data-importer:
     image: uc-historic-data-importer
     build:
       context: .
       args:
         - APP_VERSION
+    container_name: uc-historic-data-importer
