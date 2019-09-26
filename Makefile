@@ -53,16 +53,19 @@ build-all: build-jar build-images ## Build the jar file and the images.
 build-image: $(CERTIFICATES) ancillary-images build-jar ## Build all ecosystem of images
 	docker-compose build --build-arg APP_VERSION=$(APP_VERSION) uc-historic-data-importer
 
-.PHONY: up
-up: ## Run the ecosystem of containers.
+.PHONY: up-ancillary
+up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
 	docker-compose up -d hbase s3 dks
 	@{ \
 		while ! docker logs s3 | grep -q $(S3_READY_REGEX); do \
-			echo Waiting for s3.; \
-			sleep 2; \
+		echo Waiting for s3.; \
+		sleep 2; \
 		done; \
 	}
 	docker-compose up s3-init
+
+.PHONY: up
+up: up-ancillary ## Run the ecosystem of containers.
 	docker-compose up uc-historic-data-importer
 
 .PHONY: up-all
