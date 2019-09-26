@@ -1,5 +1,8 @@
 SHELL:=bash
 app_version=$(shell cat ./gradle.properties | cut -f2 -d'=')
+s3_ready_regex=^Ready\.$
+app_jar=./build/libs/uc-historic-data-importer-$(app_version).jar
+certificates=%.jks
 
 default: help
 
@@ -17,28 +20,25 @@ help:
 
 
 .PHONY: java-image
-java-image: ## basic image with java installed
-	@{ \
-		cd docker/java; \
-		docker build --tag dwp-java:latest .; \
-	}
+java-image: ## Build java image.
+	cd docker/java && docker build --tag dwp-java:latest .
 
 .PHONY: python-image
-python-image:
-	@{ \
-		cd docker/python; \
-		docker build --tag dwp-python:latest .; \
-	}
+python-image: ## Build python image.
+	cd docker/python && docker build --tag dwp-python:latest .
 
 .PHONY: dks-image
-dks-image: %.jks ## basic image with java installed
-	@{ \
-		cd docker/dks; \
-		docker build --tag dks:latest .; \
-	}
+dks-image: $(certificates) ## Build the dks image.
+	docker-compose build dks
 
-.PHONY: ancillary-images
-ancillary-images: java-image python-image dks-image  ## Build base images to avoid rebuilding frequently
+
+.PHONY: s3-init-image
+s3-init-image: ## Build the image that creates the s3 bucket.
+	docker-compose build s3-init
+
+
+.PHONY: ancillary-images #  Build the supporting images.
+ancillary-images: java-image python-image dks-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar file
 	./gradlew clean build
@@ -49,10 +49,11 @@ dist: ## Assemble distribution files in build/dist
 .PHONY: build-all
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
-.PHONY: build-images
-build-images: ancillary-images ## Build all ecosystem of images
+.PHONY: build-image
+build-image: $(certificates) ancillary-images build-jar ## Build all ecosystem of images
 	@{ \
-		 docker-compose build \
+		echo $(app_version); \
+		docker-compose build \
 			--build-arg APP_VERSION=$(app_version) \
 			uc-historic-data-importer; \
 	}
@@ -60,12 +61,17 @@ build-images: ancillary-images ## Build all ecosystem of images
 .PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase s3 dks s3-init; \
+		docker-compose up -d hbase s3 dks; \
+		while ! docker logs s3 | grep -q $(s3_ready_regex); do \
+			echo Waiting for s3.; \
+			sleep 2; \
+		done; \
+		docker-compose up s3-init; \
 		docker-compose up uc-historic-data-importer; \
 	}
 
 .PHONY: up-all
-up-all: build-images up
+up-all: build-image up
 
 .PHONY: destroy
 destroy: ## Bring down the hbase and other services then delete all volumes

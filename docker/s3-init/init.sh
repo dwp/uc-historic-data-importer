@@ -12,8 +12,7 @@ declare -i BUCKET_COUNT=$(aws_s3 ls | grep $S3_BUCKET | wc -l)
 
 if [[ $BUCKET_COUNT -eq 0 ]]; then
     aws_s3 mb "s3://${S3_BUCKET}"
+    aws_s3api put-bucket-acl --bucket "${S3_BUCKET}" --acl public-read
 else
     stderr Not making bucket \'$S3_BUCKET\': already exists.
 fi
-
-aws_s3api put-bucket-acl --bucket "${S3_BUCKET}" --acl public-read

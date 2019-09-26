@@ -8,8 +8,10 @@ ENV USER=uhdi
 RUN mkdir ${APP_HOME}
 WORKDIR ${APP_HOME}
 COPY build/libs/${APP_JAR} ./${APP_NAME}.jar
+COPY uc-historic-data-importer-keystore.jks ./
+COPY uc-historic-data-importer-truststore.jks ./
 RUN useradd ${USER} && \
         chown -R ${USER}.${USER} . && \
-        chmod +x ./${APP_NAME}.jar && ls -la *.jar && pwd
+        chmod +x ./${APP_NAME}.jar && ls -l && pwd
 USER ${USER}
 ENTRYPOINT ["sh", "-c", "./uc-historic-data-importer.jar \"$@\"", "--"]
