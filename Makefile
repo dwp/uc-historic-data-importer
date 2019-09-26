@@ -49,10 +49,6 @@ dist: ## Assemble distribution files in build/dist
 .PHONY: build-all
 build-all: build-jar build-images ## Build the jar file and then all docker images
 
-
-# .PHONY: ancillary-images
-# ancillary-images: java-image python-image dks-image ## Build base images to avoid rebuilding frequently
-
 .PHONY: build-images
 build-images: ancillary-images ## Build all ecosystem of images
 	@{ \
@@ -64,7 +60,7 @@ build-images: ancillary-images ## Build all ecosystem of images
 .PHONY: up
 up: ## Run the ecosystem of containers
 	@{ \
-		docker-compose up -d hbase aws-s3; \
+		docker-compose up -d hbase s3 dks s3-init; \
 		docker-compose up uc-historic-data-importer; \
 	}
 
