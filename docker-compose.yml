@@ -24,7 +24,7 @@ services:
     container_name: hbase
 
   s3:
-    image: localstack/localstack:latest
+    image: localstack/localstack
     ports:
       - '4563-4584:4563-4584'
       - '8055:8080'
@@ -54,4 +54,7 @@ services:
       context: .
       args:
         - APP_VERSION
+    depends_on:
+      - hbase
+      - s3-init
     container_name: uc-historic-data-importer
