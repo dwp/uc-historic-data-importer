@@ -58,3 +58,10 @@ services:
       - hbase
       - s3-init
     container_name: uc-historic-data-importer
+    command: >-
+      --aws.region=eu-west-2
+      --aws.access.key=aws-access-key
+      --aws.secret.key=aws-secret-key
+      --s3.bucket=uc-historic-data
+      --s3.service.endpoint=http://s3:4572
+      --spring.profiles.active=localS3,secureHttpClient,batchRun

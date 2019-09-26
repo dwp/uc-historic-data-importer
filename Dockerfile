@@ -10,6 +10,7 @@ WORKDIR ${APP_HOME}
 COPY build/libs/${APP_JAR} ./${APP_NAME}.jar
 COPY uc-historic-data-importer-keystore.jks ./
 COPY uc-historic-data-importer-truststore.jks ./
+COPY resources/application-docker.properties application.properties
 RUN useradd ${USER} && \
         chown -R ${USER}.${USER} . && \
         chmod +x ./${APP_NAME}.jar && ls -l && pwd

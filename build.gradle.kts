@@ -18,6 +18,10 @@ tasks.bootJar {
     launchScript()
 }
 
+configurations.all {
+        exclude(group="org.slf4j", module="slf4j-log4j12")
+}
+
 dependencies {
         implementation("org.springframework.boot:spring-boot-starter-batch")
         implementation("org.jetbrains.kotlin:kotlin-reflect")

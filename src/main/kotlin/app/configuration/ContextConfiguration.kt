@@ -30,7 +30,6 @@ class ContextConfiguration {
     fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
 
     @Bean
-    @Profile("realHbaseDataSource")
     fun localConnection(): Connection {
 
         val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
