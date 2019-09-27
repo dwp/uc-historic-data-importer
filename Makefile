@@ -1,7 +1,6 @@
 SHELL:=bash
 
 APP_VERSION=$(shell cat ./gradle.properties | cut -f2 -d'=')
-CERTIFICATES=%.jks
 S3_READY_REGEX=^Ready\.$
 
 default: help
@@ -50,7 +49,7 @@ dist: ## Assemble distribution files in build/dist.
 build-all: build-jar build-image ## Build the jar file and the images.
 
 .PHONY: build-image
-build-image: $(CERTIFICATES) ancillary-images build-jar ## Build all ecosystem of images
+build-image: ancillary-images build-jar ## Build all ecosystem of images
 	docker-compose build --build-arg APP_VERSION=$(APP_VERSION) uc-historic-data-importer
 
 .PHONY: up-ancillary
