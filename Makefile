@@ -47,7 +47,7 @@ dist: ## Assemble distribution files in build/dist.
 	./gradlew assembleDist
 
 .PHONY: build-all
-build-all: build-jar build-images ## Build the jar file and the images.
+build-all: build-jar build-image ## Build the jar file and the images.
 
 .PHONY: build-image
 build-image: $(CERTIFICATES) ancillary-images build-jar ## Build all ecosystem of images
