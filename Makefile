@@ -28,7 +28,7 @@ python-image: ## Build python image.
 	cd docker/python && docker build --tag dwp-python:latest .
 
 .PHONY: dks-image
-dks-image: $(CERTIFICATES) ## Build the dks image.
+dks-image: ## Build the dks image.
 	docker-compose build dks
 
 
