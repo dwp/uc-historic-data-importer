@@ -82,7 +82,7 @@ truststore:
     cd setup # if not already there.
     ./certificates.sh path-to-truststore
     # e.g.
-    ./certificates.sh > $JAVA_HOME/jre/lib/security/cacerts
+    ./certificates.sh $JAVA_HOME/jre/lib/security/cacerts
 
 ..again a backup will be created at (in the example above)
 
