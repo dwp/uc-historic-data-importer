@@ -71,7 +71,7 @@ First update the gradle wrapper properties file to include a gradle repository
 that can be accessed from a UC laptop. From the  project root directory:
 
     cd setup
-    ./wrapper.sh ./gradle/wrapper/gradle-wrapper.properties
+    ./wrapper.sh ../gradle/wrapper/gradle-wrapper.properties
 
 A backup of the original file will created at
 `./gradle/wrapper/gradle-wrapper.properties.backup.1`
