@@ -70,11 +70,12 @@ This is a one time activity.
 ### Java
 
 Install a JDK underneath your home directory, one way to do this is with
-`sdkman`  available at `https://sdkman.io`.
+[sdkman](https://sdkman.io).
 
 Once sdkman is installed and initialised you can install a jdk with e.g.:
 
     sdk install java 8.0.222-zulu
+
 
 ### Gradle wrapper
 
