@@ -67,11 +67,18 @@ The logs can be followed so new lines are automatically shown.
 
 This is a one time activity.
 
+### Java
+
 Install a JDK underneath your home directory, one way to do this is with
-`sdkman`  available at `https://sdkman.update`.
+`sdkman`  available at `https://sdkman.io`.
 
+Once sdkman is installed and initialised you can install a jdk with e.g.:
 
-Then update the project's gradle wrapper properties file to include a gradle
+    sdk install java 8.0.222-zulu
+
+### Gradle wrapper
+
+Update the project's gradle wrapper properties file to include a gradle
 repository that can be accessed from a UC laptop. From the project root
 directory:
 
@@ -81,7 +88,9 @@ directory:
 A backup of the original file will created at
 `./gradle/wrapper/gradle-wrapper.properties.backup.1`
 
-Then the gradle.org certificate chain must be inserted into your local java
+### Gradle.org certificates
+
+The gradle.org certificate chain must be inserted into your local java
 truststore:
 
     cd setup # if not already there.
