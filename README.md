@@ -62,3 +62,28 @@ retrieved for all services, or for a subset.
 The logs can be followed so new lines are automatically shown.
 
     docker-compose logs -f aws-s3
+
+## UC laptops
+
+This is a one time activity.
+
+First update the gradle wrapper properties file to include a gradle repository
+that can be accessed from a UC laptop. From the  project root directory:
+
+    cd setup
+    ./wrapper.sh ./gradle/wrapper/gradle-wrapper.properties
+
+A backup of the original file will created at
+`./gradle/wrapper/gradle-wrapper.properties.backup.1`
+
+Then the gradle.org certificate chain must be inserted into your local java
+truststore:
+
+    cd setup # if not already there.
+    ./certificates.sh path-to-truststore
+    # e.g.
+    ./certificates.sh > $JAVA_HOME/jre/lib/security/cacerts
+
+..again a backup will be created at (in the example above)
+
+`$JAVA_HOME/jre/lib/security/cacerts.backup.1`.
