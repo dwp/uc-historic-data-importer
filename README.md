@@ -67,8 +67,13 @@ The logs can be followed so new lines are automatically shown.
 
 This is a one time activity.
 
-First update the gradle wrapper properties file to include a gradle repository
-that can be accessed from a UC laptop. From the  project root directory:
+Install a JDK underneath your home directory, one way to do this is with
+`sdkman`  available at `https://sdkman.update`.
+
+
+Then update the project's gradle wrapper properties file to include a gradle
+repository that can be accessed from a UC laptop. From the project root
+directory:
 
     cd setup
     ./wrapper.sh ../gradle/wrapper/gradle-wrapper.properties
