@@ -1,4 +1,4 @@
-FROM dwp-centos-with-java:latest
+FROM dwp-java:latest
 
 EXPOSE 8443
 

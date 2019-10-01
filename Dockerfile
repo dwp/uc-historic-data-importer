@@ -1,4 +1,4 @@
-FROM dwp-centos-with-java:latest
+FROM dwp-java:latest
 
 ARG APP_VERSION
 ENV APP_NAME=uc-historic-data-importer

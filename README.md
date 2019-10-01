@@ -62,3 +62,74 @@ retrieved for all services, or for a subset.
 The logs can be followed so new lines are automatically shown.
 
     docker-compose logs -f aws-s3
+
+## UC laptops
+
+This is a one time activity.
+
+### Java
+
+Install a JDK underneath your home directory, one way to do this is with
+[sdkman](https://sdkman.io).
+
+Once sdkman is installed and initialised you can install a jdk with e.g.:
+
+    sdk install java 8.0.222-zulu
+
+Make sure that JAVA_HOME is set after this completes, start a new shell first
+but if it is still not set you may need to add a line to your `.bashrc` thus:
+
+    export JAVA_HOME=/Users/<your-username>/.sdkman/candidates/java/current
+
+then have it set in your current session by executing
+
+    exec bash
+
+### Gradle wrapper
+
+Update the project's gradle wrapper properties file to include a gradle
+repository that can be accessed from a UC laptop. From the project root
+directory:
+
+    cd setup
+    ./wrapper.sh ../gradle/wrapper/gradle-wrapper.properties
+
+A backup of the original file will created at
+`./gradle/wrapper/gradle-wrapper.properties.backup.1`
+
+### Gradle.org certificates
+
+The gradle.org certificate chain must be inserted into your local java
+truststore:
+
+    cd setup # if not already there.
+    ./certificates.sh path-to-truststore
+    # e.g.
+    ./certificates.sh $JAVA_HOME/jre/lib/security/cacerts
+
+..again a backup will be created at (in the example above)
+
+`$JAVA_HOME/jre/lib/security/cacerts.backup.1`.
+
+### Run a gradle build
+
+From the project root first ensure no gradle daemons are running.
+
+    ./gradlew --stop
+
+Then run a gradle build
+
+    ./gradlew build
+
+To ensure the dockerized setup is functional, first generate the self-signed
+certificates needed for local development (from the project root):
+
+    ./truststores.sh
+
+
+Then bring up the containers:
+
+    make up
+
+Note that you are at the mercy of the quarry house wifi here as there are a
+number of large docker image downloads.

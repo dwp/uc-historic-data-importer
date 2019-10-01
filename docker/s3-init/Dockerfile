@@ -1,4 +1,4 @@
-FROM dwp-python-preinstall:latest
+FROM dwp-python:latest
 
 ENV USER aws
 ENV INSTALL_DIR /opt/${USER}
