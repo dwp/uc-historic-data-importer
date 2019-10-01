@@ -1,26 +1,79 @@
 package app.batch
 
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.S3ObjectInputStream
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class S3Reader(private val s3client: AmazonS3): ItemReader<String> {
+class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
 
-    override fun read(): String? {
-        logger.info("s3client: '$s3client'.")
-        return if (count++ < 10) {
-            "item-$count"
-        }
-        else {
+
+    @Autowired
+    private lateinit var s3Client: AmazonS3
+    @Autowired
+    private lateinit var keyPairGenerator: KeyPairGenerator
+    private var iterator: ListIterator<S3ObjectSummaryPair>? = null
+    private var count = 0
+    private val IV = "iv"
+    private val DATAENCRYPTIONKEYID = "dataKeyEncryptionKeyId"
+    private val CIPHERTEXT = "cipherText"
+
+    @Value("\${s3.bucket}")
+    private lateinit var s3BucketName: String
+
+    @Value("\${s3.prefix.folder}")
+    private lateinit var s3PrefixFolder: String
+
+    @Value("\${s3.key.regex}")
+    private lateinit var s3KeyRegex: String
+
+    @Value("\${s3.data.key.extension}")
+    private lateinit var s3DataKeyExtension: String
+
+    @Value("\${s3.metadata.key.extension}")
+    private lateinit var s3MetadataKeyExtension: String
+
+    override fun read(): EncryptedStream? {
+        val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
+        return if (iterator.hasNext()) {
+            iterator.next().let {
+                val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
+                val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
+                return EncryptedStream(dataInputStream, metadataInputStream)
+            }
+        } else {
             null
         }
     }
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
+
+    @Synchronized
+    private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
+        if (null == iterator) {
+            val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
+            val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
+            val keyPairs = keyPairGenerator.generateKeyPair(objectSummaries.map { it.key }, s3KeyRegex.toRegex(), s3DataKeyExtension, s3MetadataKeyExtension)
+            val pairs = keyPairs.map {
+                val obj = objectSummaryKeyMap[it.dataKey]
+                val meta = objectSummaryKeyMap[it.metadataKey]
+                S3ObjectSummaryPair(obj, meta)
+            }
+            iterator = pairs.listIterator()
+        }
+        return iterator!!
     }
 
-    private var count = 0
+    private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
+        return s3Client.getObject(bucketName, os.key).objectContent
+    }
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
+
+    }
 }
