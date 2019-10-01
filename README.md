@@ -102,3 +102,13 @@ truststore:
 ..again a backup will be created at (in the example above)
 
 `$JAVA_HOME/jre/lib/security/cacerts.backup.1`.
+
+### Run a gradle build
+
+From the project root first ensure no gradle daemons are running.
+
+    ./gradlew --stop
+
+Then run a gradle build
+
+    ./gradlew build
