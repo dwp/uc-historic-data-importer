@@ -76,6 +76,14 @@ Once sdkman is installed and initialised you can install a jdk with e.g.:
 
     sdk install java 8.0.222-zulu
 
+Make sure that JAVA_HOME is set after this completes, start a new shell first
+but if it is still not set you may need to add a line to your `.bashrc` thus:
+
+    export JAVA_HOME=/Users/<your-username>/.sdkman/candidates/java/current
+
+then have it set in your current session by executing
+
+    exec bash
 
 ### Gradle wrapper
 
