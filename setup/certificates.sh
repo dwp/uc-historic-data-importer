@@ -2,7 +2,7 @@
 
 source ./environment.sh
 
-OPTIONS=":a:h:k:p:w:"
+OPTIONS=":a:h:p:w:"
 
 while getopts $OPTIONS opt; do
     case $opt in
@@ -30,7 +30,6 @@ KEYSTORE=${1:?Usage: $0 [$OPTIONS] keystore}
 REMOTE_HOST=${REMOTE_HOST:-plugins-artifacts.gradle.org}
 REMOTE_PORT=${REMOTE_PORT:-443}
 KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-changeit}
-
 
 undertake init
 undertake fetch_certificates $REMOTE_HOST $REMOTE_PORT
