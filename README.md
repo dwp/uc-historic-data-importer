@@ -120,3 +120,16 @@ From the project root first ensure no gradle daemons are running.
 Then run a gradle build
 
     ./gradlew build
+
+To ensure the dockerized setup is functional, first generate the self-signed
+certificates needed for local development (from the project root):
+
+    ./truststores.sh
+
+
+Then bring up the containers:
+
+    make up
+
+Note that you are at the mercy of the quarry house wifi here as there are a
+number of large docker image downloads.
