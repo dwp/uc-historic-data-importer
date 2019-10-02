@@ -6,21 +6,23 @@ import org.springframework.stereotype.Component
 
 @Component
 class KeyPairGenerator {
-    fun generateKeyPairs(keys: List<String>, regex: Regex, dataExtension: Regex, metadataExtension: Regex): List<KeyPair> {
-        val keysMap = keys.groupBy { regex.find(it)?.value }
-        val (nullValuesMap, lessMap) = keysMap.map { it }.partition { it.key == null }
-        logger.warn("${nullValuesMap.flatMap { it.value }.count()} found that dont match the file regex")
-        nullValuesMap.forEach { logger.info("${it.value}") }
-        val hh = lessMap.map {
-            logger.info("${it.key} ${it.value}")
-            val notRecognised = it.value.filterNot { abc -> (abc.contains(dataExtension) || abc.contains(metadataExtension)) }
-            logger.info("${notRecognised}")
-            val dataKey = it.value.find { it.contains(dataExtension) }
-            val metadatakey = it.value.find { it.contains(metadataExtension) }
+
+    fun generateKeyPairs(keys: List<String>, fileFormat: Regex, dataFileExtension: Regex, metadataFileExtension: Regex): List<KeyPair> {
+        val keysMap = keys.groupBy { fileFormat.find(it)?.value }
+        val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
+        val unMatchedFlattened = unMatched.flatMap { it.value }
+        logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
+        logger.info("Unmatched keys : ${unMatchedFlattened.joinToString(",")}")
+        val keyPairs = matched.map {
+            logger.info("Matched key : ${it.key} Value : ${it.value} \n")
+            val neitherDataNorMetadataKey = it.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
+            logger.warn("${neitherDataNorMetadataKey.joinToString(",")} matched file format but not matched neither data nor metadata file extension")
+            val dataKey = it.value.find { ti -> ti.contains(dataFileExtension) }
+            val metadatakey = it.value.find { ti -> ti.contains(metadataFileExtension) }
             KeyPair(dataKey, metadatakey)
         }
-        validateKeyPairs(hh)
-        return hh.filter { it.dataKey !== null && it.metadataKey != null }
+        validateKeyPairs(keyPairs)
+        return keyPairs.filter { it.dataKey !== null && it.metadataKey != null }
     }
 
     fun validateKeyPairs(keyPairs: List<KeyPair>) {
