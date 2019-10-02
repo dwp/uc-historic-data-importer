@@ -30,13 +30,13 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String
 
-    @Value("\${s3.key.regex}")
+    @Value("\${s3.key.regex: ^[A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}}")
     private lateinit var s3KeyRegex: String
 
-    @Value("\${s3.data.key.extension}")
+    @Value("\${s3.data.key.extension: \\.enc$}")
     private lateinit var s3DataKeyExtension: String
 
-    @Value("\${s3.metadata.key.extension}")
+    @Value("\${s3.metadata.key.extension: \\.encryption\\.json$}")
     private lateinit var s3MetadataKeyExtension: String
 
     override fun read(): EncryptedStream? {
@@ -57,7 +57,7 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
         if (null == iterator) {
             val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
-            val keyPairs = keyPairGenerator.generateKeyPair(objectSummaries.map { it.key }, s3KeyRegex.toRegex(), s3DataKeyExtension, s3MetadataKeyExtension)
+            val keyPairs = keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key }, s3KeyRegex.toRegex(), s3DataKeyExtension.toRegex(), s3MetadataKeyExtension.toRegex())
             val pairs = keyPairs.map {
                 val obj = objectSummaryKeyMap[it.dataKey]
                 val meta = objectSummaryKeyMap[it.metadataKey]

@@ -28,7 +28,7 @@ class S3Configuration {
                 .build()
     }
 
-    @Bean
+    /*@Bean
     @Profile("localS3")
     fun localS3(): AmazonS3 {
         return AmazonS3ClientBuilder.standard()
@@ -39,17 +39,17 @@ class S3Configuration {
                 .withPathStyleAccessEnabled(true)
                 .disableChunkedEncoding()
                 .build()
-    }
+    }*/
 
     @Value("\${aws.region}")
     private lateinit var region: String
 
-    @Value("\${s3.service.endpoint}")
+   /* @Value("\${s3.service.endpoint}")
     private lateinit var serviceEndpoint: String
 
     @Value("\${aws.access.key}")
     private lateinit var awsAccessKey: String
 
     @Value("\${aws.secret.key}")
-    private lateinit var awsSecretKey: String
+    private lateinit var awsSecretKey: String*/
 }
