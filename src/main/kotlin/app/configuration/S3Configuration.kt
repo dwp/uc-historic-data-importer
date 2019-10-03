@@ -18,33 +18,12 @@ class S3Configuration {
         val updatedRegion = region.toUpperCase().replace("-", "_")
         val clientRegion = Regions.valueOf(updatedRegion)
         return AmazonS3ClientBuilder.standard()
-            .withCredentials(DefaultAWSCredentialsProviderChain())
-            .withRegion(clientRegion)
-            .build()
-    }
-
-    /*@Bean
-    @Profile("localS3")
-    fun localS3(): AmazonS3 {
-        return AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(AwsClientBuilder.EndpointConfiguration(serviceEndpoint, region))
-                .withClientConfiguration(ClientConfiguration().withProtocol(Protocol.HTTP))
-                .withCredentials(
-                        AWSStaticCredentialsProvider(BasicAWSCredentials(awsAccessKey, awsSecretKey)))
-                .withPathStyleAccessEnabled(true)
-                .disableChunkedEncoding()
+                .withCredentials(DefaultAWSCredentialsProviderChain())
+                .withRegion(clientRegion)
                 .build()
-    }*/
+    }
 
     @Value("\${aws.region}")
     private lateinit var region: String
 
-    /* @Value("\${s3.service.endpoint}")
-     private lateinit var serviceEndpoint: String
-
-     @Value("\${aws.access.key}")
-     private lateinit var awsAccessKey: String
-
-     @Value("\${aws.secret.key}")
-     private lateinit var awsSecretKey: String*/
 }

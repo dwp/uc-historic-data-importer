@@ -52,7 +52,8 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
                 val clonedmetadataInputStream = cloneAndPrintInputStream(metadataInputStream)
                 return EncryptedStream(clonedDataInputStream, clonedmetadataInputStream)
             }
-        } else {
+        }
+        else {
             null
         }
     }
@@ -97,7 +98,6 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
-
+        val logger: Logger = LoggerFactory.getLogger(S3Reader::class.toString())
     }
 }

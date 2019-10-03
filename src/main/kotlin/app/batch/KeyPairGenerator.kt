@@ -30,7 +30,8 @@ class KeyPairGenerator {
             if (it.dataKey != null && it.metadataKey == null) {
                 logger.error("Metadata file not found for the data file ${it.dataKey}")
                 throw RuntimeException("Metadata file not found for the data file ${it.dataKey}")
-            } else if (it.metadataKey != null && it.dataKey == null) {
+            }
+            else if (it.metadataKey != null && it.dataKey == null) {
                 logger.error("Data file not found for the metadata file ${it.metadataKey}")
             }
         }
