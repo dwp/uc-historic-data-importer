@@ -10,5 +10,5 @@ import kotlin.system.exitProcess
 class UcHistoricDataImporterApplication
 
 fun main(args: Array<String>) {
-	exitProcess(SpringApplication.exit(runApplication<UcHistoricDataImporterApplication>(*args)))
+    exitProcess(SpringApplication.exit(runApplication<UcHistoricDataImporterApplication>(*args)))
 }

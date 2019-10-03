@@ -1,11 +1,6 @@
 package app.configuration
 
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.Protocol
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
@@ -23,9 +18,9 @@ class S3Configuration {
         val updatedRegion = region.toUpperCase().replace("-", "_")
         val clientRegion = Regions.valueOf(updatedRegion)
         return AmazonS3ClientBuilder.standard()
-                .withCredentials(DefaultAWSCredentialsProviderChain())
-                .withRegion(clientRegion)
-                .build()
+            .withCredentials(DefaultAWSCredentialsProviderChain())
+            .withRegion(clientRegion)
+            .build()
     }
 
     /*@Bean
@@ -44,12 +39,12 @@ class S3Configuration {
     @Value("\${aws.region}")
     private lateinit var region: String
 
-   /* @Value("\${s3.service.endpoint}")
-    private lateinit var serviceEndpoint: String
+    /* @Value("\${s3.service.endpoint}")
+     private lateinit var serviceEndpoint: String
 
-    @Value("\${aws.access.key}")
-    private lateinit var awsAccessKey: String
+     @Value("\${aws.access.key}")
+     private lateinit var awsAccessKey: String
 
-    @Value("\${aws.secret.key}")
-    private lateinit var awsSecretKey: String*/
+     @Value("\${aws.secret.key}")
+     private lateinit var awsSecretKey: String*/
 }
