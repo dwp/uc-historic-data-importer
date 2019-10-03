@@ -20,10 +20,6 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
     @Autowired
     private lateinit var keyPairGenerator: KeyPairGenerator
     private var iterator: ListIterator<S3ObjectSummaryPair>? = null
-    private var count = 0
-    private val IV = "iv"
-    private val DATAENCRYPTIONKEYID = "dataKeyEncryptionKeyId"
-    private val CIPHERTEXT = "cipherText"
 
     @Value("\${s3.bucket}")
     private lateinit var s3BucketName: String
@@ -31,13 +27,13 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String
 
-    @Value("\${s3.key.regex: ([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)}")
+    @Value("\${s3.key.regex:([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)}")
     private lateinit var s3KeyRegex: String
 
-    @Value("\${s3.data.key.extension: \\.enc\$}")
+    @Value("\${s3.data.key.extension:\\.enc\$}")
     private lateinit var s3DataKeyExtension: String
 
-    @Value("\${s3.metadata.key.extension: \\.encryption\\.json\$}")
+    @Value("\${s3.metadata.key.extension:\\.encryption\\.json\$}")
     private lateinit var s3MetadataKeyExtension: String
 
     override fun read(): EncryptedStream? {

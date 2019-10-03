@@ -31,14 +31,14 @@ class JobConfiguration {
     @Bean
     fun step() =
             stepBuilderFactory.get("step")
-                    .chunk<EncryptedStream, String>(10)
+                    .chunk<EncryptedStream, EncryptedStream>(10)
                     .reader(itemReader)
                     .processor(itemProcessor())
                     .writer(itemWriter)
                     .build()
 
-    fun itemProcessor(): ItemProcessor<EncryptedStream, String> =
-            CompositeItemProcessor<EncryptedStream, String>().apply {
+    fun itemProcessor(): ItemProcessor<EncryptedStream, EncryptedStream> =
+            CompositeItemProcessor<EncryptedStream, EncryptedStream>().apply {
                 setDelegates(listOf(decryptionProcessor, encryptionProcessor))
             }
 
@@ -46,13 +46,13 @@ class JobConfiguration {
     lateinit var itemReader: ItemReader<EncryptedStream>
 
     @Autowired
-    lateinit var encryptionProcessor: ItemProcessor<String, String>
+    lateinit var encryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
-    lateinit var decryptionProcessor: ItemProcessor<String, String>
+    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
-    lateinit var itemWriter: ItemWriter<String>
+    lateinit var itemWriter: ItemWriter<EncryptedStream>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory

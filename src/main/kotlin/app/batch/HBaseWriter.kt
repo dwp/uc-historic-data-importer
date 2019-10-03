@@ -7,8 +7,8 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component
 
 @Component
-class HBaseWriter(private val connection: Connection): ItemWriter<String> {
-    override fun write(items: MutableList<out String>) {
+class HBaseWriter(private val connection: Connection): ItemWriter<EncryptedStream> {
+    override fun write(items: MutableList<out EncryptedStream>) {
         logger.info("connection: '$connection'.")
         items.forEach {
             logger.info("it: '$it'.")
