@@ -9,10 +9,11 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
 
 @Component
 class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
-
 
     @Autowired
     private lateinit var s3Client: AmazonS3
@@ -30,13 +31,13 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String
 
-    @Value("\${s3.key.regex: ^[A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}}")
+    @Value("\${s3.key.regex: ([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)}")
     private lateinit var s3KeyRegex: String
 
-    @Value("\${s3.data.key.extension: \\.enc$}")
+    @Value("\${s3.data.key.extension: \\.enc\$}")
     private lateinit var s3DataKeyExtension: String
 
-    @Value("\${s3.metadata.key.extension: \\.encryption\\.json$}")
+    @Value("\${s3.metadata.key.extension: \\.encryption\\.json\$}")
     private lateinit var s3MetadataKeyExtension: String
 
     override fun read(): EncryptedStream? {
@@ -45,6 +46,8 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
             iterator.next().let {
                 val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
                 val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
+                logger.info(printInputStream(dataInputStream))
+                logger.info(printInputStream(metadataInputStream))
                 return EncryptedStream(dataInputStream, metadataInputStream)
             }
         } else {
@@ -70,6 +73,18 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
 
     private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
         return s3Client.getObject(bucketName, os.key).objectContent
+    }
+
+    private fun printInputStream(inputStream : S3ObjectInputStream?) : String{
+        val result = ByteArrayOutputStream()
+        val buffer = ByteArray(1024)
+        var length = 0
+        while (length  != -1) {
+            result.write(buffer, 0, length)
+            length = inputStream?.read(buffer)!!
+        }
+
+        return result.toString(StandardCharsets.UTF_8.name())
     }
 
     companion object {

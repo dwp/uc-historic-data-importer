@@ -37,7 +37,7 @@ s3-init-image: ## Build the image that creates the s3 bucket.
 
 
 .PHONY: ancillary-images #  Build the supporting images.
-ancillary-images: java-image python-image dks-image s3-init-image  ## Build base images
+ancillary-images: java-image python-image  s3-init-image #dks-image ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build
@@ -54,7 +54,7 @@ build-image: ancillary-images build-jar ## Build all ecosystem of images
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d hbase s3 dks
+	docker-compose up -d hbase s3 #dks
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \

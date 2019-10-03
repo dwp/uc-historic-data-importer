@@ -1,5 +1,6 @@
 package app.configuration
 
+import app.batch.EncryptedStream
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -30,19 +31,19 @@ class JobConfiguration {
     @Bean
     fun step() =
             stepBuilderFactory.get("step")
-                    .chunk<String, String>(10)
+                    .chunk<EncryptedStream, String>(10)
                     .reader(itemReader)
                     .processor(itemProcessor())
                     .writer(itemWriter)
                     .build()
 
-    fun itemProcessor(): ItemProcessor<String, String> =
-            CompositeItemProcessor<String, String>().apply {
+    fun itemProcessor(): ItemProcessor<EncryptedStream, String> =
+            CompositeItemProcessor<EncryptedStream, String>().apply {
                 setDelegates(listOf(decryptionProcessor, encryptionProcessor))
             }
 
     @Autowired
-    lateinit var itemReader: ItemReader<String>
+    lateinit var itemReader: ItemReader<EncryptedStream>
 
     @Autowired
     lateinit var encryptionProcessor: ItemProcessor<String, String>

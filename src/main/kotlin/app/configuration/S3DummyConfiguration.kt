@@ -34,9 +34,9 @@ class S3DummyConfiguration {
     @Value("\${s3.service.endpoint}")
     private lateinit var serviceEndpoint: String
 
-    @Value("\${s3.access.key}")
+    @Value("\${aws.access.key")
     private lateinit var accessKey: String
 
-    @Value("\${s3.secret.key}")
+    @Value("\$aws.secret.key}")
     private lateinit var secretKey: String
 }
