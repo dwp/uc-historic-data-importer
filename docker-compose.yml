@@ -5,14 +5,23 @@ services:
   dks:
     image: dks
     ports:
-      - 8091:8443
-      - 8101:8080
+      - 8443:8443
     build:
       context: docker/dks
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
-      - SPRING_CONFIG_LOCATION=application.properties
+      - SPRING_CONFIG_LOCATION=application-secure.properties
     container_name: dks
+
+  dks-insecure:
+    image: dks
+    ports:
+      - 8080:8080
+    build:
+      context: docker/dks
+    container_name: dks-insecure
+    environment:
+      - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
   hbase:
     image: harisekhon/hbase:1.4

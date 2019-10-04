@@ -1,6 +1,7 @@
 FROM dwp-java:latest
 
 EXPOSE 8443
+EXPOSE 8080
 
 ENV USER dks
 ENV INSTALL_DIR /opt/dks
@@ -12,7 +13,7 @@ WORKDIR ${INSTALL_DIR}
 RUN wget $(curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
     | jq -r '.assets[0].browser_download_url') --no-check-certificate --output-document dks-latest.jar
 
-COPY application.properties ./
+COPY application-secure.properties ./
 COPY dks*.jks  ./
 
 RUN chown -R ${USER}.${USER} ${INSTALL_DIR}
