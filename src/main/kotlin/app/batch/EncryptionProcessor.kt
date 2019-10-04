@@ -7,11 +7,11 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component
-class EncryptionProcessor(private val httpClientProvider: HttpClientProvider): ItemProcessor<String, String> {
+class EncryptionProcessor(private val httpClientProvider: HttpClientProvider) : ItemProcessor<EncryptedStream, EncryptedStream> {
 
-    override fun process(item: String): String? {
+    override fun process(item: EncryptedStream): EncryptedStream? {
         logger.info("httpClientProvider: '$httpClientProvider'.")
-        return item.toUpperCase()
+        return item
     }
 
     companion object {

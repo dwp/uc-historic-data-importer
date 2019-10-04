@@ -47,6 +47,7 @@ services:
       - AWS_ACCESS_KEY_ID=aws-access-key
       - AWS_SECRET_ACCESS_KEY=aws-secret-access-key
       - S3_BUCKET=uc-historic-data
+      - S3_PREFIX=test/prefix/
 
   uc-historic-data-importer:
     image: uc-historic-data-importer
@@ -63,5 +64,10 @@ services:
       --aws.access.key=aws-access-key
       --aws.secret.key=aws-secret-key
       --s3.bucket=uc-historic-data
+      --s3.prefix.folder=test/prefix/
       --s3.service.endpoint=http://s3:4572
       --spring.profiles.active=localS3,secureHttpClient,batchRun
+      --s3.key.regex=([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)
+      --s3.data.key.extension=\\.enc$$
+      --s3.metadata.key.extension=\\.encryption\\.json$$
+      --thread.count=10

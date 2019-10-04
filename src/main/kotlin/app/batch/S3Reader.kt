@@ -1,26 +1,103 @@
 package app.batch
 
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.S3ObjectInputStream
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+
 
 @Component
-class S3Reader(private val s3client: AmazonS3): ItemReader<String> {
+class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
 
-    override fun read(): String? {
-        logger.info("s3client: '$s3client'.")
-        return if (count++ < 10) {
-            "item-$count"
+    @Autowired
+    private lateinit var s3Client: AmazonS3
+    @Autowired
+    private lateinit var keyPairGenerator: KeyPairGenerator
+    private var iterator: ListIterator<S3ObjectSummaryPair>? = null
+
+    @Value("\${s3.bucket}")
+    private lateinit var s3BucketName: String
+
+    @Value("\${s3.prefix.folder}")
+    private lateinit var s3PrefixFolder: String
+
+    @Value("\${s3.key.regex:([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)}")
+    private lateinit var s3KeyRegex: String
+
+    @Value("\${s3.data.key.extension:\\.enc$}")
+    private lateinit var s3DataKeyExtension: String
+
+    @Value("\${s3.metadata.key.extension:\\.encryption\\.json$}")
+    private lateinit var s3MetadataKeyExtension: String
+
+    override fun read(): EncryptedStream? {
+        val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
+        return if (iterator.hasNext()) {
+            iterator.next().let {
+                val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
+                val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
+                // Uncomment the below code
+                // return EncryptedStream(dataInputStream, metadataInputStream)
+                // The below code is to satisfy the acceptance criteria of DW-2426 and can be removed later
+                val clonedDataInputStream = cloneAndPrintInputStream(dataInputStream)
+                val clonedmetadataInputStream = cloneAndPrintInputStream(metadataInputStream)
+                return EncryptedStream(clonedDataInputStream, clonedmetadataInputStream)
+            }
         }
         else {
             null
         }
     }
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
+
+    fun reset() {
+        iterator = null
     }
 
-    private var count = 0
+    @Synchronized
+    private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
+        if (null == iterator) {
+            val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
+            val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
+            val keyPairs = keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key }, s3KeyRegex.toRegex(), s3DataKeyExtension.toRegex(), s3MetadataKeyExtension.toRegex())
+            val pairs = keyPairs.map {
+                val obj = objectSummaryKeyMap[it.dataKey]
+                val meta = objectSummaryKeyMap[it.metadataKey]
+                S3ObjectSummaryPair(obj, meta)
+            }
+            iterator = pairs.listIterator()
+        }
+        return iterator!!
+    }
+
+    private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
+        return s3Client.getObject(bucketName, os.key).objectContent
+    }
+
+    // The below function  is to satisfy the acceptance criteria of DW-2426 and can be removed later
+    private fun cloneAndPrintInputStream(inputStream: S3ObjectInputStream?): InputStream {
+        val result = ByteArrayOutputStream()
+        val buffer = ByteArray(1024)
+        var length = 0
+        while (length != -1) {
+            result.write(buffer, 0, length)
+            length = inputStream?.read(buffer)!!
+        }
+
+        val copy = ByteArrayInputStream(result.toByteArray())
+        logger.info(result.toString(StandardCharsets.UTF_8.name()))
+        return copy
+    }
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(S3Reader::class.toString())
+    }
 }

@@ -6,7 +6,7 @@ ENV HOME_DIR /home/${USER}
 
 WORKDIR ${INSTALL_DIR}
 
-COPY ./init.sh ./environment.sh ./
+COPY ./init.sh ./environment.sh ./adb.collection.0001.json.gz.enc ./adb.collection.0001.json.gz.encryption.json ./
 
 RUN mkdir ${HOME_DIR} && \
         useradd ${USER} && \

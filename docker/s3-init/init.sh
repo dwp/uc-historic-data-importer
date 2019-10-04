@@ -16,3 +16,6 @@ if [[ $BUCKET_COUNT -eq 0 ]]; then
 else
     stderr Not making bucket \'$S3_BUCKET\': already exists.
 fi
+
+aws --endpoint-url=http://s3:4572 s3 cp ./adb.collection.0001.json.gz.enc s3://$S3_BUCKET/${S3_PREFIX}
+aws --endpoint-url=http://s3:4572 s3 cp ./adb.collection.0001.json.gz.encryption.json s3://$S3_BUCKET/${S3_PREFIX}

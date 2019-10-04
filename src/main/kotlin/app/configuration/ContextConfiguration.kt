@@ -17,7 +17,7 @@ class ContextConfiguration {
 
     @Bean
     @Profile("insecureHttpClient")
-    fun insecureHttpClientProvider() = object: HttpClientProvider {
+    fun insecureHttpClientProvider() = object : HttpClientProvider {
         override fun client() = HttpClients.createDefault()!!
     }
 
