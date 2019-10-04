@@ -17,5 +17,14 @@ else
     stderr Not making bucket \'$S3_BUCKET\': already exists.
 fi
 
-aws --endpoint-url=http://s3:4572 s3 cp ./adb.collection.0001.json.gz.enc s3://$S3_BUCKET/${S3_PREFIX}
-aws --endpoint-url=http://s3:4572 s3 cp ./adb.collection.0001.json.gz.encryption.json s3://$S3_BUCKET/${S3_PREFIX}
+# aws --endpoint-url=http://s3:4572 s3 cp ./adb.collection.0001.json.gz.enc s3://$S3_BUCKET/${S3_PREFIX}
+# aws --endpoint-url=http://s3:4572 s3 cp ./adb.collection.0001.json.gz.encryption.json s3://$S3_BUCKET/${S3_PREFIX}
+
+. ./venv/bin/activate
+
+if ./sample_data.py -k http://dks-insecure:8080/datakey; then
+    for file in adb.collection.*; do
+        aws_s3 cp $file s3://${S3_BUCKET}/${S3_PREFIX}
+    done
+    aws_s3 ls $S3_BUCKET/$S3_PREFIX
+fi

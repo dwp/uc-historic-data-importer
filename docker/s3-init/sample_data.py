@@ -24,7 +24,7 @@ def main():
         }
         contents = ""
         for _ in range(100):
-            contents = contents + db_object_json()
+            contents = contents + db_object_json() + "\n"
         compressed = bz2.compress(contents.encode())
         [encryption_metadata['iv'], encrypted_contents] = \
             encrypt(encryption_metadata['plaintextDatakey'], compressed)
@@ -54,7 +54,7 @@ def db_object_json():
     record['addressNumber']['cryptoId'] = guid()
     record['townCity']['cryptoId'] = guid()
     record['processId'] = guid()
-    return json.dumps(record) + "\n"
+    return json.dumps(record)
 
 def guid():
     return str(uuid.uuid4())
