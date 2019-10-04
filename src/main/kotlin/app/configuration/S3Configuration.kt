@@ -18,9 +18,9 @@ class S3Configuration {
         val updatedRegion = region.toUpperCase().replace("-", "_")
         val clientRegion = Regions.valueOf(updatedRegion)
         return AmazonS3ClientBuilder.standard()
-                .withCredentials(DefaultAWSCredentialsProviderChain())
-                .withRegion(clientRegion)
-                .build()
+            .withCredentials(DefaultAWSCredentialsProviderChain())
+            .withRegion(clientRegion)
+            .build()
     }
 
     @Value("\${aws.region}")

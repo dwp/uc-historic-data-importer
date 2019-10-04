@@ -28,8 +28,9 @@ class KeyPairGenerator {
     fun validateKeyPairs(keyPairs: List<KeyPair>) {
         keyPairs.forEach {
             if (it.dataKey != null && it.metadataKey == null) {
-                logger.error("Metadata file not found for the data file ${it.dataKey}")
-                throw RuntimeException("Metadata file not found for the data file ${it.dataKey}")
+                val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
+                logger.error(metadataFileNotFoundError)
+                throw RuntimeException(metadataFileNotFoundError)
             }
             else if (it.metadataKey != null && it.dataKey == null) {
                 logger.error("Data file not found for the metadata file ${it.metadataKey}")

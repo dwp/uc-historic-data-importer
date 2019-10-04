@@ -24,21 +24,21 @@ class JobConfiguration {
 
     @Bean
     fun importUserJob(step: Step) =
-            jobBuilderFactory.get("snapshotSenderJob")
-                    .incrementer(RunIdIncrementer())
-                    .flow(step)
-                    .end()
-                    .build()
+        jobBuilderFactory.get("snapshotSenderJob")
+            .incrementer(RunIdIncrementer())
+            .flow(step)
+            .end()
+            .build()
 
     @Bean
     fun step() =
-            stepBuilderFactory.get("step")
-                    .chunk<EncryptedStream, EncryptedStream>(10)
-                    .reader(itemReader)
-                    .processor(itemProcessor())
-                    .writer(itemWriter)
-                    .taskExecutor(taskExecutor())
-                    .build()
+        stepBuilderFactory.get("step")
+            .chunk<EncryptedStream, EncryptedStream>(10)
+            .reader(itemReader)
+            .processor(itemProcessor())
+            .writer(itemWriter)
+            .taskExecutor(taskExecutor())
+            .build()
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("uc-historic-data-importer").apply {
@@ -46,9 +46,9 @@ class JobConfiguration {
     }
 
     fun itemProcessor(): ItemProcessor<EncryptedStream, EncryptedStream> =
-            CompositeItemProcessor<EncryptedStream, EncryptedStream>().apply {
-                setDelegates(listOf(decryptionProcessor, encryptionProcessor))
-            }
+        CompositeItemProcessor<EncryptedStream, EncryptedStream>().apply {
+            setDelegates(listOf(decryptionProcessor, encryptionProcessor))
+        }
 
     @Autowired
     lateinit var itemReader: ItemReader<EncryptedStream>
