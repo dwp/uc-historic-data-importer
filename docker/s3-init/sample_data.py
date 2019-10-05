@@ -3,7 +3,7 @@
 import argparse
 import base64
 import binascii
-import bz2
+import gzip
 import json
 import uuid
 
@@ -25,9 +25,17 @@ def main():
         contents = ""
         for _ in range(100):
             contents = contents + db_object_json() + "\n"
-        compressed = bz2.compress(contents.encode())
-        [encryption_metadata['iv'], encrypted_contents] = \
-            encrypt(encryption_metadata['plaintextDatakey'], compressed)
+
+        if args.compress:
+            print("COMPRESSING")
+            compressed = gzip.compress(contents.encode())
+            [encryption_metadata['iv'], encrypted_contents] = \
+                encrypt(encryption_metadata['plaintextDatakey'], compressed)
+        else:
+            print("Not compressing.")
+            [encryption_metadata['iv'], encrypted_contents] = \
+                encrypt(encryption_metadata['plaintextDatakey'], contents.encode("utf8"))
+
 
         metadata_file = f'adb.collection.{i:04d}.json.gz.encryption.json'
         with open(metadata_file, 'w') as metadata:
@@ -102,6 +110,8 @@ def command_line_args():
     parser = argparse.ArgumentParser(description='Generate sample encrypted data.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
+    parser.add_argument('-c', '--compress', action='store_true',
+                        help='Compress before encryption.')
     return parser.parse_args()
 
 if __name__ == "__main__":

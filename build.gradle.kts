@@ -23,6 +23,7 @@ configurations.all {
 }
 
 dependencies {
+        implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
         implementation("org.springframework.boot:spring-boot-starter-batch")
         implementation("org.jetbrains.kotlin:kotlin-reflect")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

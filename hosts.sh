@@ -11,7 +11,7 @@ if [[ -n "${dks_name}" ]]; then
     temp_file=$(mktemp)
     (
         cat /etc/hosts | grep -v 'added by dks-uhdi.$'
-        echo ${dks_name} local-dks \# added by dks-uhdi.
+        echo ${dks_name} dks \# added by dks-uhdi.
     ) > ${temp_file}
 
     sudo mv ${temp_file} /etc/hosts
@@ -38,7 +38,7 @@ if [[ -n "$hbase_name" ]]; then
     temp_file=$(mktemp)
     (
         cat /etc/hosts | grep -v 'added by hbase-uhdi.$'
-        echo ${hbase_name} local-hbase \# added by hbase-uhdi.
+        echo ${hbase_name} hbase \# added by hbase-uhdi.
     ) > ${temp_file}
 
     sudo mv ${temp_file} /etc/hosts
@@ -50,4 +50,4 @@ else
         docker exec hbase cat /etc/hosts
     ) >&2
 fi
-echo "...hosts updated for hbase container '${dks_http_name}'"
+echo "...hosts updated for hbase container '${hbase_name}'"

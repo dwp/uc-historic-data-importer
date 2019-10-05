@@ -29,17 +29,17 @@ class ContextConfiguration {
     @Profile("weakRng")
     fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
 
-    @Bean
-    fun localConnection(): Connection {
-
-        val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
-            this.set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
-            this.setInt("hbase.zookeeper.port", 2181)
-        })
-
-        addShutdownHook(connection)
-        return connection
-    }
+//    @Bean
+//    fun localConnection(): Connection {
+//
+//        val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
+//            this.set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
+//            this.setInt("hbase.zookeeper.port", 2181)
+//        })
+//
+//        addShutdownHook(connection)
+//        return connection
+//    }
 
     private fun addShutdownHook(connection: Connection) {
         Runtime.getRuntime().addShutdownHook(object : Thread() {

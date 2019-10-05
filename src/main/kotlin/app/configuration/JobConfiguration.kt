@@ -1,6 +1,7 @@
 package app.configuration
 
-import app.batch.EncryptedStream
+import app.domain.EncryptedStream
+import app.domain.InputStreamPair
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
+import java.io.InputStream
 
 @Configuration
 @EnableBatchProcessing
@@ -33,7 +35,7 @@ class JobConfiguration {
     @Bean
     fun step() =
         stepBuilderFactory.get("step")
-            .chunk<EncryptedStream, EncryptedStream>(10)
+            .chunk<InputStreamPair, InputStream>(10)
             .reader(itemReader)
             .processor(itemProcessor())
             .writer(itemWriter)
@@ -45,22 +47,25 @@ class JobConfiguration {
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
-    fun itemProcessor(): ItemProcessor<EncryptedStream, EncryptedStream> =
-        CompositeItemProcessor<EncryptedStream, EncryptedStream>().apply {
-            setDelegates(listOf(decryptionProcessor, encryptionProcessor))
+    fun itemProcessor(): ItemProcessor<InputStreamPair, InputStream> =
+        CompositeItemProcessor<InputStreamPair, InputStream>().apply {
+            setDelegates(listOf(encryptionMetadataProcessor, datakeyProcessor, decryptionProcessor))
         }
 
     @Autowired
-    lateinit var itemReader: ItemReader<EncryptedStream>
+    lateinit var itemReader: ItemReader<InputStreamPair>
 
     @Autowired
-    lateinit var encryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+    lateinit var encryptionMetadataProcessor: ItemProcessor<InputStreamPair, EncryptedStream>
 
     @Autowired
-    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+    lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
-    lateinit var itemWriter: ItemWriter<EncryptedStream>
+    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, InputStream>
+
+    @Autowired
+    lateinit var itemWriter: ItemWriter<InputStream>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory
@@ -68,6 +73,6 @@ class JobConfiguration {
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
 
-    @Value("\${thread.count:10}")
+    @Value("\${thread.count:1}")
     lateinit var threadCount: String;
 }
