@@ -2,6 +2,7 @@ package app.batch
 
 import app.configuration.HttpClientProvider
 import app.domain.EncryptedStream
+import app.exceptions.DecryptionException
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -25,15 +26,21 @@ class DecryptionProcessor(private val httpClientProvider: HttpClientProvider):
     }
 
     override fun process(item: EncryptedStream): InputStream {
-        logger.info("Processing '${item}'")
-        val dataKey = item.encryptionMetadata.plaintextDatakey
-        val iv = item.encryptionMetadata.iv
-        val inputStream = item.dataInputStream
-        val keySpec: Key = SecretKeySpec(dataKey.toByteArray(), "AES")
-        val cipher = Cipher.getInstance(cipherAlgorithm, "BC").apply {
-            init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
+        try {
+            val dataKey = item.encryptionMetadata.plaintextDatakey
+            val iv = item.encryptionMetadata.iv
+            val inputStream = item.dataInputStream
+            val keySpec: Key = SecretKeySpec(dataKey.toByteArray(), "AES")
+            val cipher = Cipher.getInstance(cipherAlgorithm, "BC").apply {
+                init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
+            }
+            return CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher)
         }
-        return CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher)
+        catch (e: Exception) {
+            val message = "Failed to decrypt data in '${item.s3key}': ${e.message}."
+            logger.error(message)
+            throw DecryptionException(message, e)
+        }
     }
 
     private val cipherAlgorithm = "AES/CTR/NoPadding"

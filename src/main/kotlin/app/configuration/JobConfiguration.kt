@@ -49,11 +49,14 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<InputStreamPair, InputStream> =
         CompositeItemProcessor<InputStreamPair, InputStream>().apply {
-            setDelegates(listOf(encryptionMetadataProcessor, datakeyProcessor, decryptionProcessor))
+            setDelegates(listOf(encryptionMetadataProcessor,
+                                datakeyProcessor,
+                                decryptionProcessor))
         }
 
     @Autowired
     lateinit var itemReader: ItemReader<InputStreamPair>
+
 
     @Autowired
     lateinit var encryptionMetadataProcessor: ItemProcessor<InputStreamPair, EncryptedStream>
@@ -73,6 +76,6 @@ class JobConfiguration {
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
 
-    @Value("\${thread.count:1}")
+    @Value("\${thread.count:10}")
     lateinit var threadCount: String;
 }

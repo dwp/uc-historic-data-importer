@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
 
+"""Generate sample data for the historic data importer.
+
+Generates encrypted and optionally compressed files which are then
+placed in the s3 bucket in localstack to enable integration testing.
+
+Usage: sample_data.py [-h] [-k DATA_KEY_SERVICE] [-c]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k DATA_KEY_SERVICE, --data-key-service DATA_KEY_SERVICE
+                        Use the specified data key service.
+  -c, --compress        Compress before encryption.
+"""
+
 import argparse
 import base64
 import binascii
@@ -14,6 +28,7 @@ from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
 def main():
+    """Main entry point."""
     args = command_line_args()
     for i in range(10):
         dks_response = requests.get(args.data_key_service).json()
@@ -27,12 +42,12 @@ def main():
             contents = contents + db_object_json() + "\n"
 
         if args.compress:
-            print("COMPRESSING")
+            print("Compressing prior to encryption.")
             compressed = gzip.compress(contents.encode())
             [encryption_metadata['iv'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'], compressed)
         else:
-            print("Not compressing.")
+            print("Not compressing prior to encryption.")
             [encryption_metadata['iv'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'], contents.encode("utf8"))
 
@@ -47,6 +62,9 @@ def main():
 
 
 def encrypt(datakey, unencrypted_bytes):
+    """Encrypts the supplied bytes with the supplied key.
+    Returns the initialisation vector and the encrypted data as a tuple.
+    """
     initialisation_vector = Random.new().read(AES.block_size)
     iv_int = int(binascii.hexlify(initialisation_vector), 16)
     counter = Counter.new(AES.block_size * 8, initial_value=iv_int)
@@ -56,6 +74,7 @@ def encrypt(datakey, unencrypted_bytes):
             base64.b64encode(ciphertext).decode('ascii'))
 
 def db_object_json():
+    """Returns a sample dbRecord object with unique ids."""
     record = db_object()
     record['_id']['declarationId'] = guid()
     record['contractId'] = guid()
@@ -65,9 +84,11 @@ def db_object_json():
     return json.dumps(record)
 
 def guid():
+    """Generates, returns a guid."""
     return str(uuid.uuid4())
 
 def db_object():
+    """Returns a dbObject template to which unique ids can be applied."""
     return {
         "_id": {
             "someId": "RANDOM_GUID"
@@ -107,6 +128,7 @@ def db_object():
 
 
 def command_line_args():
+    """Parses, returns the supplied command line args."""
     parser = argparse.ArgumentParser(description='Generate sample encrypted data.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')

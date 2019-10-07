@@ -1,53 +1,31 @@
 #!/bin/bash
 
-### dks https ###
+add_container() {
+    local container=${1:?Usage: $FUNCNAME container service}
 
-dks_name=$(docker exec dks cat /etc/hosts | egrep -v '(localhost|ip6)' | tail -n1)
+    host_entry=$(docker exec $container cat /etc/hosts |
+                     egrep -v '(localhost|ip6)' | tail -n1)
 
-echo "dks https container is '${dks_name}'"
+    if [[ -n "$host_entry" ]]; then
 
-if [[ -n "${dks_name}" ]]; then
+        temp_file=$(mktemp)
+        (
+            cat /etc/hosts | fgrep -v $container
+            echo ${host_entry} $container \# added by $FUNCNAME.
+        ) > $temp_file
 
-    temp_file=$(mktemp)
-    (
-        cat /etc/hosts | grep -v 'added by dks-uhdi.$'
-        echo ${dks_name} dks \# added by dks-uhdi.
-    ) > ${temp_file}
+        sudo mv ${temp_file} /etc/hosts
+        sudo chmod 644 /etc/hosts
+    else
+        (
+            echo could not get host name for \'$container\' from hosts file:
+            docker exec $container cat /etc/hosts
+        ) >&2
+    fi
 
-    sudo mv ${temp_file} /etc/hosts
-    sudo chmod 644 /etc/hosts
-    cat /etc/hosts
-else
-    (
-        echo could not get host name from dks hosts file:
-        docker exec dks cat /etc/hosts
-    ) >&2
-fi
-echo "...hosts updated for dks https container '${dks_name}'"
+}
 
+add_container dks
+add_container hbase
 
-### hbase ###
-
-hbase_name=$(docker exec hbase cat /etc/hosts \
-                 | egrep -v '(localhost|ip6)' | tail -n1)
-
-echo "hbase container is '${hbase_name}'"
-
-if [[ -n "$hbase_name" ]]; then
-
-    temp_file=$(mktemp)
-    (
-        cat /etc/hosts | grep -v 'added by hbase-uhdi.$'
-        echo ${hbase_name} hbase \# added by hbase-uhdi.
-    ) > ${temp_file}
-
-    sudo mv ${temp_file} /etc/hosts
-    sudo chmod 644 /etc/hosts
-    cat /etc/hosts
-else
-    (
-        echo could not get host name from hbase hosts file:
-        docker exec hbase cat /etc/hosts
-    ) >&2
-fi
-echo "...hosts updated for hbase container '${hbase_name}'"
+cat /etc/hosts
