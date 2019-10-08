@@ -49,7 +49,7 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<EncryptedStream, InputStream> =
         CompositeItemProcessor<EncryptedStream, InputStream>().apply {
-            setDelegates(listOf(decryptionProcessor, decompressionProcessor))
+            setDelegates(listOf(decryptionProcessor, decompressionProcessor,messageProcessor))
         }
 
     @Autowired
@@ -60,6 +60,9 @@ class JobConfiguration {
 
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
+
+    @Autowired
+    lateinit var messageProcessor: ItemProcessor<InputStream, InputStream>
 
     @Autowired
     lateinit var itemWriter: ItemWriter<InputStream>
