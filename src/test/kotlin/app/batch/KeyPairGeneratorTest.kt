@@ -27,7 +27,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "hbase.zookeeper.quorum=hbase",
     "aws.region=eu-west-1",
     "s3.bucket=not_set",
-    "s3.prefix.folder=not_set"
+    "s3.prefix.folder=not_set",
+    "data.key.service.url=phoney"
 ])
 class KeyPairGeneratorTest {
 

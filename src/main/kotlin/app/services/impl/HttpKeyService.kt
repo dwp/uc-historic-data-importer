@@ -45,14 +45,16 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         }
                         response.statusLine.statusCode == 400 ->
                             throw DataKeyDecryptionException(
-                                    """Decrypting encryptedKey: '$encryptedKey' with 
-                            |keyEncryptionKeyId: '$encryptionKeyId'
-                            |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
+                                    """Decrypting encryptedKey: '$encryptedKey' with
+                            | keyEncryptionKeyId: '$encryptionKeyId'
+                            | data key service returned status code '${response.statusLine.statusCode}'"""
+                                            .trimMargin().replace("\n", ""))
                         else ->
                             throw DataKeyServiceUnavailableException(
-                                    """Decrypting encryptedKey: '$encryptedKey' with 
-                            |keyEncryptionKeyId: '$encryptionKeyId'
-                            |data key service returned status code '${response.statusLine.statusCode}'""".trimMargin())
+                                    """Decrypting encryptedKey: '$encryptedKey' with
+                            | keyEncryptionKeyId: '$encryptionKeyId'
+                            | data key service returned status code '${response.statusLine.statusCode}'"""
+                                            .trimMargin().replace("\n", ""))
                     }
 
                 }

@@ -36,7 +36,8 @@ import java.nio.charset.StandardCharsets
     "s3.prefix.folder=test/output/",
     "s3.key.regex=([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)",
     "s3.data.key.extension=\\.enc$",
-    "s3.metadata.key.extension=\\.encryption\\.json$"
+    "s3.metadata.key.extension=\\.encryption\\.json$",
+    "data.key.service.url=phoney"
 ])
 class S3ReaderTest {
 

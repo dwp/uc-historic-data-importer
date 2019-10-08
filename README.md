@@ -16,14 +16,6 @@ Ensure a JVM is installed and run the gradle wrapper.
 
     make build
 
-## Distribute
-
-If a standard zip file is required, just use the assembleDist command.
-
-    make dist
-
-This produces a zip and a tarball of the latest version.
-
 ## Run full local stack
 
 A full local stack can be run using the provided Dockerfile and Docker
@@ -46,6 +38,10 @@ Or completely removed including all data volumes:
 First bring up the containerized versions of hbase, aws and dks:
 
     make up-ancillary
+
+Then arrange for their docker level network names and IPs to be in your hosts files:
+
+    ./hosts.sh
 
 Create a run configuration with the environment variable `SPRING_CONFIG_LOCATION`
 pointing to `resources/application-ide.properties` and a main class of

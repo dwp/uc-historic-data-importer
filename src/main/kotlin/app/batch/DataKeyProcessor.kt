@@ -1,6 +1,7 @@
 package app.batch
 
 import app.domain.EncryptedStream
+import app.exceptions.DataKeyDecryptionException
 import app.services.KeyService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,15 +13,18 @@ import org.springframework.stereotype.Component
  */
 @Component
 class DataKeyProcessor(val keyService: KeyService): ItemProcessor<EncryptedStream, EncryptedStream> {
+
     override fun process(item: EncryptedStream): EncryptedStream {
         try {
             val encryptionMetadata = item.encryptionMetadata
-            val plaintextKey = keyService.decryptKey(encryptionMetadata.encryptionKeyId, encryptionMetadata.encryptedEncryptionKey)
+            val plaintextKey = keyService.decryptKey(encryptionMetadata.encryptionKeyId,
+                    encryptionMetadata.encryptedEncryptionKey)
             encryptionMetadata.plaintextDatakey = plaintextKey
             return item
         }
-        catch (e: Exception) {
-            item
+        catch (e: DataKeyDecryptionException) {
+            val message = "Failed to decrypt '${item.s3key}': '${e.message}'."
+            logger.error(message)
             throw e
         }
     }
