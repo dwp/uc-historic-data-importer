@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
+import java.io.InputStream
 
 @Configuration
 @EnableBatchProcessing
@@ -24,7 +25,7 @@ class JobConfiguration {
 
     @Bean
     fun importUserJob(step: Step) =
-        jobBuilderFactory.get("snapshotSenderJob")
+        jobBuilderFactory.get("ucHistoricDataImporterJob")
             .incrementer(RunIdIncrementer())
             .flow(step)
             .end()
@@ -33,7 +34,7 @@ class JobConfiguration {
     @Bean
     fun step() =
         stepBuilderFactory.get("step")
-            .chunk<EncryptedStream, EncryptedStream>(10)
+            .chunk<EncryptedStream, InputStream>(10)
             .reader(itemReader)
             .processor(itemProcessor())
             .writer(itemWriter)
@@ -45,22 +46,22 @@ class JobConfiguration {
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
-    fun itemProcessor(): ItemProcessor<EncryptedStream, EncryptedStream> =
-        CompositeItemProcessor<EncryptedStream, EncryptedStream>().apply {
-            setDelegates(listOf(decryptionProcessor, encryptionProcessor))
+    fun itemProcessor(): ItemProcessor<EncryptedStream, InputStream> =
+        CompositeItemProcessor<EncryptedStream, InputStream>().apply {
+            setDelegates(listOf(decryptionProcessor, decompressionProcessor))
         }
 
     @Autowired
     lateinit var itemReader: ItemReader<EncryptedStream>
 
     @Autowired
-    lateinit var encryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+    lateinit var decompressionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
-    lateinit var itemWriter: ItemWriter<EncryptedStream>
+    lateinit var itemWriter: ItemWriter<InputStream>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory
