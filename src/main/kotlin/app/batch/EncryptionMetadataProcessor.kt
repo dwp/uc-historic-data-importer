@@ -20,7 +20,6 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
 
     override fun process(item: InputStreamPair): EncryptedStream {
         try {
-
             return EncryptedStream(item.dataInputStream, encryptionMetadata(item), item.s3key)
         }
         catch (e: MetadataException) {
