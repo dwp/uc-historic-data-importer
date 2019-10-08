@@ -22,7 +22,7 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, InputStream> {
             return compressorInputStream
         }
         catch (e: Exception) {
-            val decompressionExceptionMsg = "Exception occurred when decompressing the gzip decrypted input stream from the file $fileName"
+            val decompressionExceptionMsg = "Exception occurred when decompressing the gzip decrypted input stream from the file $fileName : ${e.message}"
             logger.error(decompressionExceptionMsg)
             throw RuntimeException("$decompressionExceptionMsg : $e")
         }
