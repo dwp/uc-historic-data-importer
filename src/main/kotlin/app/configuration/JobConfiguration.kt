@@ -1,5 +1,6 @@
 package app.configuration
 
+import app.batch.DecryptedStream
 import app.batch.EncryptedStream
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
@@ -55,10 +56,10 @@ class JobConfiguration {
     lateinit var itemReader: ItemReader<EncryptedStream>
 
     @Autowired
-    lateinit var decompressionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+    lateinit var decompressionProcessor: ItemProcessor<DecryptedStream, InputStream>
 
     @Autowired
-    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
 
     @Autowired
     lateinit var itemWriter: ItemWriter<InputStream>

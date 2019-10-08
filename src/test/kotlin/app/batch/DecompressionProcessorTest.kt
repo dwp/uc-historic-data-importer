@@ -39,22 +39,12 @@ import java.nio.charset.StandardCharsets
 class DecompressionProcessorTest {
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
+    private val fileName = "test.json.gz"
 
     @Test
     fun Should_Decompress_Correctly_When_Given_Gzipped_Stream() {
 
-        val data = "dataworksdataworksdataworksdataworksdataworksdataworksdataworks"
-        val byteArray = data.toByteArray(StandardCharsets.UTF_8)
-        val testOutputStream = ByteArrayOutputStream()
-        val gzippedStream = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.GZIP,
-            testOutputStream)
-        gzippedStream.write(byteArray)
-        gzippedStream.close()
-
-        val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
-        val decryptedStream = DecryptedStream(inputStream, "test.json.gz")
-        val decompressionProcessor = DecompressionProcessor()
-        val decompressed = decompressionProcessor.process(decryptedStream) as GzipCompressorInputStream
+        val (data, decompressed) = decompress(CompressorStreamFactory.GZIP)
 
         assertEquals(IOUtils.toString(decompressed, StandardCharsets.UTF_8), data)
         assertEquals(0, data.length.compareTo(decompressed.uncompressedCount))
@@ -62,41 +52,19 @@ class DecompressionProcessorTest {
 
     @Test(expected = RuntimeException::class)
     fun Should_Throw_Exception_When_Given_Non_Gzipped_Stream() {
-        val data = "dataworksdataworksdataworksdataworksdataworksdataworksdataworks"
-        val byteArray = data.toByteArray(StandardCharsets.UTF_8)
-        val testOutputStream = ByteArrayOutputStream()
-        val bzippedStream = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-            testOutputStream)
-        bzippedStream.write(byteArray)
-        bzippedStream.close()
 
-        val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
-        val decryptedStream = DecryptedStream(inputStream, "test.json.bz2")
-        val decompressionProcessor = DecompressionProcessor()
-        decompressionProcessor.process(decryptedStream)
+        decompress(CompressorStreamFactory.BZIP2)
     }
 
     @Test
-    fun Should__Log_Compressed_Count_When_Given_Gzipped_Stream() {
+    fun Should_Log_Compressed_Count_When_Given_Gzipped_Stream() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
 
-        val data = "dataworksdataworksdataworksdataworksdataworksdataworksdataworks"
-        val byteArray = data.toByteArray(StandardCharsets.UTF_8)
-        val testOutputStream = ByteArrayOutputStream()
-        val bzippedStream = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.GZIP,
-            testOutputStream)
-        bzippedStream.write(byteArray)
-        bzippedStream.close()
-
-        val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
-        val fileName = "test.json.gz"
-        val decryptedStream = DecryptedStream(inputStream, fileName)
-        val decompressionProcessor = DecompressionProcessor()
-        val decompressed = decompressionProcessor.process(decryptedStream) as GzipCompressorInputStream
+        val (_, decompressed) = decompress(CompressorStreamFactory.GZIP)
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(1)).doAppend(captor.capture())
+        verify(mockAppender, times(2)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Compressed size of the file $fileName : ${decompressed.compressedCount}"))
     }
@@ -107,23 +75,27 @@ class DecompressionProcessorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
 
-        val data = "dataworksdataworksdataworksdataworksdataworksdataworksdataworks"
-        val byteArray = data.toByteArray(StandardCharsets.UTF_8)
-        val testOutputStream = ByteArrayOutputStream()
-        val bzippedStream = CompressorStreamFactory().createCompressorOutputStream(CompressorStreamFactory.BZIP2,
-            testOutputStream)
-        bzippedStream.write(byteArray)
-        bzippedStream.close()
-
-        val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
-        val fileName = "test.json.gz"
-        val decryptedStream = DecryptedStream(inputStream, fileName)
-        val decompressionProcessor = DecompressionProcessor()
-        decompressionProcessor.process(decryptedStream)
+        val (_, decompressed) = decompress(CompressorStreamFactory.BZIP2)
 
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(1)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Exception occurred when decompressing the gzip decrypted input stream from the file $fileName"))
+    }
+
+    private fun decompress(format: String): Pair<String, GzipCompressorInputStream> {
+        val data = "dataworksdataworksdataworksdataworksdataworksdataworksdataworks"
+        val byteArray = data.toByteArray(StandardCharsets.UTF_8)
+        val testOutputStream = ByteArrayOutputStream()
+        val zippedStream = CompressorStreamFactory().createCompressorOutputStream(format,
+            testOutputStream)
+        zippedStream.write(byteArray)
+        zippedStream.close()
+
+        val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
+        val decryptedStream = DecryptedStream(inputStream, fileName)
+        val decompressionProcessor = DecompressionProcessor()
+        val decompressed = decompressionProcessor.process(decryptedStream) as GzipCompressorInputStream
+        return Pair(data, decompressed)
     }
 }
