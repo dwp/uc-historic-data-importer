@@ -11,7 +11,7 @@ import java.io.ByteArrayInputStream
 class EncryptionMetadataProcessorTest {
 
     @Test
-    fun processOk() {
+    fun testWellFormedEncryptionMetadataOk() {
         val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
         val encryptionKeyId = "encryptionKeyId"
         val plaintextDatakey = "plaintextDatakey"
@@ -31,7 +31,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testMalformedNotOk() {
+    fun testMalformedEncryptionMetadataNotOk() {
         val s3key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
@@ -56,7 +56,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testExtraFieldsNotOk() {
+    fun testEncryptionMetadataWithExtraFieldsNotOk() {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
@@ -84,7 +84,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testMissingEncryptionKeyNotOk() {
+    fun testEncryptionMetadataWithMissingEncryptionKeyNotOk() {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
@@ -108,7 +108,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testMissingIvNotOk() {
+    fun testEncryptionMetadataWithMissingIvNotOk() {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
@@ -132,7 +132,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testMissingPlaintextDatakeyNotOk() {
+    fun testEncryptionMetadataWithMissingPlaintextDatakeyNotOk() {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
@@ -156,7 +156,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testMissingEncryptedEncryptionKeyDatakeyNotOk() {
+    fun testEncryptionMetadataWithMissingEncryptedEncryptionKeyDatakeyNotOk() {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
