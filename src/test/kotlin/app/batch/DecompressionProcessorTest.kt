@@ -70,7 +70,7 @@ class DecompressionProcessorTest {
         root.addAppender(mockAppender)
         val (_, decompressed) = decompress(CompressorStreamFactory.GZIP)
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(2)).doAppend(captor.capture())
+        verify(mockAppender, times(3)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Compressed size of the file $fileName : ${decompressed.compressedCount}"))
     }
