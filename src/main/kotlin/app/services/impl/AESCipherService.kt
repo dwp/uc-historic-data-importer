@@ -6,7 +6,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.security.Key
 import java.security.SecureRandom
@@ -17,7 +16,6 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Service
-@Profile("aesCipherService")
 class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
 
     init {
