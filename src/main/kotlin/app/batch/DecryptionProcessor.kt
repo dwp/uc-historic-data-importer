@@ -18,7 +18,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Component
-class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider): ItemProcessor<EncryptedStream, DecryptedStream> {
+class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : ItemProcessor<EncryptedStream, DecryptedStream> {
 
     init {
         Security.addProvider(BouncyCastleProvider())

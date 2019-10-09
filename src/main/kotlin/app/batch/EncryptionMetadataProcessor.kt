@@ -34,11 +34,11 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
 
     private fun encryptionMetadata(item: InputStreamPair): EncryptionMetadata {
         val metadata = ObjectMapper().readValue(item.metadataInputStream,
-                EncryptionMetadata::class.java)
-        assertNotBlank(item.s3key,"plaintextDatakey", metadata.plaintextDatakey)
-        assertNotBlank(item.s3key,"encryptedEncryptionKey", metadata.encryptedEncryptionKey)
-        assertNotBlank(item.s3key,"iv", metadata.iv)
-        assertNotBlank(item.s3key,"encryptionKeyId", metadata.encryptionKeyId)
+            EncryptionMetadata::class.java)
+        assertNotBlank(item.s3key, "plaintextDatakey", metadata.plaintextDatakey)
+        assertNotBlank(item.s3key, "encryptedEncryptionKey", metadata.encryptedEncryptionKey)
+        assertNotBlank(item.s3key, "iv", metadata.iv)
+        assertNotBlank(item.s3key, "encryptionKeyId", metadata.encryptionKeyId)
         return metadata
     }
 

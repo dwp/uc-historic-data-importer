@@ -12,6 +12,7 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
         mavenCentral()
+        jcenter()
 }
 
 tasks.bootJar {
@@ -36,6 +37,7 @@ dependencies {
         implementation("org.apache.hbase:hbase-client:2.2.0")
         implementation("org.apache.commons:commons-lang3:3.9")
 
+        implementation("com.beust", "klaxon", "4.0.2")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         testImplementation("org.springframework.batch:spring-batch-test")
         testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")

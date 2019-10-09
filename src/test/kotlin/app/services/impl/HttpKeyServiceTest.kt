@@ -90,7 +90,7 @@ class HttpKeyServiceTest {
         Assert.assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
         keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
         verify(httpClient, times(1))
-                .execute(ArgumentMatchers.any(HttpPost::class.java))
+            .execute(ArgumentMatchers.any(HttpPost::class.java))
     }
 
     @Test(expected = DataKeyDecryptionException::class)
@@ -104,7 +104,8 @@ class HttpKeyServiceTest {
             given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
             given(httpClientProvider.client()).willReturn(httpClient)
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-        } catch (e: DataKeyDecryptionException) {
+        }
+        catch (e: DataKeyDecryptionException) {
             val expected = """Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with
                 | keyEncryptionKeyId: '123'
                 | data key service returned status code '400'""".trimMargin().replace("\n", "")
@@ -124,7 +125,8 @@ class HttpKeyServiceTest {
             given(httpClient.execute(ArgumentMatchers.any(HttpPost::class.java))).willReturn(httpResponse)
             given(httpClientProvider.client()).willReturn(httpClient)
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
-        } catch (e: DataKeyServiceUnavailableException) {
+        }
+        catch (e: DataKeyServiceUnavailableException) {
             val expected = """Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with
             | keyEncryptionKeyId: '123'
             | data key service returned status code '503'""".trimMargin().replace(Regex("\n"), "")
