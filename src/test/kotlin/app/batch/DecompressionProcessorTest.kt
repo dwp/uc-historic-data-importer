@@ -1,6 +1,8 @@
 package app.batch
 
 import app.configuration.HttpClientProvider
+import app.domain.DecryptedStream
+import app.services.impl.HttpKeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -10,6 +12,7 @@ import com.nhaarman.mockitokotlin2.verify
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.io.IOUtils
+import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -39,6 +42,10 @@ import java.nio.charset.StandardCharsets
 class DecompressionProcessorTest {
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
+    private lateinit var connection: Connection
+
     private val fileName = "test.json.gz"
 
     @Test
@@ -61,10 +68,9 @@ class DecompressionProcessorTest {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
-
         val (_, decompressed) = decompress(CompressorStreamFactory.GZIP)
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(2)).doAppend(captor.capture())
+        verify(mockAppender, times(3)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Compressed size of the file $fileName : ${decompressed.compressedCount}"))
     }
@@ -75,7 +81,7 @@ class DecompressionProcessorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
 
-        val (_, decompressed) = decompress(CompressorStreamFactory.BZIP2)
+        decompress(CompressorStreamFactory.BZIP2)
 
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(1)).doAppend(captor.capture())
@@ -98,4 +104,7 @@ class DecompressionProcessorTest {
         val decompressed = decompressionProcessor.process(decryptedStream) as GzipCompressorInputStream
         return Pair(data, decompressed)
     }
+
+    @MockBean
+    private lateinit var httpKeyService: HttpKeyService
 }

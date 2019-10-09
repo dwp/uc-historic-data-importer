@@ -30,14 +30,18 @@ python-image: ## Build python image.
 dks-image: ## Build the dks image.
 	docker-compose build dks
 
+.PHONY: dks-insecure-image
+dks-insecure-image: ## Build the dks image.
+	docker-compose build dks-insecure
+
 
 .PHONY: s3-init-image
 s3-init-image: ## Build the image that creates the s3 bucket.
 	docker-compose build s3-init
 
 
-.PHONY: ancillary-images #  Build the supporting images.
-ancillary-images: java-image python-image dks-image s3-init-image  ## Build base images
+.PHONY: ancillary-images
+ancillary-images: java-image python-image dks-image dks-insecure s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build
@@ -54,7 +58,7 @@ build-image: ancillary-images build-jar ## Build all ecosystem of images
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d hbase s3 dks
+	docker-compose up -d hbase s3 dks dks-insecure
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \

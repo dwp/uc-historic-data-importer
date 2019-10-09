@@ -1,7 +1,6 @@
 package app.configuration
 
-import app.batch.DecryptedStream
-import app.batch.EncryptedStream
+import app.domain.*
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -24,6 +23,7 @@ import java.io.InputStream
 @Profile("batchRun")
 class JobConfiguration {
 
+
     @Bean
     fun importUserJob(step: Step) =
         jobBuilderFactory.get("ucHistoricDataImporterJob")
@@ -35,7 +35,7 @@ class JobConfiguration {
     @Bean
     fun step() =
         stepBuilderFactory.get("step")
-            .chunk<EncryptedStream, InputStream>(10)
+            .chunk<InputStreamPair, InputStream>(10)
             .reader(itemReader)
             .processor(itemProcessor())
             .writer(itemWriter)
@@ -47,22 +47,31 @@ class JobConfiguration {
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
-    fun itemProcessor(): ItemProcessor<EncryptedStream, InputStream> =
-        CompositeItemProcessor<EncryptedStream, InputStream>().apply {
-            setDelegates(listOf(decryptionProcessor, decompressionProcessor,messageProcessor))
+    fun itemProcessor(): ItemProcessor<InputStreamPair, InputStream> =
+        CompositeItemProcessor<InputStreamPair, InputStream>().apply {
+            setDelegates(listOf(encryptionMetadataProcessor,
+                datakeyProcessor,
+                decryptionProcessor,
+                decompressionProcessor, messageProcessor))
         }
 
     @Autowired
-    lateinit var itemReader: ItemReader<EncryptedStream>
+    lateinit var itemReader: ItemReader<InputStreamPair>
 
     @Autowired
-    lateinit var decompressionProcessor: ItemProcessor<DecryptedStream, InputStream>
+    lateinit var encryptionMetadataProcessor: ItemProcessor<InputStreamPair, EncryptedStream>
+
+    @Autowired
+    lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
+
+    @Autowired
+    lateinit var decompressionProcessor: ItemProcessor<DecryptedStream, DecompressedStream>
 
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
 
     @Autowired
-    lateinit var messageProcessor: ItemProcessor<InputStream, InputStream>
+    lateinit var messageProcessor: ItemProcessor<DecompressedStream, InputStream>
 
     @Autowired
     lateinit var itemWriter: ItemWriter<InputStream>

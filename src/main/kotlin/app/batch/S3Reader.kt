@@ -1,27 +1,19 @@
 package app.batch
 
+import app.domain.InputStreamPair
+import app.domain.S3ObjectSummaryPair
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.nio.charset.StandardCharsets
-
 
 @Component
-class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
+class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: KeyPairGenerator) : ItemReader<InputStreamPair> {
 
-    @Autowired
-    private lateinit var s3Client: AmazonS3
-    @Autowired
-    private lateinit var keyPairGenerator: KeyPairGenerator
     private var iterator: ListIterator<S3ObjectSummaryPair>? = null
 
     @Value("\${s3.bucket}")
@@ -39,18 +31,13 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
     @Value("\${s3.metadata.key.extension:\\.encryption\\.json$}")
     private lateinit var s3MetadataKeyExtension: String
 
-    override fun read(): EncryptedStream? {
-        val iterator = getS3ObjectSummariesIterator(s3Client, s3BucketName)
+    override fun read(): InputStreamPair? {
+        val iterator = getS3ObjectSummariesIterator(s3client, s3BucketName)
         return if (iterator.hasNext()) {
             iterator.next().let {
-                val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
-                val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3Client, s3BucketName) }
-                // Uncomment the below code
-                // return EncryptedStream(dataInputStream, metadataInputStream)
-                // The below code is to satisfy the acceptance criteria of DW-2426 and can be removed later
-                val clonedDataInputStream = cloneAndPrintInputStream(dataInputStream)
-                val clonedmetadataInputStream = cloneAndPrintInputStream(metadataInputStream)
-                return EncryptedStream(clonedDataInputStream, clonedmetadataInputStream)
+                val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
+                val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
+                return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key)
             }
         }
         else {
@@ -80,21 +67,6 @@ class S3Reader(private val s3client: AmazonS3) : ItemReader<EncryptedStream> {
 
     private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
         return s3Client.getObject(bucketName, os.key).objectContent
-    }
-
-    // The below function  is to satisfy the acceptance criteria of DW-2426 and can be removed later
-    private fun cloneAndPrintInputStream(inputStream: S3ObjectInputStream?): InputStream {
-        val result = ByteArrayOutputStream()
-        val buffer = ByteArray(1024)
-        var length = 0
-        while (length != -1) {
-            result.write(buffer, 0, length)
-            length = inputStream?.read(buffer)!!
-        }
-
-        val copy = ByteArrayInputStream(result.toByteArray())
-        logger.info(result.toString(StandardCharsets.UTF_8.name()))
-        return copy
     }
 
     companion object {
