@@ -35,7 +35,8 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
             while ({ line = reader.readLine(); line }() != null) {
                 try {
                     val parser: Parser = Parser.default()
-                    val json = line?.let { notNullLine -> parser.parse(notNullLine) } as JsonObject
+                    val stringBuilder = StringBuilder(line)
+                    val json = parser.parse(stringBuilder) as JsonObject
                     id = getId(json, fileName)?.toJsonString()
                     logger.info("Parsing DB object of id $id  in the file $fileName")
                 }
@@ -64,7 +65,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                 line.toByteArray())
         }
         catch (e: Exception) {
-            DbObjectEncryptor.logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
+            logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
             throw e
         }
     }
@@ -74,7 +75,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
             return keyService.batchDataKey()
         }
         catch (e: Exception) {
-            DbObjectEncryptor.logger.error("Error while creating data key for the file  $fileName: $e")
+            logger.error("Error while creating data key for the file  $fileName: $e")
             throw e
         }
     }

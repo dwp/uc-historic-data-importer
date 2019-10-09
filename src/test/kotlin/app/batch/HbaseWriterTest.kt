@@ -10,7 +10,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.*
 import org.apache.hadoop.hbase.client.Connection
-import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,20 +38,9 @@ import java.io.ByteArrayOutputStream
 ])
 class HbaseWriterTest {
 
-    val invalidJson1 = """
-            {"_id":{"declarationId":"47a4fad9-49af-4cb2-91b0-0056e2ac0eef"},
-            "type":"addressDeclaration"
-        """.trimIndent()
-    val invalidJson2 = """
-            {
-            "type":"addressDeclaration"
-            }
-        """.trimIndent()
-    val validJson = """
-            {"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},
-            "type":"addressDeclaration"
-            }
-        """.trimIndent()
+    val invalidJson1 = """{"_id":{"declarationId":"47a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
+    val invalidJson2 = """{"type":"addressDeclaration"}""".trimIndent()
+    val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
     val fileName1 = "file1"
 
     @MockBean
@@ -75,23 +63,23 @@ class HbaseWriterTest {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
-        whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("","",""))
-        whenever(cipherService.encrypt(any(), any())).thenReturn(EncryptionResult("",""))
-        val data = listOf(invalidJson1,invalidJson2, validJson)
+        whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
+        whenever(cipherService.encrypt(any(), any())).thenReturn(EncryptionResult("", ""))
+        val data = listOf(invalidJson1, invalidJson2, validJson)
         val inputStreams = mutableListOf(getInputStream(data, fileName1))
         hBaseWriter.write(inputStreams)
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(2)).doAppend(captor.capture())
+        verify(mockAppender, times(3)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("Parsing DB object of id {\"declarationId\":\"87a4fad9-49af-4cb2-91b0-0056e2ac0eef\"} in the file file1"))
-        assertTrue(formattedMessages.contains("DB object  does not contain _id field"))
-        //assertTrue(formattedMessages.contains("Error while parsing the file file1: "))
+        assertTrue(formattedMessages.contains("Parsing DB object of id null  in the file file1"))
+        assertTrue(formattedMessages.contains("Parsing DB object of id {\"declarationId\":\"87a4fad9-49af-4cb2-91b0-0056e2ac0eef\"}  in the file file1"))
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()
         data1.forEach {
-            baos.write(it.toByteArray())
+            val nl = it + "\n"
+            baos.write(nl.toByteArray())
         }
         val inputStream = ByteArrayInputStream(baos.toByteArray())
         return DecompressedStream(inputStream, fileName)
