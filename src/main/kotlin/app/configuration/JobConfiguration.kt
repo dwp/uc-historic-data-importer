@@ -1,6 +1,9 @@
 package app.configuration
 
-import app.domain.*
+import app.domain.DecompressedStream
+import app.domain.DecryptedStream
+import app.domain.EncryptedStream
+import app.domain.InputStreamPair
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -16,7 +19,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
-import java.io.InputStream
 
 @Configuration
 @EnableBatchProcessing
