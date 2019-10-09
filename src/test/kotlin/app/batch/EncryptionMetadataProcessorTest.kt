@@ -88,7 +88,6 @@ class EncryptionMetadataProcessorTest {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
-            val encryptionKeyId = "encryptionKeyId"
             val plaintextDatakey = "plaintextDatakey"
             val encryptedEncryptionKey = "encryptedEncryptionKey"
             val iv = "iv"
@@ -116,7 +115,6 @@ class EncryptionMetadataProcessorTest {
             val encryptionKeyId = "encryptionKeyId"
             val plaintextDatakey = "plaintextDatakey"
             val encryptedEncryptionKey = "encryptedEncryptionKey"
-            val iv = "iv"
             val invalidJson = """{
                 "encryptionKeyId": "$encryptionKeyId",
                 "plaintextDatakey": "$plaintextDatakey",   
@@ -139,7 +137,6 @@ class EncryptionMetadataProcessorTest {
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
             val encryptionKeyId = "encryptionKeyId"
-            val plaintextDatakey = "plaintextDatakey"
             val encryptedEncryptionKey = "encryptedEncryptionKey"
             val iv = "iv"
             val invalidJson = """{
@@ -165,7 +162,6 @@ class EncryptionMetadataProcessorTest {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
             val encryptionKeyId = "encryptionKeyId"
             val plaintextDatakey = "plaintextDatakey"
-            val encryptedEncryptionKey = "encryptedEncryptionKey"
             val iv = "iv"
             val invalidJson = """{
                 "plaintextDatakey": "$plaintextDatakey",

@@ -31,6 +31,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                     val parser: Parser = Parser.default()
                     val json = line?.let { notNullLine -> parser.parse(notNullLine) } as JsonObject
                     id = getId(json)?.toJsonString()
+                    
                 }
                 catch (e: Exception) {
                     logger.error("Error while parsing id $id  in the file $fileName: $e ")
