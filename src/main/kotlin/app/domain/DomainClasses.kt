@@ -15,3 +15,4 @@ data class EncryptionMetadata (val encryptionKeyId: String = "",
 
 data class EncryptedStream(val dataInputStream: InputStream, val encryptionMetadata: EncryptionMetadata, val s3key: String)
 data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKey: String, val ciphertextDataKey: String)
+data class DecryptedStream(val inputStream: InputStream, val fileName: String)

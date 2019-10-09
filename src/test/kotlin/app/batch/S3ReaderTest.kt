@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -62,6 +63,9 @@ class S3ReaderTest {
 
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
+    private lateinit var connection: Connection
 
     @Before
     fun setUp() {

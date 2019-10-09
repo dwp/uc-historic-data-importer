@@ -1,5 +1,6 @@
 package app.configuration
 
+import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.domain.InputStreamPair
 import org.springframework.batch.core.Step
@@ -18,15 +19,17 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
 import java.io.InputStream
+import javax.crypto.Cipher
 
 @Configuration
 @EnableBatchProcessing
 @Profile("batchRun")
 class JobConfiguration {
 
+
     @Bean
     fun importUserJob(step: Step) =
-        jobBuilderFactory.get("snapshotSenderJob")
+        jobBuilderFactory.get("ucHistoricDataImporterJob")
             .incrementer(RunIdIncrementer())
             .flow(step)
             .end()
@@ -64,6 +67,11 @@ class JobConfiguration {
     @Autowired
     lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
+    @Autowired
+    lateinit var decompressionProcessor: ItemProcessor<DecryptedStream, InputStream>
+
+//    @Autowired
+//    lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
     @Autowired
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, InputStream>
 

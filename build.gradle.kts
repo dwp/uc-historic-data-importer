@@ -30,7 +30,7 @@ dependencies {
         implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
         implementation("org.apache.httpcomponents:httpclient:4.5.9")
         implementation("com.google.code.gson:gson:2.8.5")
-        implementation("org.apache.commons:commons-compress:1.5")
+        implementation("org.apache.commons:commons-compress:1.17")
         implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
         implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
         implementation("org.apache.hbase:hbase-client:2.2.0")
@@ -47,3 +47,4 @@ tasks.withType<KotlinCompile> {
                 jvmTarget = "1.8"
         }
 }
+

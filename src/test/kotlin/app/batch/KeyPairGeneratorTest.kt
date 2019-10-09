@@ -8,6 +8,7 @@ import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -40,6 +41,9 @@ class KeyPairGeneratorTest {
     private lateinit var keyPairGenerator: KeyPairGenerator
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
+    private lateinit var connection: Connection
 
     @Test
     fun Should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {

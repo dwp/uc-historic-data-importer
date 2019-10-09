@@ -11,9 +11,19 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import java.security.SecureRandom
+import javax.crypto.Cipher
 
 @Configuration
 class ContextConfiguration {
+
+    @Bean
+    fun bcCipherInstanceProvider(): CipherInstanceProvider {
+        return object: CipherInstanceProvider {
+            override fun cipherInstance(): Cipher {
+                return Cipher.getInstance("AES/CTR/NoPadding", "BC")
+            }
+        }
+    }
 
     @Bean
     @Profile("insecureHttpClient")

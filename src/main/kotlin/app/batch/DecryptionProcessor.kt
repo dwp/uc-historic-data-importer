@@ -1,6 +1,8 @@
 package app.batch
 
+import app.configuration.CipherInstanceProvider
 import app.configuration.HttpClientProvider
+import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DecryptionException
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -18,7 +20,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Component
-class DecryptionProcessor: ItemProcessor<EncryptedStream, InputStream> {
+class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider): ItemProcessor<EncryptedStream, InputStream> {
 
     init {
         Security.addProvider(BouncyCastleProvider())
@@ -30,9 +32,13 @@ class DecryptionProcessor: ItemProcessor<EncryptedStream, InputStream> {
             val iv = item.encryptionMetadata.iv
             val inputStream = item.dataInputStream
             val keySpec: Key = SecretKeySpec(dataKey.toByteArray(), "AES")
-            val cipher = Cipher.getInstance(cipherAlgorithm, "BC").apply {
+//            val cipher = Cipher.getInstance(cipherAlgorithm, "BC").apply {
+//                init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
+//            }
+            val cipher = cipherInstanceProvider.cipherInstance().apply {
                 init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
             }
+            //return DecryptedStream(CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher), item.s3key)
             return CipherInputStream(Base64.getDecoder().wrap(inputStream), cipher)
         }
         catch (e: Exception) {
