@@ -50,7 +50,7 @@ class EncryptionMetadataProcessorTest {
         catch (e: MetadataException) {
             val message = "Failed to parse encryption metadata for '$s3key'."
             assertEquals(message, e.message)
-            throw e;
+            throw e
         }
     }
 

@@ -110,7 +110,7 @@ class HttpKeyServiceTest {
                 | keyEncryptionKeyId: '123'
                 | data key service returned status code '400'""".trimMargin().replace("\n", "")
             Assert.assertEquals(expected, e.message)
-            throw e;
+            throw e
         }
     }
 

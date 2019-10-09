@@ -41,7 +41,7 @@ First bring up the containerized versions of hbase, aws and dks:
 
 Then arrange for their docker level network names and IPs to be in your hosts files:
 
-    ./hosts.sh
+    make hosts
 
 Create a run configuration with the environment variable `SPRING_CONFIG_LOCATION`
 pointing to `resources/application-ide.properties` and a main class of

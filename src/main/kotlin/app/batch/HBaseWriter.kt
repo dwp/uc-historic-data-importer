@@ -2,6 +2,9 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
+import app.domain.EncryptionResult
+import app.services.CipherService
+import app.services.KeyService
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import org.apache.hadoop.hbase.client.Connection
@@ -17,36 +20,62 @@ import java.io.InputStreamReader
 class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedStream> {
 
     @Autowired
-    private lateinit var dbObjectGenerator: DbObjectEncryptor
+    private lateinit var cipherService: CipherService
+
+    @Autowired
+    private lateinit var keyService: KeyService
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
             val fileName = it.fileName
-            val dataKeyResult: DataKeyResult = dbObjectGenerator.getDataKey(fileName)
+            val dataKeyResult: DataKeyResult = getDataKey(fileName)
             val reader = BufferedReader(InputStreamReader(it.inputStream))
             var line: String? = null
-            var id: String? = null
+            var id: String?
             while ({ line = reader.readLine(); line }() != null) {
                 try {
                     val parser: Parser = Parser.default()
                     val json = line?.let { notNullLine -> parser.parse(notNullLine) } as JsonObject
-                    id = getId(json)?.toJsonString()
+                    id = getId(json, fileName)?.toJsonString()
+                    logger.info("Parsing DB object of id $id  in the file $fileName")
                 }
                 catch (e: Exception) {
-                    logger.error("Error while parsing id $id  in the file $fileName: $e ")
+                    logger.error("Error while parsing the file $fileName: $e")
                     continue
                 }
-                dbObjectGenerator.encryptDbObject(dataKeyResult, line!!, fileName, id)
+                encryptDbObject(dataKeyResult, line!!, fileName, id)
             }
         }
     }
 
-    fun getId(json: JsonObject): JsonObject? {
+    fun getId(json: JsonObject, fileName: String): JsonObject? {
         return try {
-             json.obj("_id")
-        } catch (e: Exception) {
-            logger.warn("DB object  does not contain _id field")
+            json.obj("_id")
+        }
+        catch (e: Exception) {
+            logger.warn("DB object  does not contain _id field in the file $fileName")
             null
+        }
+    }
+
+    fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?): EncryptionResult {
+        try {
+            return cipherService.encrypt(dataKeyResult.plaintextDataKey,
+                line.toByteArray())
+        }
+        catch (e: Exception) {
+            DbObjectEncryptor.logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
+            throw e
+        }
+    }
+
+    fun getDataKey(fileName: String): DataKeyResult {
+        try {
+            return keyService.batchDataKey()
+        }
+        catch (e: Exception) {
+            DbObjectEncryptor.logger.error("Error while creating data key for the file  $fileName: $e")
+            throw e
         }
     }
 

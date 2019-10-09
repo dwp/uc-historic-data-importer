@@ -23,7 +23,6 @@ import java.io.InputStream
 @Profile("batchRun")
 class JobConfiguration {
 
-
     @Bean
     fun importUserJob(step: Step) =
         jobBuilderFactory.get("ucHistoricDataImporterJob")
@@ -35,7 +34,7 @@ class JobConfiguration {
     @Bean
     fun step() =
         stepBuilderFactory.get("step")
-            .chunk<InputStreamPair, InputStream>(10)
+            .chunk<InputStreamPair, DecompressedStream>(10)
             .reader(itemReader)
             .processor(itemProcessor())
             .writer(itemWriter)
@@ -47,12 +46,12 @@ class JobConfiguration {
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
-    fun itemProcessor(): ItemProcessor<InputStreamPair, InputStream> =
-        CompositeItemProcessor<InputStreamPair, InputStream>().apply {
+    fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> =
+        CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
             setDelegates(listOf(encryptionMetadataProcessor,
                 datakeyProcessor,
                 decryptionProcessor,
-                decompressionProcessor, messageProcessor))
+                decompressionProcessor))
         }
 
     @Autowired
@@ -71,10 +70,7 @@ class JobConfiguration {
     lateinit var decryptionProcessor: ItemProcessor<EncryptedStream, DecryptedStream>
 
     @Autowired
-    lateinit var messageProcessor: ItemProcessor<DecompressedStream, InputStream>
-
-    @Autowired
-    lateinit var itemWriter: ItemWriter<InputStream>
+    lateinit var itemWriter: ItemWriter<DecompressedStream>
 
     @Autowired
     lateinit var jobBuilderFactory: JobBuilderFactory

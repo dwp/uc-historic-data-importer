@@ -1,6 +1,6 @@
 package app.services.impl
 
-import app.batch.EncryptionResult
+import app.domain.EncryptionResult
 import app.services.CipherService
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
