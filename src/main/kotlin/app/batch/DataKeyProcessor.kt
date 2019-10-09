@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DataKeyDecryptionException
 import app.services.KeyService

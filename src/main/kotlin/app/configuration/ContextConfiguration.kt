@@ -17,7 +17,7 @@ import javax.crypto.Cipher
 class ContextConfiguration {
 
     @Bean
-    fun bcCipherInstanceProvider(): CipherInstanceProvider {
+    fun cipherInstanceProvider(): CipherInstanceProvider {
         return object: CipherInstanceProvider {
             override fun cipherInstance(): Cipher {
                 return Cipher.getInstance("AES/CTR/NoPadding", "BC")

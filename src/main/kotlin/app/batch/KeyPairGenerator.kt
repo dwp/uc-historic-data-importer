@@ -17,7 +17,7 @@ class KeyPairGenerator {
         val keyPairs = matched.map {
             logger.info("Matched key : ${it.key} Value : ${it.value} \n")
             val neitherDataNorMetadataKey = it.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
-            logger.warn("${neitherDataNorMetadataKey.joinToString(",")} matched file format but not matched neither data nor metadata file extension")
+//            logger.warn("${neitherDataNorMetadataKey.joinToString(",")} matched file format but not matched neither data nor metadata file extension")
             val dataKey = it.value.find { ti -> ti.contains(dataFileExtension) }
             val metadatakey = it.value.find { ti -> ti.contains(metadataFileExtension) }
             KeyPair(dataKey, metadatakey)

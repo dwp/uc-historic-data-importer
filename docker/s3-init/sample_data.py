@@ -12,6 +12,7 @@ optional arguments:
   -k DATA_KEY_SERVICE, --data-key-service DATA_KEY_SERVICE
                         Use the specified data key service.
   -c, --compress        Compress before encryption.
+  -e, --encrypt         Encrypt the data.
 """
 
 import argparse
@@ -45,11 +46,13 @@ def main():
             print("Compressing prior to encryption.")
             compressed = gzip.compress(contents.encode())
             [encryption_metadata['iv'], encrypted_contents] = \
-                encrypt(encryption_metadata['plaintextDatakey'], compressed)
+                encrypt(encryption_metadata['plaintextDatakey'], compressed,
+                        args.encrypt)
         else:
             print("Not compressing prior to encryption.")
             [encryption_metadata['iv'], encrypted_contents] = \
-                encrypt(encryption_metadata['plaintextDatakey'], contents.encode("utf8"))
+                encrypt(encryption_metadata['plaintextDatakey'],
+                        contents.encode("utf8"), args.encrypt)
 
 
         metadata_file = f'adb.collection.{i:04d}.json.gz.encryption.json'
@@ -57,11 +60,11 @@ def main():
             json.dump(encryption_metadata, metadata, indent=4)
 
         data_file = f'adb.collection.{i:04d}.json.gz.enc'
-        with open(data_file, 'w') as data:
+        with open(data_file, 'wb') as data:
             data.write(encrypted_contents)
 
 
-def encrypt(datakey, unencrypted_bytes):
+def encrypt(datakey, unencrypted_bytes, do_encryption):
     """Encrypts the supplied bytes with the supplied key.
     Returns the initialisation vector and the encrypted data as a tuple.
     """
@@ -69,9 +72,17 @@ def encrypt(datakey, unencrypted_bytes):
     iv_int = int(binascii.hexlify(initialisation_vector), 16)
     counter = Counter.new(AES.block_size * 8, initial_value=iv_int)
     aes = AES.new(datakey.encode("ascii"), AES.MODE_CTR, counter=counter)
-    ciphertext = aes.encrypt(unencrypted_bytes)
-    return (base64.b64encode(initialisation_vector).decode('ascii'),
-            base64.b64encode(ciphertext).decode('ascii'))
+
+
+    if do_encryption:
+        print("Encrypting")
+        ciphertext = aes.encrypt(unencrypted_bytes)
+        return (base64.b64encode(initialisation_vector).decode('ascii'),
+                base64.b64encode(ciphertext))
+    else:
+        print("Not encrypting.")
+        return (base64.b64encode(initialisation_vector).decode('ascii'),
+                unencrypted_bytes)
 
 def db_object_json():
     """Returns a sample dbRecord object with unique ids."""
@@ -134,6 +145,8 @@ def command_line_args():
                         help='Use the specified data key service.')
     parser.add_argument('-c', '--compress', action='store_true',
                         help='Compress before encryption.')
+    parser.add_argument('-e', '--encrypt', action='store_true',
+                        help='Encrypt the data.')
     return parser.parse_args()
 
 if __name__ == "__main__":
