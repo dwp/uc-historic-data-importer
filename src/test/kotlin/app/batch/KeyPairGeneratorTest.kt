@@ -1,12 +1,14 @@
 package app.batch
 
 import app.configuration.HttpClientProvider
+import app.domain.KeyPair
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -26,7 +28,8 @@ import org.springframework.test.context.junit4.SpringRunner
     "hbase.zookeeper.quorum=hbase",
     "aws.region=eu-west-1",
     "s3.bucket=not_set",
-    "s3.prefix.folder=not_set"
+    "s3.prefix.folder=not_set",
+    "data.key.service.url=phoney"
 ])
 class KeyPairGeneratorTest {
 
@@ -39,11 +42,14 @@ class KeyPairGeneratorTest {
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
 
+    @MockBean
+    private lateinit var connection: Connection
+
     @Test
     fun Should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+                KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
             "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
@@ -61,8 +67,8 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+                KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
             "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
@@ -86,8 +92,8 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+                KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
             "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
@@ -110,7 +116,7 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
             "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",

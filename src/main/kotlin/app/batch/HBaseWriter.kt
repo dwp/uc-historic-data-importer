@@ -10,9 +10,11 @@ import java.io.InputStream
 @Component
 class HBaseWriter(private val connection: Connection) : ItemWriter<InputStream> {
     override fun write(items: MutableList<out InputStream>) {
-        logger.info("connection: '$connection'.")
         items.forEach {
-            logger.info("it: '$it'.")
+            it.buffered().use {
+                val contents = it.readBytes()
+                logger.info("${String(contents)}")
+            }
         }
     }
 

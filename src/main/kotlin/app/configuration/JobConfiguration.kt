@@ -1,7 +1,8 @@
 package app.configuration
 
-import app.batch.DecryptedStream
-import app.batch.EncryptedStream
+import app.domain.DecryptedStream
+import app.domain.EncryptedStream
+import app.domain.InputStreamPair
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -18,11 +19,13 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
 import java.io.InputStream
+import javax.crypto.Cipher
 
 @Configuration
 @EnableBatchProcessing
 @Profile("batchRun")
 class JobConfiguration {
+
 
     @Bean
     fun importUserJob(step: Step) =
@@ -35,7 +38,7 @@ class JobConfiguration {
     @Bean
     fun step() =
         stepBuilderFactory.get("step")
-            .chunk<EncryptedStream, InputStream>(10)
+            .chunk<InputStreamPair, InputStream>(10)
             .reader(itemReader)
             .processor(itemProcessor())
             .writer(itemWriter)
@@ -47,13 +50,22 @@ class JobConfiguration {
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
-    fun itemProcessor(): ItemProcessor<EncryptedStream, InputStream> =
-        CompositeItemProcessor<EncryptedStream, InputStream>().apply {
-            setDelegates(listOf(decryptionProcessor, decompressionProcessor))
+    fun itemProcessor(): ItemProcessor<InputStreamPair, InputStream> =
+        CompositeItemProcessor<InputStreamPair, InputStream>().apply {
+            setDelegates(listOf(encryptionMetadataProcessor,
+                                datakeyProcessor,
+                                decryptionProcessor,
+                                decompressionProcessor))
         }
 
     @Autowired
-    lateinit var itemReader: ItemReader<EncryptedStream>
+    lateinit var itemReader: ItemReader<InputStreamPair>
+
+    @Autowired
+    lateinit var encryptionMetadataProcessor: ItemProcessor<InputStreamPair, EncryptedStream>
+
+    @Autowired
+    lateinit var datakeyProcessor: ItemProcessor<EncryptedStream, EncryptedStream>
 
     @Autowired
     lateinit var decompressionProcessor: ItemProcessor<DecryptedStream, InputStream>
@@ -70,6 +82,6 @@ class JobConfiguration {
     @Autowired
     lateinit var stepBuilderFactory: StepBuilderFactory
 
-    @Value("\${thread.count:10}")
+    @Value("\${thread.count:1}")
     lateinit var threadCount: String;
 }

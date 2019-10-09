@@ -33,3 +33,7 @@ out/
 *.jks
 *.crt
 cacerts*
+*.json.gz.enc
+*.json.gz.encryption.json
+venv/
+__pycache__
