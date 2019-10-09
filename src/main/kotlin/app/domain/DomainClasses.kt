@@ -1,7 +1,6 @@
 package app.domain
 
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import com.fasterxml.jackson.annotation.JsonCreator
 import java.io.InputStream
 
 data class KeyPair(val dataKey: String?, val metadataKey: String?)

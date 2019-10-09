@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.task.SimpleAsyncTaskExecutor
 import java.io.InputStream
-import javax.crypto.Cipher
 
 @Configuration
 @EnableBatchProcessing
@@ -83,5 +82,5 @@ class JobConfiguration {
     lateinit var stepBuilderFactory: StepBuilderFactory
 
     @Value("\${thread.count:1}")
-    lateinit var threadCount: String;
+    lateinit var threadCount: String
 }

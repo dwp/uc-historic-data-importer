@@ -1,7 +1,6 @@
 package app.batch
 
 import app.configuration.CipherInstanceProvider
-import app.configuration.HttpClientProvider
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DecryptionException
@@ -10,7 +9,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import java.io.InputStream
 import java.security.Key
 import java.security.Security
 import java.util.*

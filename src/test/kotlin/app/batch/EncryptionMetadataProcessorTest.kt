@@ -3,9 +3,8 @@ package app.batch
 import app.domain.EncryptionMetadata
 import app.domain.InputStreamPair
 import app.exceptions.MetadataException
+import org.junit.Assert.assertEquals
 import org.junit.Test
-
-import org.junit.Assert.*
 import java.io.ByteArrayInputStream
 
 class EncryptionMetadataProcessorTest {
@@ -51,7 +50,7 @@ class EncryptionMetadataProcessorTest {
         catch (e: MetadataException) {
             val message = "Failed to parse encryption metadata for '$s3key'."
             assertEquals(message, e.message)
-            throw e;
+            throw e
         }
     }
 
