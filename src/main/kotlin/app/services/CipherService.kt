@@ -1,6 +1,6 @@
 package app.services
 
-import app.batch.EncryptionResult
+import app.domain.EncryptionResult
 
 
 interface CipherService {
