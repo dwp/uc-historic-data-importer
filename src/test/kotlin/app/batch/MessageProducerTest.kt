@@ -6,13 +6,15 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
+import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
 import junit.framework.Assert.assertEquals
 import org.everit.json.schema.loader.SchemaLoader
 import org.json.JSONObject
 import org.json.JSONTokener
 import org.junit.Test
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class MessageProducerTest {
@@ -161,9 +163,19 @@ class MessageProducerTest {
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
         val database = "database"
         val collection = "collection"
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
+        logger.addAppender(mockAppender)
+        val captor = argumentCaptor<ILoggingEvent>()
+
         val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+
         val expected = ""
         assertEquals(expected, actual)
+        verify(mockAppender, times(1)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        val expectedMessage = """No '_lastModifiedDateTime' in record '{"idField":"$idFieldValue","anotherIdField":"$anotherIdFieldValue"}' from '$database/$collection'."""
+        assertEquals(expectedMessage, formattedMessages[0])
     }
 
     @Test
@@ -193,9 +205,18 @@ class MessageProducerTest {
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
         val database = "database"
         val collection = "collection"
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
+        logger.addAppender(mockAppender)
+        val captor = argumentCaptor<ILoggingEvent>()
         val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+
         val expected = ""
         assertEquals(expected, actual)
+        verify(mockAppender, times(1)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        val expectedMessage = """No '_lastModifiedDateTime' in record '{"idField":"$idFieldValue","anotherIdField":"$anotherIdFieldValue"}' from '$database/$collection'."""
+        assertEquals(expectedMessage, formattedMessages[0])
     }
 
     @Test
@@ -223,12 +244,17 @@ class MessageProducerTest {
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
         val database = "database"
         val collection = "collection"
-        val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
         val expected = ""
         val mockAppender: Appender<ILoggingEvent> = mock()
-        val logger: Logger = LoggerFactory.getLogger(MessageProducer::class.toString())
-        //logger.add
+        val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
+        logger.addAppender(mockAppender)
+        val captor = argumentCaptor<ILoggingEvent>()
+        val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
         assertEquals(expected, actual)
+        verify(mockAppender, times(1)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        val expectedMessage = """No '_lastModifiedDateTime' in record '{"idField":"$idFieldValue","anotherIdField":"$anotherIdFieldValue"}' from '$database/$collection'."""
+        assertEquals(expectedMessage, formattedMessages[0])
     }
 
     private fun validate(json: String) = schemaLoader().load().build().validate(JSONObject(json))
