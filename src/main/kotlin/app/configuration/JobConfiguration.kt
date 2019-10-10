@@ -81,5 +81,5 @@ class JobConfiguration {
     lateinit var stepBuilderFactory: StepBuilderFactory
 
     @Value("\${thread.count:10}")
-    lateinit var threadCount: String;
+    lateinit var threadCount: String
 }

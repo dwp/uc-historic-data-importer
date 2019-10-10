@@ -30,7 +30,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
         items.forEach {
             val fileName = it.fileName
             val filenamePattern = """(?<database>[a-z-]+)\.(?<collection>[a-z-]+)\.\d+\.json\.gz\.enc$"""
-            val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE);
+            val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 val groups = matchResult.groups
