@@ -3,6 +3,7 @@ package app.batch
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
 import com.beust.klaxon.JsonObject
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -12,15 +13,15 @@ class MessageProducer {
                        dataKeyResult: DataKeyResult,
                        database: String,
                        collection: String): String {
-
         val id = jsonObject.obj("_id")?.toJsonString()!!
-        val modified = jsonObject.obj("_lastModifiedDateTime")//?.obj("\$date")
+        val modified = jsonObject.obj("_lastModifiedDateTime")
         val date = modified?.get("\$date")
-        logger.info("$date")
-        return if (modified != null) {
+        val dateStr = if (date != null) date as String else ""
+        val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
+        return if (StringUtils.isNotBlank(dateStr)) {
                 """{
                 |   "message": {
-                |       "@type": "MONGO_UPDATE",
+                |       "@type": "$type",
                 |       "_id": $id,
                 |       "_lastModifiedDateTime": "$date",
                 |       "collection" : "$collection",

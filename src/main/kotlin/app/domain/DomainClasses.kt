@@ -17,4 +17,3 @@ data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKe
 data class DecryptedStream(val inputStream: InputStream, val fileName: String)
 data class DecompressedStream(val inputStream: InputStream, val fileName: String)
 data class EncryptionResult(val initialisationVector: String, val encrypted: String)
-data class EnvelopeEncryptionInfo(val dataKeyResult: DataKeyResult, val encryptionResult: EncryptionResult, val fileName: String)
