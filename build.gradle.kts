@@ -36,6 +36,8 @@ dependencies {
         implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
         implementation("org.apache.hbase:hbase-client:2.2.0")
         implementation("org.apache.commons:commons-lang3:3.9")
+        implementation("org.springframework.retry:spring-retry")
+        implementation("org.springframework.boot:spring-boot-starter-aop")
 
         implementation("com.beust", "klaxon", "4.0.2")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
