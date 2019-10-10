@@ -24,7 +24,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "awsS3")
+@ActiveProfiles("awsS3")
 @SpringBootTest
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=hbase",
@@ -48,9 +48,6 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var cipherService: CipherService
-
-    @MockBean
-    private lateinit var httpClientProvider: HttpClientProvider
 
     @MockBean
     private lateinit var connection: Connection

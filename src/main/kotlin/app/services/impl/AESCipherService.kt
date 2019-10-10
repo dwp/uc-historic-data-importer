@@ -17,7 +17,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Service
-@Profile("aesCipherService")
+//@Profile("aesCipherService")
 class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
 
     init {
