@@ -40,7 +40,8 @@ s3-init-image: ## Build the image that creates the s3 bucket.
 	docker-compose build s3-init
 
 .PHONY: hosts
-hosts: ./hosts.sh
+hosts:
+	./hosts.sh
 
 
 .PHONY: ancillary-images

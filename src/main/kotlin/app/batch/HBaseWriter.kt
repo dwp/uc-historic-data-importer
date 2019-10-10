@@ -39,12 +39,14 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                     val json = parser.parse(stringBuilder) as JsonObject
                     id = getId(json, fileName)?.toJsonString()
                     logger.info("Parsing DB object of id $id  in the file $fileName")
+                    val result = encryptDbObject(dataKeyResult, line!!, fileName, id)
+                    logger.info("result: '$result', fileName: '$fileName'.")
+                    val message = MessageProducer().produceMessage(result, dataKeyResult, fileName)
+                    logger.info("Message: '$message'.")
                 }
                 catch (e: Exception) {
                     logger.error("Error while parsing the file $fileName: $e")
-                    continue
                 }
-                encryptDbObject(dataKeyResult, line!!, fileName, id)
             }
         }
     }
@@ -54,7 +56,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
             json.obj("_id")
         }
         catch (e: Exception) {
-            logger.warn("DB object  does not contain _id field in the file $fileName")
+            logger.warn("DB object does not contain _id field in the file $fileName")
             null
         }
     }
@@ -83,5 +85,4 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
     }
-
 }
