@@ -43,7 +43,6 @@ s3-init-image: ## Build the image that creates the s3 bucket.
 hosts:
 	./hosts.sh
 
-
 .PHONY: ancillary-images
 ancillary-images: java-image python-image dks-image dks-insecure s3-init-image  ## Build base images
 

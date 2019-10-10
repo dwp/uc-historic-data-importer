@@ -32,7 +32,6 @@ class ContextConfiguration {
     }
 
     @Bean
-    @Profile("strongRng")
     fun secureRandom() = SecureRandom.getInstanceStrong()!!
 
     @Bean

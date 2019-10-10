@@ -1,6 +1,6 @@
 package app.batch
 
-import app.configuration.HttpClientProvider
+import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.services.impl.HttpKeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -28,7 +28,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "awsS3")
+@ActiveProfiles("awsS3")
 @SpringBootTest
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=hbase",
@@ -40,8 +40,6 @@ import java.nio.charset.StandardCharsets
     "s3.metadata.key.extension=\\.encryption\\.json$"
 ])
 class DecompressionProcessorTest {
-    @MockBean
-    private lateinit var httpClientProvider: HttpClientProvider
 
     @MockBean
     private lateinit var connection: Connection
@@ -53,8 +51,9 @@ class DecompressionProcessorTest {
 
         val (data, decompressed) = decompress(CompressorStreamFactory.GZIP)
 
-        assertEquals(IOUtils.toString(decompressed, StandardCharsets.UTF_8), data)
-        assertEquals(0, data.length.compareTo(decompressed.uncompressedCount))
+        val gzippedStream = decompressed?.inputStream as GzipCompressorInputStream
+        assertEquals(IOUtils.toString(gzippedStream, StandardCharsets.UTF_8), data)
+        assertEquals(0, data.length.compareTo(gzippedStream.uncompressedCount))
     }
 
     @Test(expected = RuntimeException::class)
@@ -72,7 +71,8 @@ class DecompressionProcessorTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(3)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("Compressed size of the file $fileName : ${decompressed.compressedCount}"))
+        val gzippedStream = decompressed?.inputStream as GzipCompressorInputStream
+        assertTrue(formattedMessages.contains("Compressed size of the file $fileName : ${gzippedStream.compressedCount}"))
     }
 
     @Test(expected = RuntimeException::class)
@@ -89,7 +89,7 @@ class DecompressionProcessorTest {
         assertTrue(formattedMessages.contains("Exception occurred when decompressing the gzip decrypted input stream from the file $fileName"))
     }
 
-    private fun decompress(format: String): Pair<String, GzipCompressorInputStream> {
+    private fun decompress(format: String): Pair<String, DecompressedStream?> {
         val data = "dataworksdataworksdataworksdataworksdataworksdataworksdataworks"
         val byteArray = data.toByteArray(StandardCharsets.UTF_8)
         val testOutputStream = ByteArrayOutputStream()
@@ -101,7 +101,7 @@ class DecompressionProcessorTest {
         val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
         val decryptedStream = DecryptedStream(inputStream, fileName)
         val decompressionProcessor = DecompressionProcessor()
-        val decompressed = decompressionProcessor.process(decryptedStream) as GzipCompressorInputStream
+        val decompressed = decompressionProcessor.process(decryptedStream)
         return Pair(data, decompressed)
     }
 
