@@ -1,11 +1,12 @@
 package app.services.impl
 
-import app.domain.DataKeyResult
 import app.configuration.HttpClientProvider
+import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import com.google.gson.Gson
+import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
@@ -45,20 +46,40 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         }
                         response.statusLine.statusCode == 400 ->
                             throw DataKeyDecryptionException(
-                                    """Decrypting encryptedKey: '$encryptedKey' with
+                                """Decrypting encryptedKey: '$encryptedKey' with
                             | keyEncryptionKeyId: '$encryptionKeyId'
                             | data key service returned status code '${response.statusLine.statusCode}'"""
-                                            .trimMargin().replace("\n", ""))
+                                    .trimMargin().replace("\n", ""))
                         else ->
                             throw DataKeyServiceUnavailableException(
-                                    """Decrypting encryptedKey: '$encryptedKey' with
+                                """Decrypting encryptedKey: '$encryptedKey' with
                             | keyEncryptionKeyId: '$encryptionKeyId'
                             | data key service returned status code '${response.statusLine.statusCode}'"""
-                                            .trimMargin().replace("\n", ""))
+                                    .trimMargin().replace("\n", ""))
                     }
 
                 }
 
+            }
+        }
+    }
+
+    override fun batchDataKey(): DataKeyResult {
+        httpClientProvider.client().use { client ->
+            client.execute(HttpGet("$dataKeyServiceUrl/datakey")).use { response ->
+                return if (response.statusLine.statusCode == 201) {
+                    val entity = response.entity
+                    val result = BufferedReader(InputStreamReader(entity.content))
+                        .use(BufferedReader::readText).let {
+                            Gson().fromJson(it, DataKeyResult::class.java)
+                        }
+                    EntityUtils.consume(entity)
+                    result
+                }
+                else {
+                    throw DataKeyServiceUnavailableException(
+                        "DataKeyService returned status code '${response.statusLine.statusCode}'.")
+                }
             }
         }
     }

@@ -18,7 +18,7 @@ class ContextConfiguration {
 
     @Bean
     fun cipherInstanceProvider(): CipherInstanceProvider {
-        return object: CipherInstanceProvider {
+        return object : CipherInstanceProvider {
             override fun cipherInstance(): Cipher {
                 return Cipher.getInstance("AES/CTR/NoPadding", "BC")
             }
@@ -32,7 +32,6 @@ class ContextConfiguration {
     }
 
     @Bean
-    @Profile("strongRng")
     fun secureRandom() = SecureRandom.getInstanceStrong()!!
 
     @Bean
