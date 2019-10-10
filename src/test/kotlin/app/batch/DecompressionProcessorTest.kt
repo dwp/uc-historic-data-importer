@@ -1,6 +1,5 @@
 package app.batch
 
-import app.configuration.HttpClientProvider
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.services.impl.HttpKeyService
@@ -29,7 +28,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles( "awsS3")
+@ActiveProfiles("awsS3")
 @SpringBootTest
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=hbase",

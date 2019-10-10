@@ -1,6 +1,5 @@
 package app.batch
 
-import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
