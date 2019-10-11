@@ -54,7 +54,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                         }
                     }
                     catch (e: Exception) {
-                        logger.error("Error while parsing record from '$fileName': '${e.message}'.", e)
+                        logger.error("Error while parsing record from '$fileName'.")
                     }
                 }
             }
