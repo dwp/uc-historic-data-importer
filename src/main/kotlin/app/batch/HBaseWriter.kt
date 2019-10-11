@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.io.Reader
 
 @Component
 class HBaseWriter : ItemWriter<DecompressedStream> {
@@ -35,8 +34,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
+            logger.info("Processing '${it.fileName}'.")
             val fileName = it.fileName
-            val filenamePattern = """(?<database>[a-z-]+)\.(?<collection>[a-z-]+)\.\d+\.json\.gz\.enc$"""
+            val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
             val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
@@ -44,39 +44,43 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
-                val reader = BufferedReader(InputStreamReader(it.inputStream) as Reader?)
-                var line: String? = null
-                while ({ line = reader.readLine(); line }() != null) {
-                    try {
-                        val json = messageUtils.parseJson(line)
-                        val id = messageUtils.getId(json)?.toJsonString()
-                        if (StringUtils.isNotBlank(id)) {
-                            val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                            logger.info("result: '$encryptionResult', fileName: '$fileName'.")
-                            val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
-                                                                            database, collection)
-                            val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
-                            val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                            val formattedkey = messageUtils.generateKeyFromRecordBody(json)
-                            try {
-                                hbase.putVersion(
-                                    topic = "$database.$collection".toByteArray(), // TODO what topic we should insert
-                                    key = formattedkey,
-                                    body = message.toByteArray(),
-                                    version = lastModifiedTimestampLong
-                                )
-                                logger.info("Written id $id as key  $formattedkey to HBase.")
-                            } catch (e: Exception) {
-                                logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
-                                throw e
-                            }
 
-                            logger.info("Message: '$message'.")
+                BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
+                    var line: String? = null
+                    var lineNo = 1;
+                    while ({ line = reader.readLine(); line }() != null) {
+                        lineNo++
+                        try {
+                            val json = messageUtils.parseJson(line)
+                            val id = messageUtils.getId(json)?.toJsonString()
+                            if (StringUtils.isNotBlank(id)) {
+                                val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
+                                //logger.info("Success '$fileName' line ${lineNo}.")
+                                val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
+                                        database, collection)
+                                val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+                                val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                                val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                                try {
+                                    hbase.putVersion(
+                                            topic = "$database.$collection".toByteArray(), // TODO what topic we should insert
+                                            key = formattedkey,
+                                            body = message.toByteArray(),
+                                            version = lastModifiedTimestampLong
+                                    )
+                                    logger.info("Written id $id as key  $formattedkey to HBase.")
+                                } catch (e: Exception) {
+                                    logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
+                                    throw e
+                                }
+
+                            }
+                        } catch (e: Exception) {
+                            logger.error("Error while parsing record from '$fileName': '${e.message}'.", e)
                         }
                     }
-                    catch (e: Exception) {
-                        logger.error("Error while parsing record from '$fileName': '${e.message}'.", e)
-                    }
+                    logger.info("Procesed file $fileName")
+
                 }
             }
         }
@@ -85,8 +89,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?): EncryptionResult {
         try {
             return cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
             throw e
         }
@@ -95,8 +98,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun getDataKey(fileName: String): DataKeyResult {
         try {
             return keyService.batchDataKey()
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("Error while creating data key for the file  $fileName: $e")
             throw e
         }

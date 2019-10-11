@@ -15,4 +15,5 @@ RUN useradd ${USER} && \
         chown -R ${USER}.${USER} . && \
         chmod +x ./${APP_NAME}.jar && ls -l && pwd
 USER ${USER}
+RUN java -version
 ENTRYPOINT ["sh", "-c", "./uc-historic-data-importer.jar \"$@\"", "--"]

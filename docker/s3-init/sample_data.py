@@ -31,16 +31,29 @@ from Crypto.Util import Counter
 def main():
     """Main entry point."""
     args = command_line_args()
+    data_key_service = args.data_key_service \
+        if args.data_key_service \
+        else 'http://localhost:8080/datakey'
+
+    batch_nos = {}
+
     for i in range(10):
-        dks_response = requests.get(args.data_key_service).json()
+
+        dks_response = requests.get(data_key_service).json()
         encryption_metadata = {
             'encryptionKeyId': dks_response['dataKeyEncryptionKeyId'],
             'encryptedEncryptionKey': dks_response['ciphertextDataKey'],
             'plaintextDatakey': dks_response['plaintextDataKey']
         }
         contents = ""
-        for _ in range(100):
-            contents = contents + db_object_json() + "\n"
+
+        database = f'database-{(i//4) + 1}'
+        collection = f'collection-{(i//2) + 1}'
+        batch = f'{database}.{collection}'
+        batch_nos[batch] = batch_nos.get(batch, 0) + 1
+        for j in range(100):
+            contents = contents + \
+                db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
 
         if args.compress:
             print("Compressing.")
@@ -55,13 +68,18 @@ def main():
                         contents.encode("utf8"), args.encrypt)
 
 
-        metadata_file = f'adb.collection.{i:04d}.json.gz.encryption.json'
+
+        metadata_file = f'{batch}.{batch_nos[batch]:04d}.json.gz.encryption.json'
         with open(metadata_file, 'w') as metadata:
+            print(f'Writing metadata file {metadata_file}')
             json.dump(encryption_metadata, metadata, indent=4)
 
-        data_file = f'adb.collection.{i:04d}.json.gz.enc'
+        data_file = f'{batch}.{batch_nos[batch]:04d}.json.gz.enc'
         with open(data_file, 'wb') as data:
+            print(f'Writing data file {data_file}')
             data.write(encrypted_contents)
+
+
 
 
 def encrypt(datakey, unencrypted_bytes, do_encryption):
@@ -84,10 +102,10 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
         return (base64.b64encode(initialisation_vector).decode('ascii'),
                 unencrypted_bytes)
 
-def db_object_json():
+def db_object_json(batch, i):
     """Returns a sample dbRecord object with unique ids."""
-    record = db_object()
-    record['_id']['declarationId'] = guid()
+    record = db_object(i)
+    record['_id']['declarationId'] = f'{batch}-{(i//20) + 1}'
     record['contractId'] = guid()
     record['addressNumber']['cryptoId'] = guid()
     record['townCity']['cryptoId'] = guid()
@@ -98,7 +116,7 @@ def guid():
     """Generates, returns a guid."""
     return str(uuid.uuid4())
 
-def db_object():
+def db_object(i):
     """Returns a dbObject template to which unique ids can be applied."""
     return {
         "_id": {
@@ -132,7 +150,7 @@ def db_object():
         },
         "_version": 2,
         "_lastModifiedDateTime": {
-            "$date": "2018-12-14T15:01:02.000+0000"
+            "$date": f'2018-12-01T15:01:02.{i:03d}+0000'
         }
     }
 
@@ -148,6 +166,12 @@ def command_line_args():
     parser.add_argument('-e', '--encrypt', action='store_true',
                         help='Encrypt the data.')
     return parser.parse_args()
+
+def database_name(i):
+    return
+
+def collection_name(i):
+    pass
 
 if __name__ == "__main__":
     main()

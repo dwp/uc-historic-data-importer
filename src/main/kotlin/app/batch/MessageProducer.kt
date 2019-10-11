@@ -43,6 +43,7 @@ class MessageProducer {
         }
     }
 
+
     companion object {
         val logger: Logger = LoggerFactory.getLogger(MessageProducer::class.toString())
     }

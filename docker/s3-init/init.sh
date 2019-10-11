@@ -20,7 +20,7 @@ fi
 . ./venv/bin/activate
 
 if ./sample_data.py -cek http://dks-insecure:8080/datakey; then
-    for file in adb.collection.*; do
+    for file in *json.gz.enc *.json.gz.encryption.json; do
         aws_s3 cp $file s3://${S3_BUCKET}/${S3_PREFIX}
     done
     aws_s3 ls $S3_BUCKET/$S3_PREFIX
