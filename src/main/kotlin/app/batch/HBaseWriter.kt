@@ -30,12 +30,12 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
         items.forEach {
             val fileName = it.fileName
             val filenamePattern = """(?<database>[a-z-]+)\.(?<collection>[a-z-]+)\.\d+\.json\.gz\.enc$"""
-            val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE);
+            val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 val groups = matchResult.groups
-                val database = groups[1]!!.value
-                val collection = groups[2]!!.value
+                val database = groups[1]!!.value // can assert nun-null as it matched on the regex
+                val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 val reader = BufferedReader(InputStreamReader(it.inputStream))
                 var line: String? = null

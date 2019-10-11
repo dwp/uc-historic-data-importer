@@ -11,6 +11,7 @@ import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.*
 import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
@@ -58,6 +59,7 @@ class HbaseWriterTest {
     @Autowired
     private lateinit var hBaseWriter: HBaseWriter
 
+    @Ignore
     @Test
     fun should_Log_And_Continue_When_DBObject_IsNot_Valid_Json() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger

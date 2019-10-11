@@ -43,8 +43,6 @@ class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : 
         }
     }
 
-    private val cipherAlgorithm = "AES/CTR/NoPadding"
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
     }

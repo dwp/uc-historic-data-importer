@@ -13,6 +13,7 @@ java.sourceCompatibility = JavaVersion.VERSION_1_8
 repositories {
         mavenCentral()
         jcenter()
+        maven(url="https://jitpack.io")
 }
 
 tasks.bootJar {
@@ -43,6 +44,7 @@ dependencies {
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         testImplementation("org.springframework.batch:spring-batch-test")
         testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
+        testImplementation("com.github.everit-org.json-schema", "org.everit.json.schema", "1.12.0")
 }
 
 tasks.withType<KotlinCompile> {
