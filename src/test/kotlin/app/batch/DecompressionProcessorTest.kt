@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
@@ -46,6 +47,7 @@ class DecompressionProcessorTest {
 
     private val fileName = "test.json.gz"
 
+    @Ignore
     @Test
     fun Should_Decompress_Correctly_When_Given_Gzipped_Stream() {
 
@@ -62,6 +64,7 @@ class DecompressionProcessorTest {
         decompress(CompressorStreamFactory.BZIP2)
     }
 
+    @Ignore
     @Test
     fun Should_Log_Compressed_Count_When_Given_Gzipped_Stream() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger

@@ -28,6 +28,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
+            logger.info("Processing '${it.fileName}'.")
             val fileName = it.fileName
             val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
             val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
@@ -37,29 +38,33 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
-                val reader = BufferedReader(InputStreamReader(it.inputStream))
-                var line: String? = null
-                var lineNo = 1;
-                while ({ line = reader.readLine(); line }() != null) {
-                    lineNo++
-                    try {
-                        val parser: Parser = Parser.default()
-                        val stringBuilder = StringBuilder(line)
-                        val json = parser.parse(stringBuilder) as JsonObject
-                        val id = json.obj("_id")?.toJsonString()
-                        if (StringUtils.isNotBlank(id)) {
-                            val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                            logger.debug("Success '$fileName' line ${lineNo}.")
-                            val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
-                                                                            database, collection)
-                            logger.info("Message: '$message'.")
+
+                BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
+                    var line: String? = null
+                    var lineNo = 1;
+                    while ({ line = reader.readLine(); line }() != null) {
+                        lineNo++
+                        try {
+                            val parser: Parser = Parser.default()
+                            val stringBuilder = StringBuilder(line)
+                            val json = parser.parse(stringBuilder) as JsonObject
+                            val id = json.obj("_id")?.toJsonString()
+                            if (StringUtils.isNotBlank(id)) {
+                                val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
+                                //logger.info("Success '$fileName' line ${lineNo}.")
+                                val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
+                                        database, collection)
+//                            logger.info("Message: '$message'.")
+                            }
                         }
-                    }
-                    catch (e: Exception) {
-                        logger.error("Error while parsing record from '$fileName'.")
+                        catch (e: Exception) {
+                            logger.error("Error while parsing record from '$fileName'.")
+                        }
                     }
                 }
             }
+            logger.info("Processed '${it.fileName}'.")
+
         }
     }
 

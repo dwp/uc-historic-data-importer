@@ -44,7 +44,7 @@ add-containers-to-hosts:
 	./add-containers-to-hosts.sh
 
 .PHONY: ancillary-images
-ancillary-images: java-image python-image dks-image dks-insecure s3-init-image  ## Build base images
+ancillary-images: java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build

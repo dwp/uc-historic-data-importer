@@ -35,6 +35,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         val iterator = getS3ObjectSummariesIterator(s3client, s3BucketName)
         return if (iterator.hasNext()) {
             iterator.next().let {
+                logger.info("s3objectSummaryPair: '$it'.")
                 val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key)
