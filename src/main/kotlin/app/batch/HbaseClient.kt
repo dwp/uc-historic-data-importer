@@ -6,7 +6,7 @@ import org.apache.hadoop.hbase.client.*
 import org.apache.hadoop.hbase.io.TimeRange
 import org.apache.hadoop.hbase.util.Bytes
 
-class HbaseClient(
+open class HbaseClient(
     val connection: Connection,
     val dataTable: String,
     val dataFamily: ByteArray,
@@ -25,7 +25,7 @@ class HbaseClient(
         )
     }
 
-    fun putVersion(topic: ByteArray, key: ByteArray, body: ByteArray, version: Long) {
+   open fun putVersion(topic: ByteArray, key: ByteArray, body: ByteArray, version: Long) {
         connection.getTable(TableName.valueOf(dataTable)).use { table ->
             table.put(Put(key).apply {
                 this.addColumn(

@@ -1,6 +1,6 @@
 package app.services.impl
 
-import app.UcHistoricDataImporterApplication
+import app.batch.HbaseClient
 import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
@@ -49,6 +49,9 @@ class HttpKeyServiceTest {
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
 
+    @MockBean
+    private lateinit var hbase: HbaseClient
+
     @Before
     fun init() {
         this.keyService.clearCache()
@@ -85,7 +88,7 @@ class HttpKeyServiceTest {
         verify(httpClient, times(1)).execute(any(HttpGet::class.java))
     }
 
-    /*@Test
+    @Test
     fun testBatchDataKey_ServerError_ThrowsException_AndWillRetry() {
         val httpClient = mock(CloseableHttpClient::class.java)
         val statusLine = mock(StatusLine::class.java)
@@ -99,8 +102,7 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        }
-        catch (ex: DataKeyServiceUnavailableException) {
+        } catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("data key service returned status code '503'.", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
         }
@@ -121,8 +123,7 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        }
-        catch (ex: DataKeyServiceUnavailableException) {
+        } catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
         }
@@ -256,8 +257,7 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyDecryptionException")
-        }
-        catch (ex: DataKeyDecryptionException) {
+        } catch (ex: DataKeyDecryptionException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400'", ex.message)
             verify(httpClient, times(1)).execute(any(HttpPost::class.java))
         }
@@ -276,8 +276,7 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
-        }
-        catch (ex: DataKeyServiceUnavailableException) {
+        } catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '503'", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
         }
@@ -296,10 +295,9 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
-        }
-        catch (ex: DataKeyServiceUnavailableException) {
+        } catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
         }
-    }*/
+    }
 }

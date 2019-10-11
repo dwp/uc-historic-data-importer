@@ -1,14 +1,17 @@
 package app.batch
 
 import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.zip.CRC32
 
-object MessageUtils {
+@Component
+open class  MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
 
     fun getTimestampAsLong(timeStampAsStr: String?, timeStampPattern: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"): Long {
@@ -36,6 +39,13 @@ object MessageUtils {
             logger.warn("Record body does not contain valid json object at message._id")
             return null
         }
+    }
+
+    fun parseJson(line: String?): JsonObject {
+        val parser: Parser = Parser.default()
+        val stringBuilder = StringBuilder(line)
+        val json = parser.parse(stringBuilder) as JsonObject
+        return json
     }
 
     fun generateKey(json: JsonObject): ByteArray {

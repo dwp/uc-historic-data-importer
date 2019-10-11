@@ -19,6 +19,7 @@ import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.Reader
 import java.net.URLEncoder
 
 @Service
@@ -48,7 +49,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity
-                                val text = BufferedReader(InputStreamReader(response.entity.content)).use(BufferedReader::readText)
+                                val text = BufferedReader(InputStreamReader(response.entity.content) as Reader?).use(BufferedReader::readText)
                                 EntityUtils.consume(entity)
                                 val dataKeyResult = Gson().fromJson(text, DataKeyResult::class.java)
                                 decryptedKeyCache[cacheKey] = dataKeyResult.plaintextDataKey

@@ -5,17 +5,15 @@ import app.domain.DecompressedStream
 import app.domain.EncryptionResult
 import app.services.CipherService
 import app.services.KeyService
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.Parser
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.Reader
 
 @Component
 class HBaseWriter : ItemWriter<DecompressedStream> {
@@ -29,6 +27,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var hbase: HbaseClient
 
+    @Autowired
+    private lateinit var messageProducer: MessageProducer
+
+    @Autowired
+    private lateinit var messageUtils: MessageUtils
+
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
             val fileName = it.fileName
@@ -40,22 +44,20 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
-                val reader = BufferedReader(InputStreamReader(it.inputStream))
+                val reader = BufferedReader(InputStreamReader(it.inputStream) as Reader?)
                 var line: String? = null
                 while ({ line = reader.readLine(); line }() != null) {
                     try {
-                        val parser: Parser = Parser.default()
-                        val stringBuilder = StringBuilder(line)
-                        val json = parser.parse(stringBuilder) as JsonObject
-                        val id = MessageUtils.getId(json)?.toJsonString()
+                        val json = messageUtils.parseJson(line)
+                        val id = messageUtils.getId(json)?.toJsonString()
                         if (StringUtils.isNotBlank(id)) {
                             val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
                             logger.info("result: '$encryptionResult', fileName: '$fileName'.")
-                            val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
+                            val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
                                                                             database, collection)
-                            val lastModifiedTimestampStr = MessageUtils.getLastModifiedTimestamp(json)
-                            val lastModifiedTimestampLong = MessageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                            val formattedkey = MessageUtils.generateKeyFromRecordBody(json)
+                            val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+                            val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                            val formattedkey = messageUtils.generateKeyFromRecordBody(json)
                             try {
                                 hbase.putVersion(
                                     topic = "$database.$collection".toByteArray(), // TODO what topic we should insert

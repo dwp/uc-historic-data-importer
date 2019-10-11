@@ -43,6 +43,7 @@ class ContextConfiguration {
     fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
 
     @Bean
+    @Profile("hbase")
     fun hbaseConnection(): Connection {
 
         val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
@@ -54,7 +55,8 @@ class ContextConfiguration {
         return connection
     }
 
-    @Bean("hbaseClient")
+    @Bean
+    @Profile("hbase")
     fun hbaseClient(): HbaseClient {
 
         val hbase = HbaseClient.connect()
