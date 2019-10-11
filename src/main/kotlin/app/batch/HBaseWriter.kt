@@ -29,7 +29,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
             val fileName = it.fileName
-            val filenamePattern = """(?<database>[a-z-]+)\.(?<collection>[a-z-]+)\.\d+\.json\.gz\.enc$"""
+            val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
             val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
