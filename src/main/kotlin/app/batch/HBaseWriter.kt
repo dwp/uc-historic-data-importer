@@ -8,23 +8,26 @@ import app.services.KeyService
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.hbase.client.Connection
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 @Component
-class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedStream> {
+class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
     private lateinit var cipherService: CipherService
 
     @Autowired
     private lateinit var keyService: KeyService
+
+    @Autowired
+    private lateinit var hbase: HbaseClient
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
@@ -44,12 +47,28 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                         val parser: Parser = Parser.default()
                         val stringBuilder = StringBuilder(line)
                         val json = parser.parse(stringBuilder) as JsonObject
-                        val id = json.obj("_id")?.toJsonString()
+                        val id = MessageUtils.getId(json)?.toJsonString()
                         if (StringUtils.isNotBlank(id)) {
                             val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
                             logger.info("result: '$encryptionResult', fileName: '$fileName'.")
                             val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
                                                                             database, collection)
+                            val lastModifiedTimestampStr = MessageUtils.getLastModifiedTimestamp(json)
+                            val lastModifiedTimestampLong = MessageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                            val formattedkey = MessageUtils.generateKeyFromRecordBody(json)
+                            try {
+                                hbase.putVersion(
+                                    topic = "$database.$collection".toByteArray(), // TODO what topic we should insert
+                                    key = formattedkey,
+                                    body = message.toByteArray(),
+                                    version = lastModifiedTimestampLong
+                                )
+                                logger.info("Written id $id as key  $formattedkey to HBase.")
+                            } catch (e: Exception) {
+                                logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
+                                throw e
+                            }
+
                             logger.info("Message: '$message'.")
                         }
                     }

@@ -1,11 +1,14 @@
 package app.configuration
 
+import app.batch.HbaseClient
+import app.batch.migrate
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
 import org.apache.http.impl.client.HttpClients
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -24,6 +27,7 @@ class ContextConfiguration {
             }
         }
     }
+
 
     @Bean
     @Profile("insecureHttpClient")
@@ -48,6 +52,14 @@ class ContextConfiguration {
 
         addShutdownHook(connection)
         return connection
+    }
+
+    @Bean("hbaseClient")
+    fun hbaseClient(): HbaseClient {
+
+        val hbase = HbaseClient.connect()
+        hbase.migrate()
+        return hbase
     }
 
     private fun addShutdownHook(connection: Connection) {
