@@ -39,7 +39,9 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 val reader = BufferedReader(InputStreamReader(it.inputStream))
                 var line: String? = null
+                var lineNo = 1;
                 while ({ line = reader.readLine(); line }() != null) {
+                    lineNo++
                     try {
                         val parser: Parser = Parser.default()
                         val stringBuilder = StringBuilder(line)
@@ -47,7 +49,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                         val id = json.obj("_id")?.toJsonString()
                         if (StringUtils.isNotBlank(id)) {
                             val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                            logger.info("result: '$encryptionResult', fileName: '$fileName'.")
+                            logger.debug("Success '$fileName' line ${lineNo}.")
                             val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
                                                                             database, collection)
                             logger.info("Message: '$message'.")
