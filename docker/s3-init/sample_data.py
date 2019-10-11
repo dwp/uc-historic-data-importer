@@ -43,13 +43,13 @@ def main():
             contents = contents + db_object_json() + "\n"
 
         if args.compress:
-            print("Compressing prior to encryption.")
+            print("Compressing.")
             compressed = gzip.compress(contents.encode())
             [encryption_metadata['iv'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'], compressed,
                         args.encrypt)
         else:
-            print("Not compressing prior to encryption.")
+            print("Not compressing.")
             [encryption_metadata['iv'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'],
                         contents.encode("utf8"), args.encrypt)
@@ -75,7 +75,7 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
 
 
     if do_encryption:
-        print("Encrypting")
+        print("Encrypting.")
         ciphertext = aes.encrypt(unencrypted_bytes)
         return (base64.b64encode(initialisation_vector).decode('ascii'),
                 base64.b64encode(ciphertext))

@@ -39,9 +39,9 @@ dks-insecure-image: ## Build the dks image.
 s3-init-image: ## Build the image that creates the s3 bucket.
 	docker-compose build s3-init
 
-.PHONY: hosts
-hosts: ./hosts.sh
-
+.PHONY: add-containers-to-hosts
+add-containers-to-hosts:
+	./add-containers-to-hosts.sh
 
 .PHONY: ancillary-images
 ancillary-images: java-image python-image dks-image dks-insecure s3-init-image  ## Build base images

@@ -1,5 +1,6 @@
 package app.batch
 
+import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
@@ -10,6 +11,7 @@ import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.*
 import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
@@ -23,7 +25,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("awsS3")
+@ActiveProfiles("httpDataKeyService", "awsS3")
 @SpringBootTest
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=hbase",
@@ -49,11 +51,15 @@ class HbaseWriterTest {
     private lateinit var cipherService: CipherService
 
     @MockBean
+    private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
     private lateinit var connection: Connection
 
     @Autowired
     private lateinit var hBaseWriter: HBaseWriter
 
+    @Ignore
     @Test
     fun should_Log_And_Continue_When_DBObject_IsNot_Valid_Json() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
