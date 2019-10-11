@@ -19,12 +19,21 @@ import org.slf4j.LoggerFactory
 
 class MessageProducerTest {
 
+    private val dateKey = "\$date"
+    private val dateValue = "2018-12-14T15:01:02.000+0000"
+    private val idFieldValue = "idFieldValue"
+    private val anotherIdFieldValue = "anotherIdFieldValue"
+    private val initialisationVector = "initialisationVector"
+    private val encrypted = "encrypted"
+    private val dataKeyEncryptionKeyId = "cloudhsm:1,2"
+    private val plaintextDataKey = "plaintextDataKey"
+    private val ciphertextDataKey = "ciphertextDataKey"
+    private val database = "database"
+    private val collection = "collection"
+    private val type = "type"
+
     @Test
     fun testValidObjectGivesSchemaValidMessage() {
-        val dateKey = "\$date"
-        val dateValue = "2018-12-14T15:01:02.000+0000"
-        val idFieldValue = "idFieldValue"
-        val anotherIdFieldValue = "anotherIdFieldValue"
 
         val validJson = """{
             "_id": {
@@ -39,16 +48,9 @@ class MessageProducerTest {
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(validJson)
         val jsonObject = parser.parse(stringBuilder) as JsonObject
-        val initialisationVector = "initialisationVector"
-        val encrypted = "encrypted"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
-        val dataKeyEncryptionKeyId = "cloudhsm:1,2"
-        val plaintextDataKey = "plaintextDataKey"
-        val ciphertextDataKey = "ciphertextDataKey"
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val database = "database"
-        val collection = "collection"
         val message = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
         val actual = parser.parse(StringBuilder(message)) as JsonObject
         validate(message)
@@ -77,11 +79,6 @@ class MessageProducerTest {
 
     @Test
     fun testValidObjectWithTypeGivesSchemaValidMessage() {
-        val dateKey = "\$date"
-        val dateValue = "2018-12-14T15:01:02.000+0000"
-        val idFieldValue = "idFieldValue"
-        val anotherIdFieldValue = "anotherIdFieldValue"
-        val type = "type"
         val validJson = """{
             "_id": {
                 "idField": "$idFieldValue",
@@ -96,16 +93,9 @@ class MessageProducerTest {
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(validJson)
         val jsonObject = parser.parse(stringBuilder) as JsonObject
-        val initialisationVector = "initialisationVector"
-        val encrypted = "encrypted"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
-        val dataKeyEncryptionKeyId = "cloudhsm:1,2"
-        val plaintextDataKey = "plaintextDataKey"
-        val ciphertextDataKey = "ciphertextDataKey"
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val database = "database"
-        val collection = "collection"
         val message = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
         val actual = parser.parse(StringBuilder(message)) as JsonObject
         validate(message)
@@ -135,11 +125,6 @@ class MessageProducerTest {
     @Test
     fun testRecordRejectedIfEmptyModifiedDate() {
 
-        val dateKey = "\$date"
-        val dateValue = ""
-        val idFieldValue = "idFieldValue"
-        val anotherIdFieldValue = "anotherIdFieldValue"
-        val type = "type"
         val validJson = """{
             "_id": {
                 "idField": "$idFieldValue",
@@ -147,22 +132,15 @@ class MessageProducerTest {
             },
             "@type": "$type",
             "_lastModifiedDateTime": {
-                "$dateKey": "$dateValue" 
+                "$dateKey": "" 
             }
         }""".trimIndent()
 
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(validJson)
         val jsonObject = parser.parse(stringBuilder) as JsonObject
-        val initialisationVector = "initialisationVector"
-        val encrypted = "encrypted"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
-        val dataKeyEncryptionKeyId = "cloudhsm:1,2"
-        val plaintextDataKey = "plaintextDataKey"
-        val ciphertextDataKey = "ciphertextDataKey"
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val database = "database"
-        val collection = "collection"
         val mockAppender: Appender<ILoggingEvent> = mock()
         val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
         logger.addAppender(mockAppender)
@@ -180,8 +158,6 @@ class MessageProducerTest {
 
     @Test
     fun testRecordRejectedIfNoModifiedDate() {
-        val idFieldValue = "idFieldValue"
-        val anotherIdFieldValue = "anotherIdFieldValue"
         val type = "type"
         val validJson = """{
             "_id": {
@@ -196,15 +172,8 @@ class MessageProducerTest {
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(validJson)
         val jsonObject = parser.parse(stringBuilder) as JsonObject
-        val initialisationVector = "initialisationVector"
-        val encrypted = "encrypted"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
-        val dataKeyEncryptionKeyId = "cloudhsm:1,2"
-        val plaintextDataKey = "plaintextDataKey"
-        val ciphertextDataKey = "ciphertextDataKey"
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val database = "database"
-        val collection = "collection"
         val mockAppender: Appender<ILoggingEvent> = mock()
         val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
         logger.addAppender(mockAppender)
@@ -221,8 +190,6 @@ class MessageProducerTest {
 
     @Test
     fun testRecordRejectedIfNoModifiedDateObject() {
-        val idFieldValue = "idFieldValue"
-        val anotherIdFieldValue = "anotherIdFieldValue"
         val type = "type"
         val validJson = """{
             "_id": {
@@ -235,15 +202,8 @@ class MessageProducerTest {
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(validJson)
         val jsonObject = parser.parse(stringBuilder) as JsonObject
-        val initialisationVector = "initialisationVector"
-        val encrypted = "encrypted"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
-        val dataKeyEncryptionKeyId = "cloudhsm:1,2"
-        val plaintextDataKey = "plaintextDataKey"
-        val ciphertextDataKey = "ciphertextDataKey"
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val database = "database"
-        val collection = "collection"
         val expected = ""
         val mockAppender: Appender<ILoggingEvent> = mock()
         val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
