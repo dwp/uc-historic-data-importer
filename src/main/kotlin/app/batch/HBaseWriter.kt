@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.io.BufferedOutputStream
 import java.io.BufferedReader
-import java.io.FileOutputStream
 import java.io.InputStreamReader
 
 @Component
@@ -43,7 +41,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
 
                 val buffer = ByteArray(1024)
 
-                val outputStream = BufferedOutputStream(FileOutputStream("dump/${groups[0]!!.value}.gz"))
+//                val outputStream = BufferedOutputStream(FileOutputStream("dump/${groups[0]!!.value}.gz"))
 
 //                it.inputStream.copyTo(outputStream)
 //                it.inputStream.close()
