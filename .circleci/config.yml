@@ -53,6 +53,23 @@ jobs:
             - uc-historic-data-importer-*.jar
 
 
+  integration-test:
+    docker:
+      - image: circleci/python:3.7.3
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: "Run the integration test"
+          command: |
+            sudo pip3 install docker-compose
+            sudo apt-get update
+            sudo apt-get install openjdk-8-jdk
+            ./truststores.sh
+            ./gradlew build
+
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
@@ -79,10 +96,10 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - build
-      - publish-github-release:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+      - integration-test
+#      - publish-github-release:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: master
