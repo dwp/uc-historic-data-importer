@@ -77,6 +77,6 @@ services:
       --s3.bucket=uc-historic-data
       --s3.prefix.folder=test/prefix/
       --s3.service.endpoint=http://s3:4572
-      --spring.profiles.active=localS3,secureHttpClient,batchRun
+      --spring.profiles.active=localS3,secureHttpClient,batchRun,weakRng
     volumes:
       - /home/danielchicot/src/dwp/uc-historic-data-importer/dump:/opt/uc-historic-data-importer/dump
