@@ -6,7 +6,7 @@ ENV APP_HOME=/opt/${APP_NAME}
 ENV USER=uhdi
 RUN mkdir ${APP_HOME}
 WORKDIR ${APP_HOME}
-COPY build/libs/${APP_JAR} ./${APP_NAME}.jar
+COPY build/libs/*.jar ./${APP_NAME}.jar
 COPY uc-historic-data-importer-keystore.jks ./
 COPY uc-historic-data-importer-truststore.jks ./
 COPY resources/application-docker.properties application.properties
