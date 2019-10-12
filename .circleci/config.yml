@@ -82,7 +82,8 @@ jobs:
                 echo Waiting for s3.
                 sleep 2
             done
-            docker ps
+            docker-compose up s3-init
+            docker ps -a
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
