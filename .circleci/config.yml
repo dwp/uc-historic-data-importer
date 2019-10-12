@@ -73,6 +73,9 @@ jobs:
             mv tmp.txt gradle/wrapper/gradle-wrapper.properties
             cat gradle/wrapper/gradle-wrapper.properties
             ./gradlew build
+            cd docker/java && docker build --tag dwp-java:latest . && cd -
+            cd docker/python && docker build --tag dwp-python:latest . && cd -
+            docker-compose build
 
   publish-github-release:
     docker:
