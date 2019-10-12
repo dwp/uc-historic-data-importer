@@ -96,6 +96,7 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
+      - build
       - integration-test
 #      - publish-github-release:
 #          requires:
