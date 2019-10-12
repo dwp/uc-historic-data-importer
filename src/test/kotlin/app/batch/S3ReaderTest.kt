@@ -28,7 +28,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "awsS3")
+@ActiveProfiles("httpDataKeyService", "awsS3", "weakRng")
 @SpringBootTest
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=hbase",

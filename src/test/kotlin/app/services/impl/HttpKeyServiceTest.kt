@@ -23,12 +23,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
+@ActiveProfiles("weakRng")
 @TestPropertySource(properties = [
     "hbase.zookeeper.quorum=phoney",
     "data.key.service.url=phoney"
