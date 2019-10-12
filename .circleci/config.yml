@@ -76,6 +76,7 @@ jobs:
             cd docker/java && docker build --tag dwp-java:latest . && cd -
             cd docker/python && docker build --tag dwp-python:latest . && cd -
             docker-compose build
+            docker-compose up -d hbase s3 dks dks-insecure
 
   publish-github-release:
     docker:
