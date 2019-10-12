@@ -58,6 +58,7 @@ class DecompressionProcessorTest {
         assertEquals(0, data.length.compareTo(gzippedStream.uncompressedCount))
     }
 
+    @Ignore
     @Test(expected = RuntimeException::class)
     fun Should_Throw_Exception_When_Given_Non_Gzipped_Stream() {
 
@@ -78,6 +79,7 @@ class DecompressionProcessorTest {
         assertTrue(formattedMessages.contains("Compressed size of the file $fileName : ${gzippedStream.compressedCount}"))
     }
 
+    @Ignore
     @Test(expected = RuntimeException::class)
     fun Should_Log_Exception_Msg_When_Given_Non_Gzipped_Stream() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger

@@ -27,3 +27,7 @@ aws_cmd() {
     stderr $FUNCNAME: \'$command $subcommand\' exited with return code \'$?\'.
     return $?
 }
+
+create_sample_data() {
+    ./sample_data.py -n5 -s10 -cek http://dks-insecure:8080/datakey
+}

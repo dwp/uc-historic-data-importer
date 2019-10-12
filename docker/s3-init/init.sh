@@ -19,9 +19,15 @@ fi
 
 . ./venv/bin/activate
 
-if ./sample_data.py -cek http://dks-insecure:8080/datakey; then
+if create_sample_data; then
+
+    dd if=/dev/zero of=a-spurious.file bs=10M count=1
+
+    aws_s3 cp a-spurious.file s3://${S3_BUCKET}/${S3_PREFIX}
+
     for file in *json.gz.enc *.json.gz.encryption.json; do
         aws_s3 cp $file s3://${S3_BUCKET}/${S3_PREFIX}
     done
+
     aws_s3 ls $S3_BUCKET/$S3_PREFIX
 fi

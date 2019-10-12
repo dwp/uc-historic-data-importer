@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.io.BufferedOutputStream
 import java.io.BufferedReader
+import java.io.FileOutputStream
 import java.io.InputStreamReader
 
 @Component
@@ -39,9 +41,23 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
 
+                val buffer = ByteArray(1024)
+
+                val outputStream = BufferedOutputStream(FileOutputStream("dump/${groups[0]!!.value}.gz"))
+
+//                it.inputStream.copyTo(outputStream)
+//                it.inputStream.close()
+//                outputStream.close()
+//                BufferedInputStream(it.inputStream).use {
+//                    while (it.read(buffer)!= -1) {
+//                        println(Charset.defaultCharset())
+//                        println(String(buffer))
+//                    }
+//
+//                }
                 BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
                     var line: String? = null
-                    var lineNo = 1;
+                    var lineNo = 0;
                     while ({ line = reader.readLine(); line }() != null) {
                         lineNo++
                         try {
@@ -51,10 +67,10 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                             val id = json.obj("_id")?.toJsonString()
                             if (StringUtils.isNotBlank(id)) {
                                 val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                                //logger.info("Success '$fileName' line ${lineNo}.")
+                                logger.info("Success '$fileName' line ${lineNo}.")
                                 val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
                                         database, collection)
-//                            logger.info("Message: '$message'.")
+                            //logger.info("Message: '$message'.")
                             }
                         }
                         catch (e: Exception) {

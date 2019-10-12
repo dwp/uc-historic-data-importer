@@ -57,7 +57,7 @@ build-all: build-jar build-image ## Build the jar file and the images.
 
 .PHONY: build-image
 build-image: ancillary-images build-jar ## Build all ecosystem of images
-	docker-compose build --build-arg APP_VERSION=$(APP_VERSION) uc-historic-data-importer
+	docker-compose build --no-cache --build-arg APP_VERSION=$(APP_VERSION) uc-historic-data-importer
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)

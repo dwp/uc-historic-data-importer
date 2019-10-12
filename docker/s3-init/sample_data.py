@@ -35,9 +35,11 @@ def main():
         if args.data_key_service \
         else 'http://localhost:8080/datakey'
 
+    print(f'data_key_service: {data_key_service}.')
     batch_nos = {}
+    file_count = int(args.file_count if args.file_count else 10)
 
-    for i in range(10):
+    for i in range(file_count):
 
         dks_response = requests.get(data_key_service).json()
         encryption_metadata = {
@@ -51,13 +53,16 @@ def main():
         collection = f'collection-{(i//2) + 1}'
         batch = f'{database}.{collection}'
         batch_nos[batch] = batch_nos.get(batch, 0) + 1
-        for j in range(100):
+
+        record_count = int(args.batch_size if args.batch_size else 10)
+
+        for j in range(record_count):
             contents = contents + \
                 db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
 
         if args.compress:
             print("Compressing.")
-            compressed = gzip.compress(contents.encode())
+            compressed = gzip.compress(contents.encode("ascii"))
             [encryption_metadata['iv'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'], compressed,
                         args.encrypt)
@@ -78,9 +83,6 @@ def main():
         with open(data_file, 'wb') as data:
             print(f'Writing data file {data_file}')
             data.write(encrypted_contents)
-
-
-
 
 def encrypt(datakey, unencrypted_bytes, do_encryption):
     """Encrypts the supplied bytes with the supplied key.
@@ -128,7 +130,6 @@ def db_object(i):
             "type": "AddressLine",
             "cryptoId": "RANDOM_GUID"
         },
-        "addressLine2": None,
         "townCity": {
             "type": "AddressLine",
             "cryptoId": "RANDOM_GUID"
@@ -161,6 +162,10 @@ def command_line_args():
     parser = argparse.ArgumentParser(description='Generate sample encrypted data.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
+    parser.add_argument('-n', '--file-count',
+                        help='The number of files to create.')
+    parser.add_argument('-s', '--batch-size',
+                        help='The number of records in each file.')
     parser.add_argument('-c', '--compress', action='store_true',
                         help='Compress before encryption.')
     parser.add_argument('-e', '--encrypt', action='store_true',

@@ -20,6 +20,7 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
 //            val compressorInputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
 //                inputStream)
 
+//            return DecompressedStream(inputStream, fileName)
             val decompressedStream = GZIPInputStream(inputStream)
 //            logger.info("Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
             logger.info("Using java.util.zip.")

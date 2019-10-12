@@ -78,3 +78,5 @@ services:
       --s3.prefix.folder=test/prefix/
       --s3.service.endpoint=http://s3:4572
       --spring.profiles.active=localS3,secureHttpClient,batchRun
+    volumes:
+      - /home/danielchicot/src/dwp/uc-historic-data-importer/dump:/opt/uc-historic-data-importer/dump

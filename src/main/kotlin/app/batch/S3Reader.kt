@@ -53,6 +53,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
         if (null == iterator) {
+            logger.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
             val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
             val keyPairs = keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key }, s3KeyRegex.toRegex(), s3DataKeyExtension.toRegex(), s3MetadataKeyExtension.toRegex())

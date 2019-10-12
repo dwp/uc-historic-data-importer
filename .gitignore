@@ -37,3 +37,4 @@ cacerts*
 *.json.gz.encryption.json
 venv/
 __pycache__
+dump/
