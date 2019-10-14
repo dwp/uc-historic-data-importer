@@ -11,7 +11,6 @@ import com.beust.klaxon.JsonObject
 import com.nhaarman.mockitokotlin2.*
 import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
@@ -21,12 +20,9 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.lang.RuntimeException
-import javax.annotation.PostConstruct
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
-
 class HbaseWriterTest {
 
     val validJsonWithoutTimeStamp = """{"type":"addressDeclaration"}""".trimIndent()
@@ -96,9 +92,7 @@ class HbaseWriterTest {
         verify(mockAppender, times(4)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
-        assertTrue(formattedMessages.contains("Error while parsing record from '$validFileName': 'parse error'."))
-        //verify(hbase, times(1)).putVersion(topic,key,message1,100)
-
+        assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
     }
 
    @Test
@@ -139,8 +133,7 @@ class HbaseWriterTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(4)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-
-        assertTrue(formattedMessages.contains("Error while parsing record from '$validFileName': 'parse error'."))
+        assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
         assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of id"))
 
     }
@@ -184,7 +177,7 @@ class HbaseWriterTest {
          verify(mockAppender, times(4)).doAppend(captor.capture())
          val formattedMessages = captor.allValues.map { it.formattedMessage }
 
-         assertTrue(formattedMessages.contains("Error while parsing record from '$validFileName': 'parse error'."))
+         assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
          assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
 
      }
