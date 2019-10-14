@@ -45,20 +45,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
 
-                val buffer = ByteArray(1024)
-
-//                val outputStream = BufferedOutputStream(FileOutputStream("dump/${groups[0]!!.value}.gz"))
-
-//                it.inputStream.copyTo(outputStream)
-//                it.inputStream.close()
-//                outputStream.close()
-//                BufferedInputStream(it.inputStream).use {
-//                    while (it.read(buffer)!= -1) {
-//                        println(Charset.defaultCharset())
-//                        println(String(buffer))
-//                    }
-//
-//                }
                 BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
                     var line: String? = null
                     var lineNo = 0;

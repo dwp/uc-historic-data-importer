@@ -85,3 +85,15 @@ services:
       --s3.prefix.folder=test/prefix/
       --s3.service.endpoint=http://s3:4572
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng
+
+  integration-test:
+    image: uc-historic-data-importer-integration:latest
+    build:
+      context: .
+      dockerfile: docker/integration/Dockerfile
+      args:
+        - APP_VERSION
+    container_name: uc-historic-data-importer-ittest
+    depends_on:
+      - uc-historic-data-importer
+    command: "gradle --rerun-tasks integration"

@@ -72,8 +72,6 @@ def main():
                 encrypt(encryption_metadata['plaintextDatakey'],
                         contents.encode("utf8"), args.encrypt)
 
-
-
         metadata_file = f'{batch}.{batch_nos[batch]:04d}.json.gz.encryption.json'
         with open(metadata_file, 'w') as metadata:
             print(f'Writing metadata file {metadata_file}')
@@ -172,11 +170,6 @@ def command_line_args():
                         help='Encrypt the data.')
     return parser.parse_args()
 
-def database_name(i):
-    return
-
-def collection_name(i):
-    pass
 
 if __name__ == "__main__":
     main()

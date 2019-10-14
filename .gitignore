@@ -38,3 +38,4 @@ cacerts*
 venv/
 __pycache__
 dump/
+.kotlintest/

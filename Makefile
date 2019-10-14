@@ -17,6 +17,14 @@ help:
 %.jks:
 	./truststores.sh
 
+build-base-images: ## Build base images to avoid rebuilding frequently
+	@{ \
+		pushd docker; \
+		cp ../settings.gradle.kts ../gradle.properties . ; \
+		docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_java_gradle_base . ; \
+		rm settings.gradle.kts gradle.properties ; \
+		popd; \
+	}
 
 .PHONY: java-image
 java-image: ## Build java image.
@@ -39,12 +47,16 @@ dks-insecure-image: ## Build the dks image.
 s3-init-image: ## Build the image that creates the s3 bucket.
 	docker-compose build s3-init
 
+.PHONY: integration-test-image
+integration-test-image: ## Build the image for integration tests.
+	docker-compose build integration-test
+
 .PHONY: add-containers-to-hosts
 add-containers-to-hosts:
 	./add-containers-to-hosts.sh
 
 .PHONY: ancillary-images
-ancillary-images: java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
+ancillary-images: build-base-images java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build
@@ -78,7 +90,8 @@ up: build-image up-ancillary ## Run the ecosystem of containers.
 up-all: build-image up
 
 .PHONY: integration
-integration: destroy up-all
+integration: destroy up-all integration-test-image
+	docker-compose run --rm integration-test
 
 .PHONY: destroy
 destroy: ## Bring everything down and clean up.
