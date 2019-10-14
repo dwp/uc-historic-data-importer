@@ -2,11 +2,12 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
+import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import java.util.zip.GZIPInputStream
 
 @Component
 class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream> {
@@ -15,22 +16,16 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
         val inputStream = item.inputStream
         val fileName = item.fileName
         try {
-            logger.info("Starting decompression of the file '$fileName'.")
-            logger.info("inputStream: '$inputStream'.")
-//            val compressorInputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
-//                inputStream)
-
-//            return DecompressedStream(inputStream, fileName)
-            val decompressedStream = GZIPInputStream(inputStream)
-//            logger.info("Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
-            logger.info("Using java.util.zip.")
-            return DecompressedStream(decompressedStream, fileName)
+            logger.info("Starting decompression of the file $fileName")
+            logger.info("inputStream: '$inputStream'")
+            val compressorInputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
+                inputStream) as GzipCompressorInputStream
+            logger.info("Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
+            return DecompressedStream(compressorInputStream, fileName)
         }
         catch (e: Exception) {
-            logger.error("Processing '$fileName': ${e.message}", e)
-//            e.printStackTrace(System.err)
             val decompressionExceptionMsg = "Exception occurred when decompressing the gzip decrypted input stream from the file $fileName : ${e.message}"
-//            logger.error(decompressionExceptionMsg)
+            logger.error(decompressionExceptionMsg)
             throw RuntimeException("$decompressionExceptionMsg : $e")
         }
     }

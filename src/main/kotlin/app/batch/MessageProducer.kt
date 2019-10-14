@@ -6,7 +6,9 @@ import com.beust.klaxon.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
+@Component
 class MessageProducer {
     fun produceMessage(jsonObject: JsonObject,
                        encryptionResult: EncryptionResult,

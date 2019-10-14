@@ -1,6 +1,13 @@
 version: '3'
 
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:4.1.0
+    ports:
+      - "2181:2181"
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
 
   dks:
     image: dks
@@ -24,13 +31,13 @@ services:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
   hbase:
-    image: harisekhon/hbase:1.4
-    ports:
-      - 9090:9090
-      - 9095:9095
-      - 2181:2181
-      - 16201:16201
+    image: hbase:latest
+    build: docker/hbase
+    depends_on:
+      - zookeeper
     container_name: hbase
+    environment:
+      ZOOKEEPER_QUORUM: zookeeper
 
   s3:
     image: localstack/localstack
@@ -77,6 +84,4 @@ services:
       --s3.bucket=uc-historic-data
       --s3.prefix.folder=test/prefix/
       --s3.service.endpoint=http://s3:4572
-      --spring.profiles.active=localS3,secureHttpClient,batchRun,weakRng
-    volumes:
-      - /home/danielchicot/src/dwp/uc-historic-data-importer/dump:/opt/uc-historic-data-importer/dump
+      --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng

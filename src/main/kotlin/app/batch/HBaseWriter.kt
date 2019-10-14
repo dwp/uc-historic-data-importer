@@ -5,10 +5,7 @@ import app.domain.DecompressedStream
 import app.domain.EncryptionResult
 import app.services.CipherService
 import app.services.KeyService
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.Parser
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.hbase.client.Connection
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
@@ -18,13 +15,22 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 @Component
-class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedStream> {
+class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
     private lateinit var cipherService: CipherService
 
     @Autowired
     private lateinit var keyService: KeyService
+
+    @Autowired
+    private lateinit var hbase: HbaseClient
+
+    @Autowired
+    private lateinit var messageProducer: MessageProducer
+
+    @Autowired
+    private lateinit var messageUtils: MessageUtils
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
@@ -59,34 +65,52 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
                     while ({ line = reader.readLine(); line }() != null) {
                         lineNo++
                         try {
-                            val parser: Parser = Parser.default()
-                            val stringBuilder = StringBuilder(line)
-                            val json = parser.parse(stringBuilder) as JsonObject
-                            val id = json.obj("_id")?.toJsonString()
+                            val json = messageUtils.parseJson(line)
+                            val id = messageUtils.getId(json)?.toJsonString()
                             if (StringUtils.isNotBlank(id)) {
                                 val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                                logger.info("Success '$fileName' line ${lineNo}.")
-                                val message = MessageProducer().produceMessage(json, encryptionResult, dataKeyResult,
+                                val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
                                         database, collection)
-                            //logger.info("Message: '$message'.")
+                                val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+                                if(StringUtils.isNotBlank(lastModifiedTimestampStr)){
+                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                                    val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                                    val topic = "$database.$collection"
+                                    try {
+                                        hbase.putVersion(
+                                                topic = topic.toByteArray(), // TODO what topic we should insert
+                                                key = formattedkey,
+                                                body = message.toByteArray(),
+                                                version = lastModifiedTimestampLong
+                                        )
+                                        logger.info("Written id $id as key  $formattedkey to HBase.")
+                                    } catch (e: Exception) {
+                                        logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
+                                        throw e
+                                    }
+                                } else {
+                                    logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                                }
+
+                            } else {
+                                logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
                             }
-                        }
-                        catch (e: Exception) {
-                            logger.error("Error while parsing record from '$fileName'.")
+
+                        } catch (e: Exception) {
+                            logger.error("Error while parsing record from '$fileName': '${e.message}'.", e)
                         }
                     }
+                    logger.info("Processed file $fileName")
+
                 }
             }
-            logger.info("Processed '${it.fileName}'.")
-
         }
     }
 
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?): EncryptionResult {
         try {
             return cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
             throw e
         }
@@ -95,8 +119,7 @@ class HBaseWriter(private val connection: Connection) : ItemWriter<DecompressedS
     fun getDataKey(fileName: String): DataKeyResult {
         try {
             return keyService.batchDataKey()
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.error("Error while creating data key for the file  $fileName: $e")
             throw e
         }

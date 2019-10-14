@@ -61,7 +61,7 @@ build-image: ancillary-images build-jar ## Build all ecosystem of images
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d hbase s3 dks dks-insecure
+	docker-compose up -d zookeeper hbase s3 dks dks-insecure
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \
