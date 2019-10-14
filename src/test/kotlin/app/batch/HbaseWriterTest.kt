@@ -29,8 +29,9 @@ import javax.annotation.PostConstruct
 
 class HbaseWriterTest {
 
-    val invalidJson1 = """{"_id":{"declarationId":"47a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
-    val invalidJson2 = """{"type":"addressDeclaration"}""".trimIndent()
+    val validJsonWithoutTimeStamp = """{"type":"addressDeclaration"}""".trimIndent()
+    val validJsonWithoutId = """{"type":"addressDeclaration"}""".trimIndent()
+    val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
     val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
     val validFileName = "adb.collection.0001.json.gz.enc"
 
@@ -56,37 +57,7 @@ class HbaseWriterTest {
     private lateinit var hBaseWriter: HBaseWriter
 
 
-
-    /*@Test
-    fun should_Log_And_Continue_When_DBObject_IsNot_Valid_Json() {
-        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
-        val mockAppender: Appender<ILoggingEvent> = mock()
-        root.addAppender(mockAppender)
-        val dataKeyResult = DataKeyResult("", "", "")
-        val encryptionResult = EncryptionResult("", "")
-        val jsonObject = JsonObject()
-        whenever(messageUtils.parseJson(validJson)).thenReturn(jsonObject)
-        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
-        whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
-        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
-        whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
-        val formattedKey = "0000-0000-00001"
-        whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
-        val message = "message"
-        whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "colection")).thenReturn(message)
-        doNothing().whenever(hbase).putVersion("adb.collection".toByteArray(), formattedKey.toByteArray(), message.toByteArray(), 100L)
-        val data = listOf(invalidJson1, invalidJson2, validJson)
-        val inputStreams = mutableListOf(getInputStream(data, validFileName))
-        hBaseWriter.write(inputStreams)
-        val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(3)).doAppend(captor.capture())
-        val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("Parsing DB object of id null  in the file file1"))
-        assertTrue(formattedMessages.contains("Parsing DB object of id {\"declarationId\":\"87a4fad9-49af-4cb2-91b0-0056e2ac0eef\"}  in the file file1"))
-    }*/
-
     @Test
-    @Ignore
     fun should_Log_Error_For_Invalid_Json_And_continue() {
 
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
@@ -103,7 +74,7 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(validJson)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
+        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("something")
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
@@ -126,9 +97,97 @@ class HbaseWriterTest {
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error while parsing record from '$validFileName': 'parse error'."))
-        verify(hbase, times(1)).putVersion(topic,key,message1,100)
+        //verify(hbase, times(1)).putVersion(topic,key,message1,100)
 
     }
+
+   @Test
+    fun should_Log_Error_For_Json_Without_Id() {
+
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
+
+        val dataKeyResult = DataKeyResult("", "", "")
+        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
+        val encryptionResult = EncryptionResult("", "")
+        whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
+
+        whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
+        val jsonObject = JsonObject()
+        whenever(messageUtils.parseJson(validJsonWithoutId)).thenReturn(jsonObject)
+        whenever(messageUtils.getId(jsonObject)).thenReturn(null)
+
+        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
+        whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
+        val message = "message"
+        whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+
+        val formattedKey = "0000-0000-00001"
+        whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
+
+        val topic = "adb.collection".toByteArray()
+        val key = formattedKey.toByteArray()
+        val message1 = message.toByteArray()
+
+        doNothing().`when`(hbase).putVersion(topic,key,message1,100)
+
+        val data = listOf(invalidJson2, validJsonWithoutId)
+        val inputStreams = mutableListOf(getInputStream(data, validFileName))
+        hBaseWriter.write(inputStreams)
+
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(4)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+
+        assertTrue(formattedMessages.contains("Error while parsing record from '$validFileName': 'parse error'."))
+        assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of id"))
+
+    }
+
+      @Test
+     fun should_Log_Error_For_Json_Without_Timestamp() {
+
+         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+         val mockAppender: Appender<ILoggingEvent> = mock()
+         root.addAppender(mockAppender)
+
+         val dataKeyResult = DataKeyResult("", "", "")
+         whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
+         val encryptionResult = EncryptionResult("", "")
+         whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
+
+         whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
+         val jsonObject = JsonObject()
+         whenever(messageUtils.parseJson(validJsonWithoutTimeStamp)).thenReturn(jsonObject)
+         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
+
+         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn(null)
+         //whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
+         val message = "message"
+         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+
+         val formattedKey = "0000-0000-00001"
+         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
+
+         val topic = "adb.collection".toByteArray()
+         val key = formattedKey.toByteArray()
+         val message1 = message.toByteArray()
+
+         doNothing().`when`(hbase).putVersion(topic,key,message1,100)
+
+         val data = listOf(invalidJson2, validJsonWithoutTimeStamp)
+         val inputStreams = mutableListOf(getInputStream(data, validFileName))
+         hBaseWriter.write(inputStreams)
+
+         val captor = argumentCaptor<ILoggingEvent>()
+         verify(mockAppender, times(4)).doAppend(captor.capture())
+         val formattedMessages = captor.allValues.map { it.formattedMessage }
+
+         assertTrue(formattedMessages.contains("Error while parsing record from '$validFileName': 'parse error'."))
+         assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
+
+     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()

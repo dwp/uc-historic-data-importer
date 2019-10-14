@@ -20,9 +20,13 @@ open class  MessageUtils {
     }
 
     fun getLastModifiedTimestamp(json: JsonObject?): String? {
-        val lastModifiedTimestampStr = json?.lookup<String?>("_lastModifiedDateTime.\$date")?.get(0)
-        if (lastModifiedTimestampStr.isNullOrBlank()) throw RuntimeException("Last modified date time is null or blank")
-        return lastModifiedTimestampStr
+        try {
+            val lastModifiedTimestampStr = json?.lookup<String?>("_lastModifiedDateTime.\$date")?.get(0)
+            return lastModifiedTimestampStr
+        } catch(e: Exception) {
+            logger.warn("Record body does not contain valid json object with  __lastModifiedDateTime field")
+            return null
+        }
     }
 
     fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
@@ -33,10 +37,9 @@ open class  MessageUtils {
     fun getId(json: JsonObject): JsonObject? {
         try {
             return json.obj("_id")
-            //return if (message == null) null else message.obj("_id")
         }
-        catch (e: ClassCastException) {
-            logger.warn("Record body does not contain valid json object at message._id")
+        catch (e: Exception) {
+            logger.warn("Record body does not contain valid json object with  _id field")
             return null
         }
     }

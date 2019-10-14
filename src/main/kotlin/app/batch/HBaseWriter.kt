@@ -47,7 +47,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                 BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
                     var line: String? = null
-                    var lineNo = 1;
+                    var lineNo = 0;
                     while ({ line = reader.readLine(); line }() != null) {
                         lineNo++
                         try {
@@ -55,31 +55,38 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             val id = messageUtils.getId(json)?.toJsonString()
                             if (StringUtils.isNotBlank(id)) {
                                 val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                                //logger.info("Success '$fileName' line ${lineNo}.")
                                 val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
                                         database, collection)
                                 val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
-                                val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                                val formattedkey = messageUtils.generateKeyFromRecordBody(json)
-                                try {
-                                    hbase.putVersion(
-                                            topic = "$database.$collection".toByteArray(), // TODO what topic we should insert
-                                            key = formattedkey,
-                                            body = message.toByteArray(),
-                                            version = lastModifiedTimestampLong
-                                    )
-                                    logger.info("Written id $id as key  $formattedkey to HBase.")
-                                } catch (e: Exception) {
-                                    logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
-                                    throw e
+                                if(StringUtils.isNotBlank(lastModifiedTimestampStr)){
+                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                                    val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                                    val topic = "$database.$collection"
+                                    try {
+                                        hbase.putVersion(
+                                                topic = topic.toByteArray(), // TODO what topic we should insert
+                                                key = formattedkey,
+                                                body = message.toByteArray(),
+                                                version = lastModifiedTimestampLong
+                                        )
+                                        logger.info("Written id $id as key  $formattedkey to HBase.")
+                                    } catch (e: Exception) {
+                                        logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
+                                        throw e
+                                    }
+                                } else {
+                                    logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
                                 }
 
+                            } else {
+                                logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
                             }
+
                         } catch (e: Exception) {
                             logger.error("Error while parsing record from '$fileName': '${e.message}'.", e)
                         }
                     }
-                    logger.info("Procesed file $fileName")
+                    logger.info("Processed file $fileName")
 
                 }
             }
