@@ -1,5 +1,10 @@
+import app.batch.HbaseClient
+import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
+import org.apache.hadoop.hbase.TableName
+import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
+
 
 class Kafka2HBaseSpec: StringSpec(){
 
@@ -7,7 +12,15 @@ class Kafka2HBaseSpec: StringSpec(){
 
     init {
         "Number of records should match" {
-
+            val hbase = HbaseClient.connect()
+            val scan = Scan()
+           val rowCount =  hbase.connection.getTable(TableName.valueOf("k2hb:ingest-topic")).use { table ->
+                val  scanner = table.getScanner(scan)
+                scanner.map { it }.size
+               scanner.close()
+            }
+            log.info("Row count : $rowCount")
+           rowCount shouldBe 1000
         }
     }
 
