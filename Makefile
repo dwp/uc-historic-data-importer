@@ -77,6 +77,9 @@ up: build-image up-ancillary ## Run the ecosystem of containers.
 .PHONY: up-all
 up-all: build-image up
 
+.PHONY: integration
+integration: destroy up-all
+
 .PHONY: destroy
 destroy: ## Bring everything down and clean up.
 	docker-compose down
