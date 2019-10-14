@@ -88,6 +88,7 @@ jobs:
             done
             docker-compose up s3-init
             docker-compose up uc-historic-data-importer
+            docker-compose up integration-test
   publish-github-release:
     docker:
       - image: cibuilds/github:0.10
