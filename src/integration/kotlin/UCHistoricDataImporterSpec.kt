@@ -16,11 +16,13 @@ class Kafka2HBaseSpec: StringSpec(){
             val scan = Scan()
            val rowCount =  hbase.connection.getTable(TableName.valueOf("k2hb:ingest-topic")).use { table ->
                 val  scanner = table.getScanner(scan)
-                scanner.map { it }.size
+               val size = scanner.map { it }.size
                scanner.close()
+               size
             }
+
             log.info("Row count : $rowCount")
-           rowCount shouldBe 1000
+           rowCount shouldBe 4
         }
     }
 
