@@ -87,13 +87,11 @@ services:
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng
 
   integration-test:
-    image: uc-historic-data-importer-integration:latest
+    image: integration-test:latest
     build:
       context: .
       dockerfile: docker/integration/Dockerfile
-      args:
-        - APP_VERSION
-    container_name: uc-historic-data-importer-ittest
+    container_name: integration-test
     depends_on:
       - uc-historic-data-importer
     command: "gradle --rerun-tasks integration"

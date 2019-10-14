@@ -1,4 +1,4 @@
-FROM dwp-kotlin-slim-gradle:latest
+FROM dwp-gradle:latest
 
 COPY build.gradle.kts .
 COPY settings.gradle.kts .

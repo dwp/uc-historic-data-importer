@@ -17,14 +17,10 @@ help:
 %.jks:
 	./truststores.sh
 
-build-base-images: ## Build base images to avoid rebuilding frequently
-	@{ \
-		pushd docker; \
-		cp ../settings.gradle.kts ../gradle.properties . ; \
-		docker build --tag dwp-kotlin-slim-gradle:latest --file Dockerfile_java_gradle_base . ; \
-		rm settings.gradle.kts gradle.properties ; \
-		popd; \
-	}
+.PHONY: gradle-image
+gradle-image: ## Build gradle image.
+	cp settings.gradle.kts gradle.properties docker/gradle
+	cd docker/gradle && docker build --tag dwp-gradle:latest .
 
 .PHONY: java-image
 java-image: ## Build java image.
