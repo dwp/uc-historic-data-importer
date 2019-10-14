@@ -60,6 +60,26 @@ def main():
             contents = contents + \
                 db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
 
+        if args.malformed_input:
+            print("Adding corrupted line.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            corrupted = record[0:int(len(record)/2)]
+            contents = contents + corrupted + "\n"
+
+        if args.record_with_no_id:
+            print("Adding record with no id.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            del jso['_id']
+            contents = contents + json.dumps(jso) + "\n"
+
+        if args.record_with_no_timestamp:
+            print("Adding record with no timestamp.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            del jso['_lastModifiedDateTime']
+            contents = contents + json.dumps(jso) + "\n"
+
         if args.compress:
             print("Compressing.")
             compressed = gzip.compress(contents.encode("ascii"))
@@ -158,6 +178,12 @@ def db_object(i):
 def command_line_args():
     """Parses, returns the supplied command line args."""
     parser = argparse.ArgumentParser(description='Generate sample encrypted data.')
+    parser.add_argument('-m', '--malformed-input', action='store_true',
+                        help='Add malformed inputs to each file.')
+    parser.add_argument('-i', '--record-with-no-id', action='store_true',
+                        help='Add a record with no id to each file.')
+    parser.add_argument('-d', '--record-with-no-timestamp', action='store_true',
+                        help='Add a record with no timestamp to each file.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
     parser.add_argument('-n', '--file-count',

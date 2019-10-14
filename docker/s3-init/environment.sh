@@ -29,5 +29,5 @@ aws_cmd() {
 }
 
 create_sample_data() {
-    ./sample_data.py -n5 -s10 -cek http://dks-insecure:8080/datakey
+    ./sample_data.py -n5 -s10 -cedimk http://dks-insecure:8080/datakey
 }

@@ -83,7 +83,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             }
 
                         } catch (e: Exception) {
-                            logger.error("Error while parsing record from '$fileName': '${e.message}'.", e)
+                            logger.error("Error while parsing record $lineNo from '$fileName': '${e.message}'.")
                         }
                     }
                     logger.info("Processed file $fileName")
