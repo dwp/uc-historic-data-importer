@@ -2,13 +2,10 @@ package app.configuration
 
 import app.batch.HbaseClient
 import app.batch.migrate
-import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Connection
-import org.apache.hadoop.hbase.client.ConnectionFactory
 import org.apache.http.impl.client.HttpClients
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -43,18 +40,18 @@ class ContextConfiguration {
     @Profile("weakRng")
     fun weakRandom() = SecureRandom.getInstance("SHA1PRNG")!!
 
-    @Bean
-    @Profile("hbase")
-    fun hbaseConnection(): Connection {
-
-        val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
-            this.set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
-            this.setInt("hbase.zookeeper.port", 2181)
-        })
-
-        addShutdownHook(connection)
-        return connection
-    }
+//    @Bean
+//    @Profile("hbase")
+//    fun hbaseConnection(): Connection {
+//
+//        val connection = ConnectionFactory.createConnection(HBaseConfiguration.create().apply {
+//            this.set("hbase.zookeeper.quorum", hbaseZookeeperQuorum)
+//            this.setInt("hbase.zookeeper.port", 2181)
+//        })
+//
+//        addShutdownHook(connection)
+//        return connection
+//    }
 
     @Bean
     @Profile("hbase")

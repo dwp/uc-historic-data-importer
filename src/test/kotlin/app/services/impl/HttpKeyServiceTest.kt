@@ -29,9 +29,8 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("awsS3")
+@ActiveProfiles("awsS3", "weakRng")
 @SpringBootTest
-@ActiveProfiles("weakRng")
 @TestPropertySource(properties = [
     "data.key.service.url=phoney",
     "aws.region=eu-west-1",

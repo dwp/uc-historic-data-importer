@@ -10,10 +10,10 @@ import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
-import junit.framework.Assert.assertEquals
 import org.everit.json.schema.loader.SchemaLoader
 import org.json.JSONObject
 import org.json.JSONTokener
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.slf4j.LoggerFactory
 
