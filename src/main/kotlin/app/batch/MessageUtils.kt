@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.zip.CRC32
 
 @Component
-open class MessageUtils {
+class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
 
     fun getTimestampAsLong(timeStampAsStr: String?, timeStampPattern: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"): Long {

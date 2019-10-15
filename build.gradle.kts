@@ -59,7 +59,6 @@ tasks.withType<KotlinCompile> {
 
 sourceSets {
         create("integration") {
-                java.srcDir(file("src/integration/groovy"))
                 java.srcDir(file("src/integration/kotlin"))
                 compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
                 runtimeClasspath += output + compileClasspath

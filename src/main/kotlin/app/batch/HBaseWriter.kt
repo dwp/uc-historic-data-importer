@@ -32,61 +32,55 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var messageUtils: MessageUtils
 
+    private val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
+    private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
+
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
             logger.info("Processing '${it.fileName}'.")
             val fileName = it.fileName
-            val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
-            val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
+                var lineNo = 0;
+                BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
+                    lineNo++
+                    try {
+                        val json = messageUtils.parseJson(line)
+                        val id = messageUtils.getId(json)?.toJsonString()
 
-                BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
-                    var line: String? = null
-                    var lineNo = 0;
-                    while ({ line = reader.readLine(); line }() != null) {
-                        lineNo++
-                        try {
-                            val json = messageUtils.parseJson(line)
-                            val id = messageUtils.getId(json)?.toJsonString()
-                            if (StringUtils.isNotBlank(id)) {
-                                val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                                val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
-                                        database, collection)
-                                val messageJsonObject = messageUtils.parseJson(message)
-                                val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
-                                if (StringUtils.isNotBlank(lastModifiedTimestampStr)) {
-                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                                    val formattedkey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
-                                    val topic = "$database.$collection"
-                                    try {
-                                        hbase.putVersion(
-                                                topic = topic.toByteArray(), // TODO what topic we should insert
-                                                key = formattedkey,
-                                                body = message.toByteArray(),
-                                                version = lastModifiedTimestampLong
-                                        )
-                                        logger.info("Written id $id as key  $formattedkey to HBase.")
-                                    } catch (e: Exception) {
-                                        logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
-                                        throw e
-                                    }
-                                } else {
-                                    logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
-                                }
-
-                            } else {
-                                logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
-                            }
-
-                        } catch (e: Exception) {
-                            logger.error("Error while parsing record $lineNo from '$fileName': '${e.message}'.")
+                        if (StringUtils.isBlank(id)) {
+                            logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
+                            return@forEachLine
                         }
+
+                        val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
+                        val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
+                                database, collection)
+                        val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+
+                        if (StringUtils.isBlank(lastModifiedTimestampStr)) {
+                            logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                            return@forEachLine
+                        }
+
+                        val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                        val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                        val topic = "$database.$collection"
+                        hbase.putVersion(
+                                topic = topic.toByteArray(),
+                                key = formattedkey,
+                                body = message.toByteArray(),
+                                version = lastModifiedTimestampLong
+                        )
+                        logger.info("Written id $id as key $formattedkey to HBase.")
+                    } catch (e: Exception) {
+                        logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
+
                     logger.info("Processed file $fileName")
 
                 }

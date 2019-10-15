@@ -1,18 +1,14 @@
 package app.batch
 
 import org.apache.hadoop.conf.Configuration
-import java.time.Duration
 import java.util.*
 
 
 fun getEnv(envVar: String): String? {
     val value = System.getenv(envVar)
-    return if (value.isNullOrEmpty()) null else value
+    return if (value.isBlank()) null else value
 }
 
-fun String.toDuration(): Duration {
-    return Duration.parse(this)
-}
 
 object Config {
 
