@@ -52,7 +52,6 @@ class HbaseWriterTest {
     @Autowired
     private lateinit var hBaseWriter: HBaseWriter
 
-
     @Test
     fun should_Log_Error_For_Invalid_Json_And_continue() {
 
@@ -82,7 +81,7 @@ class HbaseWriterTest {
         val key = formattedKey.toByteArray()
         val message1 = message.toByteArray()
 
-       doNothing().`when`(hbase).putVersion(topic,key,message1,100)
+        doNothing().`when`(hbase).putVersion(topic,key,message1,100)
 
         val data = listOf(invalidJson2, validJson)
         val inputStreams = mutableListOf(getInputStream(data, validFileName))
@@ -116,8 +115,8 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
-
         val formattedKey = "0000-0000-00001"
+
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
 
         val topic = "adb.collection".toByteArray()

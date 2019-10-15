@@ -17,10 +17,7 @@ class KeyPairGeneratorTest {
     private val fileFormatRegex = "^[A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz".toRegex()
     private val dataFileExtensionRegex = "\\.enc\$".toRegex()
     private val metadataFileExtensionRegex = "\\.encryption\\.json\$".toRegex()
-
-
     private val keyPairGenerator: KeyPairGenerator = KeyPairGenerator()
-
 
     @Test
     fun Should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {
