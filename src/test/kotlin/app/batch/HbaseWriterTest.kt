@@ -25,7 +25,7 @@ import java.io.ByteArrayOutputStream
 @SpringBootTest(classes = [HBaseWriter::class])
 class HbaseWriterTest {
 
-    val validJsonWithoutTimeStamp = """{"type":"addressDeclaration"}""".trimIndent()
+    val validJsonWithoutTimeStamp = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
     val validJsonWithoutId = """{"type":"addressDeclaration"}""".trimIndent()
     val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
     val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
@@ -110,7 +110,7 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
         val jsonObject = JsonObject()
         whenever(messageUtils.parseJson(validJsonWithoutId)).thenReturn(jsonObject)
-        whenever(messageUtils.getId(jsonObject)).thenReturn(null)
+        whenever(messageUtils.getIdFromDbObject(jsonObject)).thenReturn(null)
 
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
@@ -154,10 +154,9 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
         val jsonObject = JsonObject()
         whenever(messageUtils.parseJson(validJsonWithoutTimeStamp)).thenReturn(jsonObject)
-        whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
+        whenever(messageUtils.getIdFromDbObject(jsonObject)).thenReturn(jsonObject)
 
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn(null)
-        //whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 

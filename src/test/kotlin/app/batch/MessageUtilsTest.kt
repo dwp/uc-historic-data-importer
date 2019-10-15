@@ -112,7 +112,7 @@ class MessageUtilsTest {
                 "            \"_id\": {\n" +
                 "                \"exampleId\": \"aaaa1111-abcd-4567-1234-1234567890ab\"\n" +
                 "            },\n" +
-                "           \"_lastModifiedDateTime\": {\"\$date\" : \"2018-12-14T15:01:02.000+0000\"},\n" +
+                "           \"_lastModifiedDateTime\": \"2018-12-14T15:01:02.000+0000\",\n" +
                 "            \"encryption\": {\n" +
                 "                \"encryptionKeyId\": \"55556666-abcd-89ab-1234-1234567890ab\",\n" +
                 "                \"encryptedEncryptionKey\": \"bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab\",\n" +
@@ -134,7 +134,7 @@ class MessageUtilsTest {
     fun Invalid_timestamp_format_in_the_message_throws_Exception() {
         val jsonString = "{\n" +
                 "        \"message\": {\n" +
-                "           \"_lastModifiedDateTime\": {\"\$date\" : \"2018-12-14\"},\n" +
+                "           \"_lastModifiedDateTime\":  \"2018-12-14\",\n" +
                 "        }\n" +
                 "    }"
 
@@ -183,7 +183,7 @@ class MessageUtilsTest {
                 "    }"
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        shouldThrow<RuntimeException> {
+        shouldThrow<ParseException> {
             val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
             messageUtils.getTimestampAsLong(lastModifiedTimestamp)
         }
@@ -198,7 +198,7 @@ class MessageUtilsTest {
                 "    }"
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        shouldThrow<RuntimeException> {
+        shouldThrow<ParseException> {
             val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
             messageUtils.getTimestampAsLong(lastModifiedTimestamp)
         }
@@ -365,6 +365,35 @@ class MessageUtilsTest {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"test_object\":{\"test_key\":\"test_value\"}}}")
         val idJson: JsonObject? = messageUtils.getId(jsonOne)
+
+        idJson shouldBe null
+    }
+
+    @Test
+    fun id_is_returned_from_valid_dbobject() {
+
+        val jsonOne: JsonObject = messageUtils.parseJson("{\"_id\":{\"test_key\":\"test_value\"}}")
+        val idString = "{\"test_key\":\"test_value\"}"
+
+        val idJson: JsonObject? = messageUtils.getIdFromDbObject(jsonOne)
+
+        idJson?.toJsonString() shouldBe idString
+    }
+
+    @Test
+    fun null_is_returned_from_json_where_message__exists() {
+
+        val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":{\"test_key\":\"test_value\"}}}")
+        val idJson: JsonObject? = messageUtils.getIdFromDbObject(jsonOne)
+
+        idJson shouldBe null
+    }
+
+    @Test
+    fun null_is_returned_from_json_where_id_in_dbobject_is_missing() {
+
+        val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"test_object\":{\"test_key\":\"test_value\"}}}")
+        val idJson: JsonObject? = messageUtils.getIdFromDbObject(jsonOne)
 
         idJson shouldBe null
     }

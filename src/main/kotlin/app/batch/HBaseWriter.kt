@@ -54,7 +54,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     lineNo++
                     try {
                         val json = messageUtils.parseJson(line)
-                        val id = messageUtils.getId(json)?.toJsonString()
+                        val id = messageUtils.getIdFromDbObject(json)?.toJsonString()
 
                         if (StringUtils.isBlank(id)) {
                             logger.info("Skipping record $lineNo in the file $fileName due to absence of id")

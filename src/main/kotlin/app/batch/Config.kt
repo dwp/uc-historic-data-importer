@@ -1,7 +1,6 @@
 package app.batch
 
 import org.apache.hadoop.conf.Configuration
-import java.util.*
 
 
 fun getEnv(envVar: String): String? {

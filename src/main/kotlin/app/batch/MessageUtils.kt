@@ -21,7 +21,7 @@ class MessageUtils {
 
     fun getLastModifiedTimestamp(json: JsonObject?): String? {
         try {
-            val lastModifiedTimestampStr = json?.lookup<String?>("message._lastModifiedDateTime.\$date")?.get(0)
+            val lastModifiedTimestampStr = json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
             return lastModifiedTimestampStr
         } catch (e: Exception) {
             logger.warn("Record body does not contain valid json object with  _lastModifiedDateTime field")
@@ -39,7 +39,16 @@ class MessageUtils {
             val message: JsonObject? = json.obj("message")
             return if (message == null) null else message.obj("_id")
         } catch (e: Exception) {
-            logger.warn("Record body does not contain valid json object with  _id field")
+            logger.warn("Message does not contain valid json object with  _id field")
+            return null
+        }
+    }
+
+    fun getIdFromDbObject(json: JsonObject): JsonObject? {
+        try {
+            return json.obj("_id")
+        } catch (e: Exception) {
+            logger.warn("DB Object does not contain valid json object with  _id field")
             return null
         }
     }
