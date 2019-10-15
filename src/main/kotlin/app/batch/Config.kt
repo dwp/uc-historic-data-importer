@@ -6,7 +6,7 @@ import java.util.*
 
 fun getEnv(envVar: String): String? {
     val value = System.getenv(envVar)
-    return if (value.isBlank()) null else value
+    return if (value.isNullOrEmpty()) null else value
 }
 
 
