@@ -4,6 +4,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.hbase.TableName
+import org.apache.hadoop.hbase.client.Admin
 import org.apache.log4j.Logger
 
 fun HbaseClient.migrate() {
@@ -31,27 +32,21 @@ fun HbaseClient.migrate() {
             minVersions = 1
         }
 
-        if (!admin.tableExists(dataTableName)) {
-            logger.info("Creating table '$dataTable'")
-            admin.createTable(HTableDescriptor(dataTableName).apply {
-                addFamily(dataFamilyDescriptor)
-            })
-        } else if (!admin.getTableDescriptor(dataTableName).hasFamily(dataFamily)) {
-            logger.info("Adding column family '$dataFamily' to table '$dataTable'")
-            admin.addColumn(dataTableName, dataFamilyDescriptor)
-        }
-
-        // Create topic table if not exists, else add the family
+        initTable(admin, dataTableName, dataFamilyDescriptor)
         val topicFamilyDescriptor = HColumnDescriptor(topicFamily)
+        initTable(admin, topicTableName, topicFamilyDescriptor)
+    }
+}
 
-        if (!admin.tableExists(topicTableName)) {
-            logger.info("Creating table '$topicTable'")
-            admin.createTable(HTableDescriptor(topicTableName).apply {
-                addFamily(topicFamilyDescriptor)
-            })
-        } else if (!admin.getTableDescriptor(topicTableName).hasFamily(topicFamily)) {
-            logger.info("Adding column family '$topicFamily' to table '$topicTable'")
-            admin.addColumn(topicTableName, topicFamilyDescriptor)
-        }
+private fun HbaseClient.initTable(admin: Admin, dataTableName: TableName?, dataFamilyDescriptor: HColumnDescriptor) {
+    val logger = Logger.getLogger(HbaseClient::class.java)
+    if (!admin.tableExists(dataTableName)) {
+        logger.info("Creating table '$dataTable'")
+        admin.createTable(HTableDescriptor(dataTableName).apply {
+            addFamily(dataFamilyDescriptor)
+        })
+    } else if (!admin.getTableDescriptor(dataTableName).hasFamily(dataFamily)) {
+        logger.info("Adding column family '$dataFamily' to table '$dataTable'")
+        admin.addColumn(dataTableName, dataFamilyDescriptor)
     }
 }
