@@ -46,46 +46,43 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
 
-                BufferedReader(InputStreamReader(it.inputStream)).use { reader ->
-                    var line: String? = null
-                    var lineNo = 0;
-                    while ({ line = reader.readLine(); line }() != null) {
-                        lineNo++
-                        try {
-                            val json = messageUtils.parseJson(line)
-                            val id = messageUtils.getId(json)?.toJsonString()
-                            if (StringUtils.isNotBlank(id)) {
-                                val encryptionResult = encryptDbObject(dataKeyResult, line!!, fileName, id)
-                                val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
-                                        database, collection)
-                                val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
-                                if(StringUtils.isNotBlank(lastModifiedTimestampStr)){
-                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                                    val formattedkey = messageUtils.generateKeyFromRecordBody(json)
-                                    val topic = "$database.$collection"
-                                    try {
-                                        hbase.putVersion(
-                                                topic = topic.toByteArray(), // TODO what topic we should insert
-                                                key = formattedkey,
-                                                body = message.toByteArray(),
-                                                version = lastModifiedTimestampLong
-                                        )
-                                        logger.info("Written id $id as key  $formattedkey to HBase.")
-                                    } catch (e: Exception) {
-                                        logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
-                                        throw e
-                                    }
-                                } else {
-                                    logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                var lineNo = 0;
+                BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
+                    lineNo++
+                    try {
+                        val json = messageUtils.parseJson(line)
+                        val id = messageUtils.getId(json)?.toJsonString()
+                        if (StringUtils.isNotBlank(id)) {
+                            val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
+                            val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
+                                    database, collection)
+                            val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+                            if (StringUtils.isNotBlank(lastModifiedTimestampStr)) {
+                                val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                                val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                                val topic = "$database.$collection"
+                                try {
+                                    hbase.putVersion(
+                                            topic = topic.toByteArray(), // TODO what topic we should insert
+                                            key = formattedkey,
+                                            body = message.toByteArray(),
+                                            version = lastModifiedTimestampLong
+                                    )
+                                    logger.info("Written id $id as key  $formattedkey to HBase.")
+                                } catch (e: Exception) {
+                                    logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
+                                    throw e
                                 }
-
                             } else {
-                                logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
+                                logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
                             }
 
-                        } catch (e: Exception) {
-                            logger.error("Error while parsing record $lineNo from '$fileName': '${e.message}'.")
+                        } else {
+                            logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
                         }
+
+                    } catch (e: Exception) {
+                        logger.error("Error while parsing record $lineNo from '$fileName': '${e.message}'.")
                     }
                     logger.info("Processed file $fileName")
 
