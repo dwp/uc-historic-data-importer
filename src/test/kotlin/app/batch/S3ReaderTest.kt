@@ -6,7 +6,6 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import com.nhaarman.mockitokotlin2.mock
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.assertTrue
 import org.junit.Before

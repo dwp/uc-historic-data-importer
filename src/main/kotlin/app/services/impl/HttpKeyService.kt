@@ -27,8 +27,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttempts = maxAttempts,
-        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         logger.info("Decrypting encryptedKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId'.")
@@ -36,8 +36,7 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
                 decryptedKeyCache[cacheKey]!!
-            }
-            else {
+            } else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = """$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"""
                     logger.info("Calling dataKeyServiceUrl: '$dksUrl'.")
@@ -57,16 +56,15 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                             }
                             400 ->
                                 throw DataKeyDecryptionException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
+                                        "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
                             else ->
                                 throw DataKeyServiceUnavailableException(
-                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
+                                        "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId' data key service returned status code '$statusCode'")
                         }
                     }
                 }
             }
-        }
-        catch (ex: Exception) {
+        } catch (ex: Exception) {
             when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
                     throw ex
@@ -78,8 +76,8 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-        maxAttempts = maxAttempts,
-        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+            maxAttempts = maxAttempts,
+            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     @Throws(DataKeyServiceUnavailableException::class)
     override fun batchDataKey(): DataKeyResult {
         try {
@@ -92,19 +90,17 @@ class HttpKeyService(private val httpClientProvider: HttpClientProvider) : KeySe
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
-                            .use(BufferedReader::readText).let {
-                                Gson().fromJson(it, DataKeyResult::class.java)
-                            }
+                                .use(BufferedReader::readText).let {
+                                    Gson().fromJson(it, DataKeyResult::class.java)
+                                }
                         EntityUtils.consume(entity)
                         result
-                    }
-                    else {
+                    } else {
                         throw DataKeyServiceUnavailableException("data key service returned status code '$statusCode'.")
                     }
                 }
             }
-        }
-        catch (ex: Exception) {
+        } catch (ex: Exception) {
             when (ex) {
                 is DataKeyServiceUnavailableException -> {
                     throw ex

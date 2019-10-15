@@ -34,7 +34,7 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
 
         val encrypted = cipher.doFinal(unencrypted)
         return EncryptionResult(String(Base64.getEncoder().encode(initialisationVector)),
-            String(Base64.getEncoder().encode(encrypted)))
+                String(Base64.getEncoder().encode(encrypted)))
     }
 
     @Value("\${target.cipher.algorithm:AES/CTR/NoPadding}")

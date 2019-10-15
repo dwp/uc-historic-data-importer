@@ -16,34 +16,34 @@ import javax.net.ssl.SSLContext
 class SecureHttpClientProvider : HttpClientProvider {
 
     override fun client(): CloseableHttpClient =
-        HttpClients.custom().run {
-            setDefaultRequestConfig(requestConfig())
-            setSSLSocketFactory(connectionFactory())
-            build()
-        }
+            HttpClients.custom().run {
+                setDefaultRequestConfig(requestConfig())
+                setSSLSocketFactory(connectionFactory())
+                build()
+            }
 
     private fun requestConfig(): RequestConfig =
-        RequestConfig.custom().run {
-            setConnectTimeout(5_000)
-            setConnectionRequestTimeout(5_000)
-            build()
-        }
+            RequestConfig.custom().run {
+                setConnectTimeout(5_000)
+                setConnectionRequestTimeout(5_000)
+                build()
+            }
 
     private fun connectionFactory() = SSLConnectionSocketFactory(
-        sslContext(),
-        arrayOf("TLSv1.2"),
-        null,
-        SSLConnectionSocketFactory.getDefaultHostnameVerifier())
+            sslContext(),
+            arrayOf("TLSv1.2"),
+            null,
+            SSLConnectionSocketFactory.getDefaultHostnameVerifier())
 
     private fun sslContext(): SSLContext =
-        SSLContexts.custom().run {
-            loadKeyMaterial(
-                File(identityStore),
-                identityStorePassword.toCharArray(),
-                identityKeyPassword.toCharArray()) { _, _ -> identityStoreAlias }
-            loadTrustMaterial(File(trustStore), trustStorePassword.toCharArray())
-            build()
-        }
+            SSLContexts.custom().run {
+                loadKeyMaterial(
+                        File(identityStore),
+                        identityStorePassword.toCharArray(),
+                        identityKeyPassword.toCharArray()) { _, _ -> identityStoreAlias }
+                loadTrustMaterial(File(trustStore), trustStorePassword.toCharArray())
+                build()
+            }
 
     @Value("\${identity.keystore}")
     private lateinit var identityStore: String

@@ -21,7 +21,7 @@ class MessageProducer {
         val dateStr = if (date != null) date as String else ""
         val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
         return if (StringUtils.isNotBlank(dateStr)) {
-                """{
+            """{
                 |   "message": {
                 |       "@type": "$type",
                 |       "_id": $id,
@@ -36,8 +36,7 @@ class MessageProducer {
                 |       }
                 |   }
                 |}""".trimMargin()
-        }
-        else {
+        } else {
             logger.error("No '_lastModifiedDateTime' in record '$id' from '$database/$collection'.")
             ""
         }

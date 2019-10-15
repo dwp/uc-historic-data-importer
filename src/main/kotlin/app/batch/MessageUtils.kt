@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.zip.CRC32
 
 @Component
-open class  MessageUtils {
+open class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
 
     fun getTimestampAsLong(timeStampAsStr: String?, timeStampPattern: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"): Long {
@@ -23,7 +23,7 @@ open class  MessageUtils {
         try {
             val lastModifiedTimestampStr = json?.lookup<String?>("_lastModifiedDateTime.\$date")?.get(0)
             return lastModifiedTimestampStr
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             logger.warn("Record body does not contain valid json object with  __lastModifiedDateTime field")
             return null
         }
@@ -37,8 +37,7 @@ open class  MessageUtils {
     fun getId(json: JsonObject): JsonObject? {
         try {
             return json.obj("_id")
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             logger.warn("Record body does not contain valid json object with  _id field")
             return null
         }

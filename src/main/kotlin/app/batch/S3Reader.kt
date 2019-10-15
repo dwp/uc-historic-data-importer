@@ -40,8 +40,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key)
             }
-        }
-        else {
+        } else {
             null
         }
     }

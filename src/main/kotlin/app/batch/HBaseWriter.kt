@@ -58,7 +58,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
                                         database, collection)
                                 val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
-                                if(StringUtils.isNotBlank(lastModifiedTimestampStr)){
+                                if (StringUtils.isNotBlank(lastModifiedTimestampStr)) {
                                     val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                                     val formattedkey = messageUtils.generateKeyFromRecordBody(json)
                                     val topic = "$database.$collection"

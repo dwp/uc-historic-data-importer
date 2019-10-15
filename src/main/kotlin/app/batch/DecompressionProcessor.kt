@@ -19,11 +19,10 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
             logger.info("Starting decompression of the file $fileName")
             logger.info("inputStream: '$inputStream'")
             val compressorInputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
-                inputStream) as GzipCompressorInputStream
+                    inputStream) as GzipCompressorInputStream
             logger.info("Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
             return DecompressedStream(compressorInputStream, fileName)
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
 
             val decompressionExceptionMsg = "Exception occurred when decompressing the gzip decrypted input stream from the file $fileName : ${e.message}"
             logger.error(decompressionExceptionMsg, e)

@@ -27,21 +27,21 @@ class JobConfiguration {
 
     @Bean
     fun importUserJob(step: Step) =
-        jobBuilderFactory.get("ucHistoricDataImporterJob")
-            .incrementer(RunIdIncrementer())
-            .flow(step)
-            .end()
-            .build()
+            jobBuilderFactory.get("ucHistoricDataImporterJob")
+                    .incrementer(RunIdIncrementer())
+                    .flow(step)
+                    .end()
+                    .build()
 
     @Bean
     fun step() =
-        stepBuilderFactory.get("step")
-            .chunk<InputStreamPair, DecompressedStream>(10)
-            .reader(itemReader)
-            .processor(itemProcessor())
-            .writer(itemWriter)
-            .taskExecutor(taskExecutor())
-            .build()
+            stepBuilderFactory.get("step")
+                    .chunk<InputStreamPair, DecompressedStream>(10)
+                    .reader(itemReader)
+                    .processor(itemProcessor())
+                    .writer(itemWriter)
+                    .taskExecutor(taskExecutor())
+                    .build()
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("uc-historic-data-importer").apply {
@@ -49,12 +49,12 @@ class JobConfiguration {
     }
 
     fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> =
-        CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
-            setDelegates(listOf(encryptionMetadataProcessor,
-                datakeyProcessor,
-                decryptionProcessor,
-                decompressionProcessor))
-        }
+            CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
+                setDelegates(listOf(encryptionMetadataProcessor,
+                        datakeyProcessor,
+                        decryptionProcessor,
+                        decompressionProcessor))
+            }
 
     @Autowired
     lateinit var itemReader: ItemReader<InputStreamPair>
