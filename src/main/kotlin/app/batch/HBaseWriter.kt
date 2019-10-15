@@ -10,6 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -32,7 +33,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var messageUtils: MessageUtils
 
-    private val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
+    @Value("\${kafka.topic.prefix:db}")
+    private lateinit var kafkaTopicPrefix: String
+
+    private val filenamePattern = """(?<database>[A-Za-z0-9-]+)\.(?<collection>[[A-Za-z0-9-]+]+)\.[0-9]+\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
 
     override fun write(items: MutableList<out DecompressedStream>) {
@@ -70,7 +74,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                         val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                         val formattedkey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
-                        val topic = "$database.$collection"
+                        val topic = "$kafkaTopicPrefix.$database.$collection"
                         hbase.putVersion(
                                 topic = topic.toByteArray(),
                                 key = formattedkey,

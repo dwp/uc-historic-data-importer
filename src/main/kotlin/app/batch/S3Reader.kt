@@ -22,14 +22,14 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String
 
-    @Value("\${s3.key.regex:([A-Za-z0-9-]+\\.[A-Za-z0-9-]+\\.[0-9]+\\.json\\.gz)}")
-    private lateinit var s3KeyRegex: String
+    @Value("\${filename.format.regex:([A-Za-z0-9-]+\\.[A-Za-z0-9-]+\\.[0-9]+\\.json\\.gz)}")
+    private lateinit var fileNameFormat: String
 
-    @Value("\${s3.data.key.extension:\\.enc$}")
-    private lateinit var s3DataKeyExtension: String
+    @Value("\${filename.format.data.extension:\\.enc$}")
+    private lateinit var fileNameFormatDataExtension: String
 
-    @Value("\${s3.metadata.key.extension:\\.encryption\\.json$}")
-    private lateinit var s3MetadataKeyExtension: String
+    @Value("\${filename.format.metadata.extension:\\.encryption\\.json$}")
+    private lateinit var fileNameFormatMetadataExtension: String
 
     override fun read(): InputStreamPair? {
         val iterator = getS3ObjectSummariesIterator(s3client, s3BucketName)
@@ -54,7 +54,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         if (null == iterator) {
             val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
-            val keyPairs = keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key }, s3KeyRegex.toRegex(), s3DataKeyExtension.toRegex(), s3MetadataKeyExtension.toRegex())
+            val keyPairs = keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key }, fileNameFormat.toRegex(), fileNameFormatDataExtension.toRegex(), fileNameFormatMetadataExtension.toRegex())
             val pairs = keyPairs.map {
                 val obj = objectSummaryKeyMap[it.dataKey]
                 val meta = objectSummaryKeyMap[it.metadataKey]
