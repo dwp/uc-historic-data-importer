@@ -45,7 +45,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
-
                 var lineNo = 0;
                 BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
                     lineNo++
@@ -71,23 +70,17 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                         val formattedkey = messageUtils.generateKeyFromRecordBody(json)
                         val topic = "$database.$collection"
-                        try {
-                            hbase.putVersion(
-                                    topic = topic.toByteArray(),
-                                    key = formattedkey,
-                                    body = message.toByteArray(),
-                                    version = lastModifiedTimestampLong
-                            )
-                            logger.info("Written id $id as key  $formattedkey to HBase.")
-                        } catch (e: Exception) {
-                            logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
-                            throw e
-                        }
-
-
+                        hbase.putVersion(
+                                topic = topic.toByteArray(),
+                                key = formattedkey,
+                                body = message.toByteArray(),
+                                version = lastModifiedTimestampLong
+                        )
+                        logger.info("Written id $id as key $formattedkey to HBase.")
                     } catch (e: Exception) {
-                        logger.error("Error while parsing record $lineNo from '$fileName': '${e.message}'.")
+                        logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
+
                     logger.info("Processed file $fileName")
 
                 }
