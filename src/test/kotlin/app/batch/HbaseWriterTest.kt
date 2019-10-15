@@ -190,6 +190,5 @@ class HbaseWriterTest {
         val inputStream = ByteArrayInputStream(baos.toByteArray())
         return DecompressedStream(inputStream, fileName)
     }
-
-
 }
+

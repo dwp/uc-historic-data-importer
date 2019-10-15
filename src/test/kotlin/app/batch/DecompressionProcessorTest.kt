@@ -36,8 +36,16 @@ class DecompressionProcessorTest {
 
     @Test(expected = RuntimeException::class)
     fun Should_Throw_Exception_When_Given_Non_Gzipped_Stream() {
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
 
         decompress(CompressorStreamFactory.BZIP2)
+
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(1)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        assertTrue(formattedMessages.contains("Exception occurred when decompressing the gzip decrypted input stream from the file $fileName"))
     }
 
     @Test
