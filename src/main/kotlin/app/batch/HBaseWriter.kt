@@ -32,12 +32,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var messageUtils: MessageUtils
 
+    private val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
+    private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
+
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
             logger.info("Processing '${it.fileName}'.")
             val fileName = it.fileName
-            val filenamePattern = """(?<database>[a-z0-9-]+)\.(?<collection>[a-z0-9-]+)\.\d+\.json\.gz\.enc$"""
-            val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 val groups = matchResult.groups
