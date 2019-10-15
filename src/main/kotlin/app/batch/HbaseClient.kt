@@ -2,9 +2,10 @@ package app.batch
 
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.*
-import org.apache.hadoop.hbase.io.TimeRange
-import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.client.Connection
+import org.apache.hadoop.hbase.client.ConnectionFactory
+import org.apache.hadoop.hbase.client.Increment
+import org.apache.hadoop.hbase.client.Put
 
 open class HbaseClient(
     val connection: Connection,
@@ -45,38 +46,6 @@ open class HbaseClient(
                     1
                 )
             })
-        }
-    }
-
-    fun getCellAfterTimestamp(topic: ByteArray, key: ByteArray, timestamp: Long): ByteArray? {
-        connection.getTable(TableName.valueOf(dataTable)).use { table ->
-            val result = table.get(Get(key).apply {
-                setTimeRange(timestamp, TimeRange.INITIAL_MAX_TIMESTAMP)
-            })
-
-            return result.getValue(dataFamily, topic)
-        }
-
-    }
-
-    fun getCellBeforeTimestamp(topic: ByteArray, key: ByteArray, timestamp: Long): ByteArray? {
-        connection.getTable(TableName.valueOf(dataTable)).use { table ->
-            val result = table.get(Get(key).apply {
-                setTimeRange(0, timestamp)
-            })
-
-            return result.getValue(dataFamily, topic)
-        }
-    }
-
-    fun getCount(key: ByteArray): Long {
-        connection.getTable(TableName.valueOf(topicTable)).use { table ->
-            val result = table.get(Get(key).apply {
-                addColumn(topicFamily, topicQualifier)
-            })
-
-            val bytes = result?.getValue(topicFamily, topicQualifier) ?: ByteArray(8)
-            return Bytes.toLong(bytes)
         }
     }
 
