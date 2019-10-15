@@ -81,21 +81,21 @@ class HbaseWriterTest {
         val key = formattedKey.toByteArray()
         val message1 = message.toByteArray()
 
-        doNothing().`when`(hbase).putVersion(topic,key,message1,100)
+        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
 
         val data = listOf(invalidJson2, validJson)
         val inputStreams = mutableListOf(getInputStream(data, validFileName))
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(5)).doAppend(captor.capture())
+        verify(mockAppender, times(4)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         formattedMessages.forEach { println(it) }
 
         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
     }
 
-   @Test
+    @Test
     fun should_Log_Error_For_Json_Without_Id() {
 
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
@@ -124,7 +124,7 @@ class HbaseWriterTest {
         val key = formattedKey.toByteArray()
         val message1 = message.toByteArray()
 
-        doNothing().`when`(hbase).putVersion(topic,key,message1,100)
+        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
 
         val data = listOf(invalidJson2, validJsonWithoutId)
         val inputStreams = mutableListOf(getInputStream(data, validFileName))
@@ -139,47 +139,47 @@ class HbaseWriterTest {
 
     }
 
-      @Test
-     fun should_Log_Error_For_Json_Without_Timestamp() {
+    @Test
+    fun should_Log_Error_For_Json_Without_Timestamp() {
 
-         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
-         val mockAppender: Appender<ILoggingEvent> = mock()
-         root.addAppender(mockAppender)
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
 
-         val dataKeyResult = DataKeyResult("", "", "")
-         whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
-         val encryptionResult = EncryptionResult("", "")
-         whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
+        val dataKeyResult = DataKeyResult("", "", "")
+        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
+        val encryptionResult = EncryptionResult("", "")
+        whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
 
-         whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
-         val jsonObject = JsonObject()
-         whenever(messageUtils.parseJson(validJsonWithoutTimeStamp)).thenReturn(jsonObject)
-         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
+        whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
+        val jsonObject = JsonObject()
+        whenever(messageUtils.parseJson(validJsonWithoutTimeStamp)).thenReturn(jsonObject)
+        whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn(null)
-         //whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
-         val message = "message"
-         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn(null)
+        //whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
+        val message = "message"
+        whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 
-         val formattedKey = "0000-0000-00001"
-         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
+        val formattedKey = "0000-0000-00001"
+        whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
 
-         val topic = "adb.collection".toByteArray()
-         val key = formattedKey.toByteArray()
-         val message1 = message.toByteArray()
+        val topic = "adb.collection".toByteArray()
+        val key = formattedKey.toByteArray()
+        val message1 = message.toByteArray()
 
-         doNothing().`when`(hbase).putVersion(topic,key,message1,100)
+        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
 
-         val data = listOf(invalidJson2, validJsonWithoutTimeStamp)
-         val inputStreams = mutableListOf(getInputStream(data, validFileName))
-         hBaseWriter.write(inputStreams)
+        val data = listOf(invalidJson2, validJsonWithoutTimeStamp)
+        val inputStreams = mutableListOf(getInputStream(data, validFileName))
+        hBaseWriter.write(inputStreams)
 
-         val captor = argumentCaptor<ILoggingEvent>()
-         verify(mockAppender, times(4)).doAppend(captor.capture())
-         val formattedMessages = captor.allValues.map { it.formattedMessage }
-         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
-         assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
-     }
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(4)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
+        assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
+    }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()

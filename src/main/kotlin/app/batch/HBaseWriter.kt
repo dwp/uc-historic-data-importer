@@ -60,7 +60,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
                         val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
                                 database, collection)
-                        val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+                        val messageJsonObject = messageUtils.parseJson(message)
+                        val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
 
                         if (StringUtils.isBlank(lastModifiedTimestampStr)) {
                             logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
@@ -68,7 +69,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         }
 
                         val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                        val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                        val formattedkey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                         val topic = "$database.$collection"
                         hbase.putVersion(
                                 topic = topic.toByteArray(),
