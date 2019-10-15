@@ -52,34 +52,38 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     try {
                         val json = messageUtils.parseJson(line)
                         val id = messageUtils.getId(json)?.toJsonString()
-                        if (StringUtils.isNotBlank(id)) {
-                            val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
-                            val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
-                                    database, collection)
-                            val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
-                            if (StringUtils.isNotBlank(lastModifiedTimestampStr)) {
-                                val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                                val formattedkey = messageUtils.generateKeyFromRecordBody(json)
-                                val topic = "$database.$collection"
-                                try {
-                                    hbase.putVersion(
-                                            topic = topic.toByteArray(), // TODO what topic we should insert
-                                            key = formattedkey,
-                                            body = message.toByteArray(),
-                                            version = lastModifiedTimestampLong
-                                    )
-                                    logger.info("Written id $id as key  $formattedkey to HBase.")
-                                } catch (e: Exception) {
-                                    logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
-                                    throw e
-                                }
-                            } else {
-                                logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
-                            }
 
-                        } else {
+                        if (StringUtils.isBlank(id)) {
                             logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
+                            return@forEachLine
                         }
+
+                        val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
+                        val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
+                                database, collection)
+                        val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(json)
+
+                        if (StringUtils.isBlank(lastModifiedTimestampStr)) {
+                            logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                            return@forEachLine
+                        }
+
+                        val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                        val formattedkey = messageUtils.generateKeyFromRecordBody(json)
+                        val topic = "$database.$collection"
+                        try {
+                            hbase.putVersion(
+                                    topic = topic.toByteArray(), // TODO what topic we should insert
+                                    key = formattedkey,
+                                    body = message.toByteArray(),
+                                    version = lastModifiedTimestampLong
+                            )
+                            logger.info("Written id $id as key  $formattedkey to HBase.")
+                        } catch (e: Exception) {
+                            logger.error("Error writing record to HBase with id $id as key  $formattedkey to HBase.")
+                            throw e
+                        }
+
 
                     } catch (e: Exception) {
                         logger.error("Error while parsing record $lineNo from '$fileName': '${e.message}'.")
