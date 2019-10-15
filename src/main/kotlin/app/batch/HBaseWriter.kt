@@ -73,7 +73,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         val topic = "$database.$collection"
                         try {
                             hbase.putVersion(
-                                    topic = topic.toByteArray(), // TODO what topic we should insert
+                                    topic = topic.toByteArray(),
                                     key = formattedkey,
                                     body = message.toByteArray(),
                                     version = lastModifiedTimestampLong
