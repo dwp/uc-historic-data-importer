@@ -71,7 +71,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("something")
-        whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
+        whenever(messageUtils.getTimestampAsLong("something")).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 
@@ -93,6 +93,7 @@ class HbaseWriterTest {
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
+        verify(hbase, times(1)).putVersion(topic, key, message1, 100)
     }
 
     @Test
@@ -156,7 +157,6 @@ class HbaseWriterTest {
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn(null)
-        //whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 
