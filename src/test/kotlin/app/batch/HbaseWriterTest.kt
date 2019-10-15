@@ -88,10 +88,11 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(4)).doAppend(captor.capture())
+        verify(mockAppender, times(5)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
+        formattedMessages.forEach { println(it) }
 
-        assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
+        assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
     }
 
    @Test
@@ -132,7 +133,8 @@ class HbaseWriterTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(4)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
+
+        assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
         assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of id"))
 
     }
@@ -175,10 +177,8 @@ class HbaseWriterTest {
          val captor = argumentCaptor<ILoggingEvent>()
          verify(mockAppender, times(4)).doAppend(captor.capture())
          val formattedMessages = captor.allValues.map { it.formattedMessage }
-
-         assertTrue(formattedMessages.contains("Error while parsing record 1 from '$validFileName': 'parse error'."))
+         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
          assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
-
      }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
