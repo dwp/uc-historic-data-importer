@@ -56,25 +56,25 @@ tasks.withType<KotlinCompile> {
         }
 }
 
-//sourceSets {
-//        create("integration") {
-//                java.srcDir(file("src/integration/kotlin"))
-//                compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
-//                runtimeClasspath += output + compileClasspath
-//        }
-//}
+sourceSets {
+        create("integration") {
+                java.srcDir(file("src/integration/kotlin"))
+                compileClasspath += sourceSets.getByName("main").output + configurations.testRuntimeClasspath
+                runtimeClasspath += output + compileClasspath
+        }
+}
 
-//tasks.register<Test>("integration") {
-//        description = "Runs the integration tests"
-//        group = "verification"
-//        testClassesDirs = sourceSets["integration"].output.classesDirs
-//        classpath = sourceSets["integration"].runtimeClasspath
-//
-//        useJUnitPlatform { }
-//        testLogging {
-//                exceptionFormat = TestExceptionFormat.FULL
-//                events = setOf(TestLogEvent.SKIPPED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT)
-//        }
-//}
+tasks.register<Test>("integration") {
+        description = "Runs the integration tests"
+        group = "verification"
+        testClassesDirs = sourceSets["integration"].output.classesDirs
+        classpath = sourceSets["integration"].runtimeClasspath
+
+        useJUnitPlatform { }
+        testLogging {
+                exceptionFormat = TestExceptionFormat.FULL
+                events = setOf(TestLogEvent.SKIPPED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT)
+        }
+}
 
 
