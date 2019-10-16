@@ -27,5 +27,6 @@ add_container() {
 
 add_container dks
 add_container hbase
+add_container zookeeper
 
 cat /etc/hosts

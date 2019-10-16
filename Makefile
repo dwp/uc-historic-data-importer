@@ -17,6 +17,10 @@ help:
 %.jks:
 	./truststores.sh
 
+.PHONY: gradle-image
+gradle-image: ## Build gradle image.
+	cp settings.gradle.kts gradle.properties docker/gradle
+	cd docker/gradle && docker build --tag dwp-gradle:latest .
 
 .PHONY: java-image
 java-image: ## Build java image.
@@ -39,12 +43,16 @@ dks-insecure-image: ## Build the dks image.
 s3-init-image: ## Build the image that creates the s3 bucket.
 	docker-compose build s3-init
 
+.PHONY: integration-test-image
+integration-test-image: ## Build the image for integration tests.
+	docker-compose build integration-test
+
 .PHONY: add-containers-to-hosts
 add-containers-to-hosts:
 	./add-containers-to-hosts.sh
 
 .PHONY: ancillary-images
-ancillary-images: java-image python-image dks-image dks-insecure s3-init-image  ## Build base images
+ancillary-images: gradle-image java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build
@@ -57,11 +65,11 @@ build-all: build-jar build-image ## Build the jar file and the images.
 
 .PHONY: build-image
 build-image: ancillary-images build-jar ## Build all ecosystem of images
-	docker-compose build --build-arg APP_VERSION=$(APP_VERSION) uc-historic-data-importer
+	docker-compose build --no-cache --build-arg APP_VERSION=$(APP_VERSION) uc-historic-data-importer
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d hbase s3 dks dks-insecure
+	docker-compose up -d zookeeper hbase s3 dks dks-insecure
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \
@@ -76,6 +84,10 @@ up: build-image up-ancillary ## Run the ecosystem of containers.
 
 .PHONY: up-all
 up-all: build-image up
+
+.PHONY: integration
+integration: destroy up-all integration-test-image
+	docker-compose run --rm integration-test
 
 .PHONY: destroy
 destroy: ## Bring everything down and clean up.

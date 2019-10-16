@@ -2,7 +2,6 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
-import app.services.impl.HttpKeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.nhaarman.mockitokotlin2.argumentCaptor
@@ -12,37 +11,16 @@ import com.nhaarman.mockitokotlin2.verify
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.io.IOUtils
-import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
-@RunWith(SpringRunner::class)
-@ActiveProfiles("awsS3")
-@SpringBootTest
-@TestPropertySource(properties = [
-    "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-1",
-    "s3.bucket=bucket1",
-    "s3.prefix.folder=test/output/",
-    "s3.key.regex=([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)",
-    "s3.data.key.extension=\\.enc$",
-    "s3.metadata.key.extension=\\.encryption\\.json$"
-])
-class DecompressionProcessorTest {
 
-    @MockBean
-    private lateinit var connection: Connection
+class DecompressionProcessorTest {
 
     private val fileName = "test.json.gz"
 
@@ -58,8 +36,16 @@ class DecompressionProcessorTest {
 
     @Test(expected = RuntimeException::class)
     fun Should_Throw_Exception_When_Given_Non_Gzipped_Stream() {
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
 
         decompress(CompressorStreamFactory.BZIP2)
+
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(1)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+        assertTrue(formattedMessages.contains("Exception occurred when decompressing the gzip decrypted input stream from the file $fileName"))
     }
 
     @Test
@@ -94,7 +80,7 @@ class DecompressionProcessorTest {
         val byteArray = data.toByteArray(StandardCharsets.UTF_8)
         val testOutputStream = ByteArrayOutputStream()
         val zippedStream = CompressorStreamFactory().createCompressorOutputStream(format,
-            testOutputStream)
+                testOutputStream)
         zippedStream.write(byteArray)
         zippedStream.close()
 
@@ -105,6 +91,4 @@ class DecompressionProcessorTest {
         return Pair(data, decompressed)
     }
 
-    @MockBean
-    private lateinit var httpKeyService: HttpKeyService
 }

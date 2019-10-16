@@ -31,20 +31,58 @@ from Crypto.Util import Counter
 def main():
     """Main entry point."""
     args = command_line_args()
-    for i in range(10):
-        dks_response = requests.get(args.data_key_service).json()
+    data_key_service = args.data_key_service \
+        if args.data_key_service \
+        else 'http://localhost:8080/datakey'
+
+    print(f'data_key_service: {data_key_service}.')
+    batch_nos = {}
+    file_count = int(args.file_count if args.file_count else 10)
+
+    for i in range(file_count):
+
+        dks_response = requests.get(data_key_service).json()
         encryption_metadata = {
             'encryptionKeyId': dks_response['dataKeyEncryptionKeyId'],
             'encryptedEncryptionKey': dks_response['ciphertextDataKey'],
             'plaintextDatakey': dks_response['plaintextDataKey']
         }
         contents = ""
-        for _ in range(100):
-            contents = contents + db_object_json() + "\n"
+
+        database = f'database-{(i//4) + 1}'
+        collection = f'collection-{(i//2) + 1}'
+        batch = f'{database}.{collection}'
+        batch_nos[batch] = batch_nos.get(batch, 0) + 1
+
+        record_count = int(args.batch_size if args.batch_size else 10)
+
+        for j in range(record_count):
+            contents = contents + \
+                db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
+
+        if args.malformed_input:
+            print("Adding corrupted line.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            corrupted = record[0:int(len(record)/2)]
+            contents = contents + corrupted + "\n"
+
+        if args.record_with_no_id:
+            print("Adding record with no id.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            del jso['_id']
+            contents = contents + json.dumps(jso) + "\n"
+
+        if args.record_with_no_timestamp:
+            print("Adding record with no timestamp.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            del jso['_lastModifiedDateTime']
+            contents = contents + json.dumps(jso) + "\n"
 
         if args.compress:
             print("Compressing.")
-            compressed = gzip.compress(contents.encode())
+            compressed = gzip.compress(contents.encode("ascii"))
             [encryption_metadata['iv'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'], compressed,
                         args.encrypt)
@@ -54,15 +92,15 @@ def main():
                 encrypt(encryption_metadata['plaintextDatakey'],
                         contents.encode("utf8"), args.encrypt)
 
-
-        metadata_file = f'adb.collection.{i:04d}.json.gz.encryption.json'
+        metadata_file = f'{batch}.{batch_nos[batch]:04d}.json.gz.encryption.json'
         with open(metadata_file, 'w') as metadata:
+            print(f'Writing metadata file {metadata_file}')
             json.dump(encryption_metadata, metadata, indent=4)
 
-        data_file = f'adb.collection.{i:04d}.json.gz.enc'
+        data_file = f'{batch}.{batch_nos[batch]:04d}.json.gz.enc'
         with open(data_file, 'wb') as data:
+            print(f'Writing data file {data_file}')
             data.write(encrypted_contents)
-
 
 def encrypt(datakey, unencrypted_bytes, do_encryption):
     """Encrypts the supplied bytes with the supplied key.
@@ -84,10 +122,10 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
         return (base64.b64encode(initialisation_vector).decode('ascii'),
                 unencrypted_bytes)
 
-def db_object_json():
+def db_object_json(batch, i):
     """Returns a sample dbRecord object with unique ids."""
-    record = db_object()
-    record['_id']['declarationId'] = guid()
+    record = db_object(i)
+    record['_id']['declarationId'] = f'{batch}-{(i//20) + 1}'
     record['contractId'] = guid()
     record['addressNumber']['cryptoId'] = guid()
     record['townCity']['cryptoId'] = guid()
@@ -98,7 +136,7 @@ def guid():
     """Generates, returns a guid."""
     return str(uuid.uuid4())
 
-def db_object():
+def db_object(i):
     """Returns a dbObject template to which unique ids can be applied."""
     return {
         "_id": {
@@ -110,7 +148,6 @@ def db_object():
             "type": "AddressLine",
             "cryptoId": "RANDOM_GUID"
         },
-        "addressLine2": None,
         "townCity": {
             "type": "AddressLine",
             "cryptoId": "RANDOM_GUID"
@@ -132,7 +169,7 @@ def db_object():
         },
         "_version": 2,
         "_lastModifiedDateTime": {
-            "$date": "2018-12-14T15:01:02.000+0000"
+            "$date": f'2018-12-01T15:01:02.{i:03d}+0000'
         }
     }
 
@@ -141,13 +178,24 @@ def db_object():
 def command_line_args():
     """Parses, returns the supplied command line args."""
     parser = argparse.ArgumentParser(description='Generate sample encrypted data.')
+    parser.add_argument('-m', '--malformed-input', action='store_true',
+                        help='Add malformed inputs to each file.')
+    parser.add_argument('-i', '--record-with-no-id', action='store_true',
+                        help='Add a record with no id to each file.')
+    parser.add_argument('-d', '--record-with-no-timestamp', action='store_true',
+                        help='Add a record with no timestamp to each file.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
+    parser.add_argument('-n', '--file-count',
+                        help='The number of files to create.')
+    parser.add_argument('-s', '--batch-size',
+                        help='The number of records in each file.')
     parser.add_argument('-c', '--compress', action='store_true',
                         help='Compress before encryption.')
     parser.add_argument('-e', '--encrypt', action='store_true',
                         help='Encrypt the data.')
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     main()

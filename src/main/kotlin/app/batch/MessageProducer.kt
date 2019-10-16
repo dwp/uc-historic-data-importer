@@ -6,7 +6,9 @@ import com.beust.klaxon.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
+@Component
 class MessageProducer {
     fun produceMessage(jsonObject: JsonObject,
                        encryptionResult: EncryptionResult,
@@ -19,7 +21,7 @@ class MessageProducer {
         val dateStr = if (date != null) date as String else ""
         val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
         return if (StringUtils.isNotBlank(dateStr)) {
-                """{
+            """{
                 |   "message": {
                 |       "@type": "$type",
                 |       "_id": $id,
@@ -34,8 +36,7 @@ class MessageProducer {
                 |       }
                 |   }
                 |}""".trimMargin()
-        }
-        else {
+        } else {
             logger.error("No '_lastModifiedDateTime' in record '$id' from '$database/$collection'.")
             ""
         }

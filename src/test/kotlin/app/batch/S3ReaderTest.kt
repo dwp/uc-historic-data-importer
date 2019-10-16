@@ -1,12 +1,11 @@
 package app.batch
 
-import app.configuration.HttpClientProvider
+import app.configuration.S3Configuration
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -28,17 +27,15 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
-@ActiveProfiles("httpDataKeyService", "awsS3")
-@SpringBootTest
+@ActiveProfiles("awsS3")
+@SpringBootTest(classes = [S3Reader::class, S3Configuration::class, KeyPairGenerator::class])
 @TestPropertySource(properties = [
-    "hbase.zookeeper.quorum=hbase",
     "aws.region=eu-west-1",
     "s3.bucket=bucket1",
     "s3.prefix.folder=test/output/",
     "s3.key.regex=([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)",
     "s3.data.key.extension=\\.enc$",
-    "s3.metadata.key.extension=\\.encryption\\.json$",
-    "data.key.service.url=phoney"
+    "s3.metadata.key.extension=\\.encryption\\.json$"
 ])
 class S3ReaderTest {
 
@@ -55,17 +52,14 @@ class S3ReaderTest {
     private lateinit var s3Object1: S3Object
     private lateinit var s3Object2: S3Object
 
-    @Autowired
-    private lateinit var s3Reader: S3Reader
-
     @MockBean
     private lateinit var s3Client: AmazonS3
 
-    @MockBean
-    private lateinit var httpClientProvider: HttpClientProvider
+    @Autowired
+    private lateinit var keyPairGenerator: KeyPairGenerator
 
-    @MockBean
-    private lateinit var connection: Connection
+    @Autowired
+    private lateinit var s3Reader: S3Reader
 
     @Before
     fun setUp() {
