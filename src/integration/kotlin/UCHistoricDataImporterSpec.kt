@@ -68,19 +68,8 @@ class Kafka2HBaseSpec : StringSpec() {
                         fail("No column family on the table.")
                     }
 
-                    familyMap.keys.forEach { columnFamilyName ->
-                        val columnMap = familyMap.get(columnFamilyName)
-
-                        if (columnMap == null) {
-                            fail("No columns returned.")
-                        }
-
-                        if (columnMap.keys.size == 0) {
-                            fail("No cells returned.")
-                        }
-
-                        columnMap?.keys?.forEach { columnName ->
-                            val cell = columnMap[columnName] ?: ByteArray(0)
+                    familyMap.forEach { _, columnMap ->
+                        columnMap.forEach { _, cell ->
                             val json = cell.toString(Charset.defaultCharset())
                             val dataBlock = Gson().fromJson(json, JsonObject::class.java)
                             val messageInfo = dataBlock.getAsJsonObject("message")
@@ -98,7 +87,7 @@ class Kafka2HBaseSpec : StringSpec() {
                                     fail("Decrypted db object should be parseable as json.")
                                 }
                             }
-                            else{
+                            else {
                                 fail("No encrypted db object.")
                             }
                         }
