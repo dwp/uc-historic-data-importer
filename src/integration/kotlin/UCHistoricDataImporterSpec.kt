@@ -60,10 +60,7 @@ class Kafka2HBaseSpec : StringSpec() {
                 val scan = Scan()
                 val scanner = table.getScanner(scan)
                 var result = scanner.next()
-                do {
-                    if (result == null) {
-                        fail("No results returned - should be 4 records in the db")
-                    }
+                scanner.forEach { result ->
 
                     val familyMap = result.noVersionMap
 
@@ -96,6 +93,7 @@ class Kafka2HBaseSpec : StringSpec() {
                                     val decryptedKey = decryptedDatakey(encryptedEncryptionKey)
                                     val decryptedDbObject = decrypt(decryptedKey, initializationVector, encryptedDbObject)
                                     val jsonObject = Gson().fromJson(decryptedDbObject, JsonObject::class.java)
+                                    println(jsonObject)
                                 } catch (e: Exception) {
                                     fail("Decrypted db object should be parseable as json.")
                                 }
@@ -105,9 +103,8 @@ class Kafka2HBaseSpec : StringSpec() {
                             }
                         }
                     }
-                    result = scanner.next()
+
                 }
-                while (result != null)
             }
         }
 
