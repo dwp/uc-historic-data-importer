@@ -59,7 +59,6 @@ class Kafka2HBaseSpec : StringSpec() {
             hbase.connection.getTable(TableName.valueOf("k2hb:ingest")).use { table ->
                 val scan = Scan()
                 val scanner = table.getScanner(scan)
-                var result = scanner.next()
                 scanner.forEach { result ->
 
                     val familyMap = result.noVersionMap
