@@ -23,7 +23,7 @@ class EncryptionMetadataProcessorTest {
             "iv": "$iv"   
         }""".trimIndent().toByteArray()
 
-        val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(validJson), "S3_KEY")
+        val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(validJson), "S3_KEY", 100L)
         val result = EncryptionMetadataProcessor().process(pair)
         val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv)
         assertEquals(expected, result.encryptionMetadata)
@@ -44,7 +44,7 @@ class EncryptionMetadataProcessorTest {
             "encryptedEncryptionKey": "$encryptedEncryptionKey",   
             "iv": "$iv"""".trimIndent().toByteArray()
 
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(malformedJson), "S3_KEY")
+            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(malformedJson), "S3_KEY", 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
             val message = "Failed to parse encryption metadata for '$s3key'."
@@ -70,7 +70,7 @@ class EncryptionMetadataProcessorTest {
                 "iv": "$iv"   
             }""".trimIndent().replace("\n", " ").toByteArray()
 
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key)
+            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             val result = EncryptionMetadataProcessor().process(pair)
             val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv)
             assertEquals(expected, result.encryptionMetadata)
@@ -95,7 +95,7 @@ class EncryptionMetadataProcessorTest {
                 "iv": "$iv"   
             }""".trimIndent().replace("\n", " ").toByteArray()
 
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key)
+            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'encryptionKeyId' encryption metadata field must not be blank."
@@ -118,7 +118,7 @@ class EncryptionMetadataProcessorTest {
                 "encryptedEncryptionKey": "$encryptedEncryptionKey"   
             }""".trimIndent().replace("\n", " ").toByteArray()
 
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key)
+            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'iv' encryption metadata field must not be blank."
@@ -141,7 +141,7 @@ class EncryptionMetadataProcessorTest {
                 "iv": "$iv"  
             }""".trimIndent().replace("\n", " ").toByteArray()
 
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key)
+            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'plaintextDatakey' encryption metadata field must not be blank."
@@ -164,7 +164,7 @@ class EncryptionMetadataProcessorTest {
                 "iv": "$iv"  
             }""".trimIndent().replace("\n", " ").toByteArray()
 
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key)
+            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'encryptedEncryptionKey' encryption metadata field must not be blank."

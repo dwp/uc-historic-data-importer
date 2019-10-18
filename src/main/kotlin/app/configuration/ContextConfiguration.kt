@@ -5,6 +5,7 @@ import app.batch.migrate
 import org.apache.http.impl.client.HttpClients
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -15,6 +16,9 @@ import javax.crypto.Cipher
 class ContextConfiguration {
 
     @Bean
+    fun maxSize() = maxSize.toLong()
+
+    @Bean
     fun cipherInstanceProvider(): CipherInstanceProvider {
         return object : CipherInstanceProvider {
             override fun cipherInstance(): Cipher {
@@ -22,7 +26,6 @@ class ContextConfiguration {
             }
         }
     }
-
 
     @Bean
     @Profile("insecureHttpClient")
@@ -45,6 +48,9 @@ class ContextConfiguration {
         hbase.migrate()
         return hbase
     }
+
+    @Value("\${object.maximum.size:2200000000}")
+    lateinit var maxSize: String
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(ContextConfiguration::class.toString())
