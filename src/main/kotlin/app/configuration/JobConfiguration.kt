@@ -50,7 +50,8 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> =
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
-                setDelegates(listOf(encryptionMetadataProcessor,
+                setDelegates(listOf(objectSizeProcessor,
+                        encryptionMetadataProcessor,
                         datakeyProcessor,
                         decryptionProcessor,
                         decompressionProcessor))
@@ -58,6 +59,9 @@ class JobConfiguration {
 
     @Autowired
     lateinit var itemReader: ItemReader<InputStreamPair>
+
+    @Autowired
+    lateinit var objectSizeProcessor: ItemProcessor<InputStreamPair, InputStreamPair>
 
     @Autowired
     lateinit var encryptionMetadataProcessor: ItemProcessor<InputStreamPair, EncryptedStream>
@@ -82,4 +86,5 @@ class JobConfiguration {
 
     @Value("\${thread.count:10}")
     lateinit var threadCount: String
+
 }
