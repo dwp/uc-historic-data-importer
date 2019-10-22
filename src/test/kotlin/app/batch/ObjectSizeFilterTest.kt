@@ -19,7 +19,7 @@ class ObjectSizeFilterTest {
         val objectSizeFilter = ObjectSizeFilter(100)
         val dataStream = ByteArrayInputStream("DATA".toByteArray())
         val metadataStream = ByteArrayInputStream("METADATA".toByteArray())
-        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 50)
+        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 100)
         val processed = objectSizeFilter.process(inputStreamPair)
         assertNotNull(processed)
         assertEquals(processed, inputStreamPair)
@@ -30,7 +30,7 @@ class ObjectSizeFilterTest {
         val objectSizeFilter = ObjectSizeFilter(100)
         val dataStream = ByteArrayInputStream("DATA".toByteArray())
         val metadataStream = ByteArrayInputStream("METADATA".toByteArray())
-        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 150)
+        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 101)
         val processed = objectSizeFilter.process(inputStreamPair)
         assertNull(processed)
     }
