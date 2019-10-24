@@ -95,7 +95,7 @@ class MessageProducerTest {
 
     @Test
     fun testTwoObjectsGetSameGuid() =
-        assertEquals(unitOfWorkId(validJsonOne()),unitOfWorkId(validJsonTwo()))
+            assertEquals(unitOfWorkId(validJsonOne()), unitOfWorkId(validJsonTwo()))
 
     @Test
     fun testTimestampRepresentsTimeOfMessageCreation() {
@@ -269,6 +269,7 @@ class MessageProducerTest {
                     .use { inputStream ->
                         JSONObject(JSONTokener(inputStream))
                     }
+
     private fun validJsonTwo(): String {
         return """{
                 "_id": {
