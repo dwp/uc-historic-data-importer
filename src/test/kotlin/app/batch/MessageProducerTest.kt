@@ -270,7 +270,7 @@ class MessageProducerTest {
                         JSONObject(JSONTokener(inputStream))
                     }
     private fun validJsonTwo(): String {
-        val validJsonTwo = """{
+        return """{
                 "_id": {
                     "idField": "$anotherIdFieldValue",
                     "anotherIdField": "$idFieldValue"
@@ -279,11 +279,10 @@ class MessageProducerTest {
                     "$dateKey": "$dateValue" 
                 }
             }""".trimIndent()
-        return validJsonTwo
     }
 
     private fun validJsonOne(): String {
-        val validJsonOne = """{
+        return """{
                 "_id": {
                     "idField": "$idFieldValue",
                     "anotherIdField": "$anotherIdFieldValue"
@@ -292,7 +291,6 @@ class MessageProducerTest {
                     "$dateKey": "$dateValue" 
                 }
             }""".trimIndent()
-        return validJsonOne
     }
 
     private fun unitOfWorkId(json: String) = messageField("unitOfWorkId", json)

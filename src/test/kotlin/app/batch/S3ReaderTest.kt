@@ -56,9 +56,6 @@ class S3ReaderTest {
     private lateinit var s3Client: AmazonS3
 
     @Autowired
-    private lateinit var keyPairGenerator: KeyPairGenerator
-
-    @Autowired
     private lateinit var s3Reader: S3Reader
 
     @Before
