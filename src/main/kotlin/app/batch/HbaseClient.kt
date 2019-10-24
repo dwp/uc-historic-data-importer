@@ -50,4 +50,5 @@ open class HbaseClient(
     }
 
     fun close() = connection.close()
+
 }

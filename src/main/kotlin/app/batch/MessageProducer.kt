@@ -3,10 +3,17 @@ package app.batch
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
 import com.beust.klaxon.JsonObject
+import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.env.Environment
+import org.springframework.core.env.get
 import org.springframework.stereotype.Component
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Component
 class MessageProducer {
@@ -20,8 +27,15 @@ class MessageProducer {
         val date = modified?.get("\$date")
         val dateStr = if (date != null) date as String else ""
         val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
+        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(Date())
+
         return if (StringUtils.isNotBlank(dateStr)) {
             """{
+                |   "unitOfWorkId": "$unitOfWorkId",
+                |   "timestamp": "$timestamp",
+                |   "traceId": "$traceId",
+                |   "@type": "HDI",
+                |   "version": "$hdiVersion",
                 |   "message": {
                 |       "@type": "$type",
                 |       "_id": $id,
@@ -42,9 +56,24 @@ class MessageProducer {
         }
     }
 
-
     companion object {
         val logger: Logger = LoggerFactory.getLogger(MessageProducer::class.toString())
     }
 
+    @Value("\${trace.id}")
+    private lateinit var traceId: String
+
+    private val hdiVersion: String by lazy {
+        val valueFromManifest = try { Manifests.read("Hdi-Version") } catch (e: Exception) { null }
+        val valueFromArguments = environment.get("hdi.version")
+        logger.info("valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
+        valueFromManifest ?: valueFromArguments ?: "No hdi version available."
+    }
+
+    private val unitOfWorkId by lazy {
+        UUID.randomUUID().toString()
+    }
+
+    @Autowired
+    private lateinit var environment: Environment
 }

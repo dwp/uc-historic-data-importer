@@ -15,14 +15,13 @@ class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
 
     fun getTimestampAsLong(timeStampAsStr: String?, timeStampPattern: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"): Long {
-        val df = SimpleDateFormat(timeStampPattern);
+        val df = SimpleDateFormat(timeStampPattern)
         return df.parse(timeStampAsStr).time
     }
 
     fun getLastModifiedTimestamp(json: JsonObject?): String? {
         try {
-            val lastModifiedTimestampStr = json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
-            return lastModifiedTimestampStr
+            return json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
         } catch (e: Exception) {
             logger.warn("Record body does not contain valid json object with  _lastModifiedDateTime field")
             return null
@@ -56,8 +55,7 @@ class MessageUtils {
     fun parseJson(line: String?): JsonObject {
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(line)
-        val json = parser.parse(stringBuilder) as JsonObject
-        return json
+        return parser.parse(stringBuilder) as JsonObject
     }
 
     fun generateKey(json: JsonObject): ByteArray {
@@ -68,7 +66,7 @@ class MessageUtils {
     }
 
     fun sortJsonByKey(unsortedJson: JsonObject): String {
-        val sortedEntries = unsortedJson.toSortedMap(compareBy<String> { it })
+        val sortedEntries = unsortedJson.toSortedMap(compareBy { it })
         val json: JsonObject = JsonObject(sortedEntries)
         return json.toJsonString()
     }
@@ -79,6 +77,6 @@ class MessageUtils {
 
         checksum.update(bytes, 0, bytes.size)
 
-        return ByteBuffer.allocate(4).putInt(checksum.getValue().toInt()).array();
+        return ByteBuffer.allocate(4).putInt(checksum.getValue().toInt()).array()
     }
 }

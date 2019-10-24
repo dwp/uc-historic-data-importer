@@ -25,8 +25,8 @@ add_container() {
 
 }
 
-add_container dks
-add_container hbase
-add_container zookeeper
+docker ps --format '{{.Names}}' | while read container; do
+  add_container $container
+done
 
 cat /etc/hosts
