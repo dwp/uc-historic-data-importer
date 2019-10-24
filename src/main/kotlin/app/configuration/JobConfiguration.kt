@@ -26,9 +26,10 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor
 class JobConfiguration {
 
     @Bean
-    fun importUserJob(step: Step) =
+    fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
             jobBuilderFactory.get("ucHistoricDataImporterJob")
                     .incrementer(RunIdIncrementer())
+                    .listener(listener)
                     .flow(step)
                     .end()
                     .build()
