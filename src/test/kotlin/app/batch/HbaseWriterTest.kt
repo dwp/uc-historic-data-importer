@@ -17,12 +17,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
+@TestPropertySource(properties = [
+    "aws.region=eu-west-1"
+])
 class HbaseWriterTest {
 
     val validJsonWithoutTimeStamp = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
@@ -177,6 +181,11 @@ class HbaseWriterTest {
         verify(mockAppender, times(4)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
+
+        formattedMessages.forEach {
+            println(it)
+        }
+
         assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
     }
 

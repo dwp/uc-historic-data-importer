@@ -20,7 +20,10 @@ repositories {
 }
 
 tasks.bootJar {
-    launchScript()
+        launchScript()
+        manifest {
+                attributes["Hdi-Version"] = version
+        }
 }
 
 configurations.all {
@@ -38,17 +41,17 @@ dependencies {
         implementation("org.apache.commons:commons-compress:1.17")
         implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
         implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
-        implementation("org.apache.hbase", "hbase-client", "1.4.9")
+        implementation("org.apache.hbase:hbase-client:1.4.9")
         implementation("org.apache.commons:commons-lang3:3.9")
         implementation("org.springframework.retry:spring-retry")
         implementation("org.springframework.boot:spring-boot-starter-aop")
-
-        implementation("com.beust", "klaxon", "4.0.2")
+        implementation("com.beust:klaxon:4.0.2")
+        implementation("com.jcabi:jcabi-manifests:1.1")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         testImplementation("org.springframework.batch:spring-batch-test")
-        testImplementation("com.nhaarman.mockitokotlin2", "mockito-kotlin", "2.2.0")
-        testImplementation("com.github.everit-org.json-schema", "org.everit.json.schema", "1.12.0")
-        testImplementation("io.kotlintest", "kotlintest-runner-junit5", "3.3.2")
+        testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+        testImplementation("com.github.everit-org.json-schema:org.everit.json.schema:1.12.0")
+        testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
 }
 
 tasks.withType<KotlinCompile> {
@@ -78,5 +81,3 @@ tasks.register<Test>("integration") {
                 events = setOf(TestLogEvent.SKIPPED, TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT)
         }
 }
-
-

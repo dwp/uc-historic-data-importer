@@ -88,6 +88,7 @@ services:
       --filename.format.data.extension=\.enc$$
       --filename.format.metadata.extension=\.encryption\.json$$
       --kafka.topic.prefix=db
+      --trace.id=1234
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng
 
   integration-test:
