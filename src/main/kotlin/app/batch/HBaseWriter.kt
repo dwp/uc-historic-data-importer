@@ -73,15 +73,18 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         }
 
                         val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                        val formattedkey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
+                        val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
+                        val formattedKeyString = formattedKey.contentToString()
+                        logger.info("Formatted key for the record '$id' is '$formattedKeyString'")
+
                         val topic = "$kafkaTopicPrefix.$database.$collection"
                         hbase.putVersion(
                                 topic = topic.toByteArray(),
-                                key = formattedkey,
+                                key = formattedKey,
                                 body = message.toByteArray(),
                                 version = lastModifiedTimestampLong
                         )
-                        logger.info("Written record $lineNo id $id as key $formattedkey to HBase topic $topic.")
+                        logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
                     } catch (e: Exception) {
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
