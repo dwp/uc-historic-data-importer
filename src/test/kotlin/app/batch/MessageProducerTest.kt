@@ -13,11 +13,26 @@ import com.nhaarman.mockitokotlin2.verify
 import org.everit.json.schema.loader.SchemaLoader
 import org.json.JSONObject
 import org.json.JSONTokener
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestPropertySource
+import org.springframework.test.context.junit4.SpringRunner
+import java.text.SimpleDateFormat
+import java.util.*
 
+@RunWith(SpringRunner::class)
+@SpringBootTest(classes = [MessageProducer::class])
+@TestPropertySource(properties = [
+    "trace.id=1", "hdi.version=1.0.0"
+])
 class MessageProducerTest {
+
+    @Autowired
+    private lateinit var messageProducer: MessageProducer
 
     private val dateKey = "\$date"
     private val dateValue = "2018-12-14T15:01:02.000+0000"
@@ -35,15 +50,7 @@ class MessageProducerTest {
     @Test
     fun testValidObjectGivesSchemaValidMessage() {
 
-        val validJson = """{
-            "_id": {
-                "idField": "$idFieldValue",
-                "anotherIdField": "$anotherIdFieldValue"
-            },
-            "_lastModifiedDateTime": {
-                "$dateKey": "$dateValue" 
-            }
-        }""".trimIndent()
+        val validJson = validJsonOne()
 
         val parser: Parser = Parser.default()
         val stringBuilder = StringBuilder(validJson)
@@ -51,10 +58,19 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
         val actual = parser.parse(StringBuilder(message)) as JsonObject
+        val unitOfWorkId = actual["unitOfWorkId"]
+        val timestamp = actual["timestamp"]
+        assertNotNull(unitOfWorkId)
+        assertNotNull(timestamp)
+        actual.remove("unitOfWorkId")
+        actual.remove("timestamp")
         validate(message)
         val expected = """{
+              "traceId": "1",
+              "@type": "HDI",
+              "version": "1.0.0",
               "message": {
                 "@type": "MONGO_UPDATE",
                 "_id": {
@@ -78,6 +94,20 @@ class MessageProducerTest {
     }
 
     @Test
+    fun testTwoObjectsGetSameGuid() =
+            assertEquals(unitOfWorkId(validJsonOne()), unitOfWorkId(validJsonTwo()))
+
+    @Test
+    fun testTimestampRepresentsTimeOfMessageCreation() {
+        val start = Date()
+        val timestamp = timestamp(validJsonOne())
+        val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(timestamp)
+        val end = Date()
+        assertTrue(start.before(date) || start.equals(date))
+        assertTrue(end.after(date) || end.equals(date))
+    }
+
+    @Test
     fun testValidObjectWithTypeGivesSchemaValidMessage() {
         val validJson = """{
             "_id": {
@@ -96,10 +126,19 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
         val actual = parser.parse(StringBuilder(message)) as JsonObject
+        val unitOfWorkId = actual["unitOfWorkId"]
+        val timestamp = actual["timestamp"]
+        assertNotNull(unitOfWorkId)
+        assertNotNull(timestamp)
+        actual.remove("unitOfWorkId")
+        actual.remove("timestamp")
         validate(message)
         val expected = """{
+              "traceId": "1",
+              "@type": "HDI",
+              "version": "1.0.0",
               "message": {
                 "@type": "$type",
                 "_id": {
@@ -230,4 +269,42 @@ class MessageProducerTest {
                     .use { inputStream ->
                         JSONObject(JSONTokener(inputStream))
                     }
+
+    private fun validJsonTwo(): String {
+        return """{
+                "_id": {
+                    "idField": "$anotherIdFieldValue",
+                    "anotherIdField": "$idFieldValue"
+                },
+                "_lastModifiedDateTime": {
+                    "$dateKey": "$dateValue" 
+                }
+            }""".trimIndent()
+    }
+
+    private fun validJsonOne(): String {
+        return """{
+                "_id": {
+                    "idField": "$idFieldValue",
+                    "anotherIdField": "$anotherIdFieldValue"
+                },
+                "_lastModifiedDateTime": {
+                    "$dateKey": "$dateValue" 
+                }
+            }""".trimIndent()
+    }
+
+    private fun unitOfWorkId(json: String) = messageField("unitOfWorkId", json)
+    private fun timestamp(json: String) = messageField("timestamp", json)
+
+    private fun messageField(field: String, json: String): String {
+        val parser: Parser = Parser.default()
+        val encryptionResult = EncryptionResult(initialisationVector, encrypted)
+        val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
+        val jsonObjectOne = parser.parse(StringBuilder(json)) as JsonObject
+        val messageOne = messageProducer.produceMessage(jsonObjectOne, encryptionResult, dataKeyResult, database, collection)
+        val actualOne = parser.parse(StringBuilder(messageOne)) as JsonObject
+        return actualOne[field] as String
+    }
+
 }

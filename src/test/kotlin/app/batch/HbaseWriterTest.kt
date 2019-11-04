@@ -9,7 +9,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.beust.klaxon.JsonObject
 import com.nhaarman.mockitokotlin2.*
-import org.apache.hadoop.hbase.client.Connection
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,9 +44,6 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var messageUtils: MessageUtils
-
-    @MockBean
-    private lateinit var connection: Connection
 
     @Autowired
     private lateinit var hBaseWriter: HBaseWriter

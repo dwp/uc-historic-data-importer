@@ -49,7 +49,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
-                var lineNo = 0;
+                var lineNo = 0
                 BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
                     lineNo++
                     try {

@@ -3,7 +3,6 @@ package app.batch
 import app.domain.InputStreamPair
 import app.domain.S3ObjectSummaryPair
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -38,7 +37,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 logger.info("s3objectSummaryPair: '$it'.")
                 val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
-                return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key)
+                return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key, it.data.size)
             }
         } else {
             null
@@ -54,7 +53,12 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         if (null == iterator) {
             val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
-            val keyPairs = keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key }, fileNameFormat.toRegex(), fileNameFormatDataExtension.toRegex(), fileNameFormatMetadataExtension.toRegex())
+            val keyPairs =
+                    keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },
+                            fileNameFormat.toRegex(),
+                            fileNameFormatDataExtension.toRegex(),
+                            fileNameFormatMetadataExtension.toRegex())
+
             val pairs = keyPairs.map {
                 val obj = objectSummaryKeyMap[it.dataKey]
                 val meta = objectSummaryKeyMap[it.metadataKey]
@@ -65,9 +69,8 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         return iterator!!
     }
 
-    private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
-        return s3Client.getObject(bucketName, os.key).objectContent
-    }
+    private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String) =
+            s3Client.getObject(bucketName, os.key).objectContent
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3Reader::class.toString())

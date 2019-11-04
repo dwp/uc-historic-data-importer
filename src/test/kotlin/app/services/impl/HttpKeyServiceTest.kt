@@ -1,10 +1,10 @@
 package app.services.impl
 
-import app.batch.HbaseClient
 import app.configuration.HttpClientProvider
 import app.domain.DataKeyResult
 import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
+import app.services.KeyService
 import com.google.gson.Gson
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
@@ -23,34 +23,25 @@ import org.mockito.Mockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 
+@EnableRetry
 @RunWith(SpringRunner::class)
-@ActiveProfiles("awsS3", "weakRng")
-@SpringBootTest
+@SpringBootTest(classes = [HttpKeyService::class])
 @TestPropertySource(properties = [
-    "data.key.service.url=phoney",
-    "aws.region=eu-west-1",
-    "s3.bucket=bucket1",
-    "s3.prefix.folder=test/output/",
-    "s3.key.regex=([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)",
-    "s3.data.key.extension=\\.enc$",
-    "s3.metadata.key.extension=\\.encryption\\.json$",
-    "hbase.zookeeper.quorum=hbase"
+    "data.key.service.url=http://phoney",
+    "phoney.key=phoney-value"
 ])
 class HttpKeyServiceTest {
 
     @Autowired
-    private lateinit var keyService: HttpKeyService
+    private lateinit var keyService: KeyService
 
     @MockBean
     private lateinit var httpClientProvider: HttpClientProvider
-
-    @MockBean
-    private lateinit var hbase: HbaseClient
 
     @Before
     fun init() {
@@ -102,7 +93,8 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("data key service returned status code '503'.", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
         }
@@ -123,7 +115,8 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpGet::class.java))
         }
@@ -211,7 +204,6 @@ class HttpKeyServiceTest {
         val dataKeyResult = keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
 
         assertEquals("PLAINTEXT_DATAKEY", dataKeyResult)
-
         verify(httpClient, times(3)).execute(any(HttpPost::class.java))
     }
 
@@ -257,7 +249,8 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyDecryptionException")
-        } catch (ex: DataKeyDecryptionException) {
+        }
+        catch (ex: DataKeyDecryptionException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '400'", ex.message)
             verify(httpClient, times(1)).execute(any(HttpPost::class.java))
         }
@@ -276,7 +269,8 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123' data key service returned status code '503'", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
         }
@@ -284,7 +278,6 @@ class HttpKeyServiceTest {
 
     @Test
     fun testDecryptKey_UnknownHttpError_WillCauseRetryMaxTimes() {
-
         val statusLine = mock(StatusLine::class.java)
         given(statusLine.statusCode).willReturn(503)
         val httpResponse = mock(CloseableHttpResponse::class.java)
@@ -295,7 +288,8 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Error contacting data key service: java.lang.RuntimeException: Boom!", ex.message)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(any(HttpPost::class.java))
         }
