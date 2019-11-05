@@ -12,14 +12,23 @@ class KeyPairGenerator {
         val keysMap = keys.groupBy { fileFormat.find(it)?.value }
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
+
         logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
-        logger.info("Unmatched keys : ${unMatchedFlattened.joinToString(",")}")
-        val keyPairs = matched.map {
-            logger.info("Matched key : ${it.key} Value : ${it.value} \n")
-            val neitherDataNorMetadataKey = it.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
-            logger.warn("${neitherDataNorMetadataKey.joinToString(",")} matched file format but not matched neither data nor metadata file extension")
-            val dataKey = it.value.find { ti -> ti.contains(dataFileExtension) }
-            val metadatakey = it.value.find { ti -> ti.contains(metadataFileExtension) }
+        if (unMatchedFlattened.isNotEmpty()) {
+            logger.warn("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+        }
+
+        val keyPairs = matched.map { pair ->
+            logger.info("Matched key : ${pair.key} Value : ${pair.value} \n")
+            val neitherDataNorMetadataKey =
+                pair.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
+            val dataKey = pair.value.find { ti -> ti.contains(dataFileExtension) }
+            val metadatakey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
+
+            if (neitherDataNorMetadataKey.isNotEmpty()) {
+                logger.warn("${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
+            }
+
             KeyPair(dataKey, metadatakey)
         }
         validateKeyPairs(keyPairs)
@@ -32,7 +41,8 @@ class KeyPairGenerator {
                 val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
                 logger.error(metadataFileNotFoundError)
                 throw RuntimeException(metadataFileNotFoundError)
-            } else if (it.metadataKey != null && it.dataKey == null) {
+            }
+            else if (it.metadataKey != null && it.dataKey == null) {
                 logger.error("Data file not found for the metadata file ${it.metadataKey}")
             }
         }
