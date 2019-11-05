@@ -1,16 +1,13 @@
 package app.batch
 
-import app.domain.KeyPair
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.Appender
-import com.nhaarman.mockitokotlin2.argumentCaptor
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.times
-import com.nhaarman.mockitokotlin2.verify
+import app.domain.*
+import ch.qos.logback.classic.spi.*
+import ch.qos.logback.core.*
+import com.nhaarman.mockitokotlin2.*
+import org.junit.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Test
-import org.slf4j.LoggerFactory
+import org.slf4j.*
 
 class KeyPairGeneratorTest {
 
@@ -22,12 +19,12 @@ class KeyPairGeneratorTest {
     @Test
     fun Should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-                KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-                "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
-                "sdb.collection.0000.json.gz.encryption.json")
+            "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
+            "sdb.collection.0000.json.gz.encryption.json")
 
         val actualKeyPairs = keyPairGenerator.generateKeyPairs(keys, "^[A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz".toRegex(), "\\.enc\$".toRegex(), "\\.encryption\\.json\$".toRegex())
 
@@ -41,12 +38,12 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-                KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-                "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
-                "sdb.collection.0000.json.gz.encryption.json", "abc.json", "edf.json")
+            "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
+            "sdb.collection.0000.json.gz.encryption.json", "abc.json", "edf.json")
 
         val actualKeyPairs = keyPairGenerator.generateKeyPairs(keys, fileFormatRegex, dataFileExtensionRegex, metadataFileExtensionRegex)
 
@@ -55,6 +52,7 @@ class KeyPairGeneratorTest {
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("2 key(s) that don't match the given file fileFormat $fileFormatRegex found"))
         assertTrue(formattedMessages.contains("Unmatched keys : abc.json,edf.json"))
+        assertEquals(2, formattedMessages.size)
         assertEquals(expectedKeyPairs, actualKeyPairs)
 
     }
@@ -66,21 +64,21 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-                KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-                "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
-                "sdb.collection.0000.json.gz.encryption.json", "adb.collection.0000.json.gz.pdf", "adb.collection.0000.json.gz.docx")
+            "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
+            "sdb.collection.0000.json.gz.encryption.json", "adb.collection.0000.json.gz.pdf", "adb.collection.0000.json.gz.docx")
 
         val actualKeyPairs = keyPairGenerator.generateKeyPairs(keys, fileFormatRegex, dataFileExtensionRegex, metadataFileExtensionRegex)
 
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(8)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("adb.collection.0000.json.gz.pdf,adb.collection.0000.json.gz.docx matched file format but not matched neither data nor metadata file extension"))
+        assertTrue(formattedMessages.contains("adb.collection.0000.json.gz.pdf, adb.collection.0000.json.gz.docx matched file format but not data or metadata file extensions"))
+        assertEquals(1, formattedMessages.size)
         assertEquals(expectedKeyPairs, actualKeyPairs)
-
     }
 
     @Test
@@ -90,11 +88,11 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
-                KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
+            KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
         val keys = listOf("cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-                "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
-                "sdb.collection.0000.json.gz.encryption.json")
+            "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
+            "sdb.collection.0000.json.gz.encryption.json")
 
         val actualKeyPairs = keyPairGenerator.generateKeyPairs(keys, fileFormatRegex, dataFileExtensionRegex, metadataFileExtensionRegex)
 
@@ -102,8 +100,8 @@ class KeyPairGeneratorTest {
         verify(mockAppender, times(9)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Data file not found for the metadata file adb.collection.0000.json.gz.encryption.json"))
+        assertEquals(1, formattedMessages.size)
         assertEquals(expectedKeyPairs, actualKeyPairs)
-
     }
 
     @Test(expected = RuntimeException::class)
@@ -114,8 +112,8 @@ class KeyPairGeneratorTest {
         root.addAppender(mockAppender)
 
         val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-                "cdb.collection.0000.json.gz.encryption.json",
-                "sdb.collection.0000.json.gz.encryption.json")
+            "cdb.collection.0000.json.gz.encryption.json",
+            "sdb.collection.0000.json.gz.encryption.json")
 
         keyPairGenerator.generateKeyPairs(keys, fileFormatRegex, dataFileExtensionRegex, metadataFileExtensionRegex)
 
@@ -123,5 +121,6 @@ class KeyPairGeneratorTest {
         verify(mockAppender, times(9)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Metadata file not found for the data file adb.collection.0000.json.gz.enc"))
+        assertEquals(1, formattedMessages.size)
     }
 }

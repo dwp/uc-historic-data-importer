@@ -1,9 +1,8 @@
 package app.batch
 
-import app.domain.KeyPair
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
+import app.domain.*
+import org.slf4j.*
+import org.springframework.stereotype.*
 
 @Component
 class KeyPairGenerator {
@@ -13,13 +12,18 @@ class KeyPairGenerator {
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
         logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
-        logger.info("Unmatched keys : ${unMatchedFlattened.joinToString(",")}")
-        val keyPairs = matched.map {
-            logger.info("Matched key : ${it.key} Value : ${it.value} \n")
-            val neitherDataNorMetadataKey = it.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
-            logger.warn("${neitherDataNorMetadataKey.joinToString(",")} matched file format but not matched neither data nor metadata file extension")
-            val dataKey = it.value.find { ti -> ti.contains(dataFileExtension) }
-            val metadatakey = it.value.find { ti -> ti.contains(metadataFileExtension) }
+        logger.info("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+        val keyPairs = matched.map { pair ->
+            logger.info("Matched key : ${pair.key} Value : ${pair.value} \n")
+            val neitherDataNorMetadataKey =
+                pair.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
+            val dataKey = pair.value.find { ti -> ti.contains(dataFileExtension) }
+            val metadatakey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
+
+            if (neitherDataNorMetadataKey.isEmpty()) {
+                logger.warn("${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
+            }
+
             KeyPair(dataKey, metadatakey)
         }
         validateKeyPairs(keyPairs)
