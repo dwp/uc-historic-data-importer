@@ -1,8 +1,9 @@
 package app.batch
 
-import app.domain.*
-import org.slf4j.*
-import org.springframework.stereotype.*
+import app.domain.KeyPair
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
 @Component
 class KeyPairGenerator {
@@ -11,8 +12,12 @@ class KeyPairGenerator {
         val keysMap = keys.groupBy { fileFormat.find(it)?.value }
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
+
         logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
-        logger.info("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+        if (unMatchedFlattened.isNotEmpty()) {
+            logger.warn("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+        }
+
         val keyPairs = matched.map { pair ->
             logger.info("Matched key : ${pair.key} Value : ${pair.value} \n")
             val neitherDataNorMetadataKey =
@@ -20,7 +25,7 @@ class KeyPairGenerator {
             val dataKey = pair.value.find { ti -> ti.contains(dataFileExtension) }
             val metadatakey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
 
-            if (neitherDataNorMetadataKey.isEmpty()) {
+            if (neitherDataNorMetadataKey.isNotEmpty()) {
                 logger.warn("${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
             }
 
@@ -36,7 +41,8 @@ class KeyPairGenerator {
                 val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
                 logger.error(metadataFileNotFoundError)
                 throw RuntimeException(metadataFileNotFoundError)
-            } else if (it.metadataKey != null && it.dataKey == null) {
+            }
+            else if (it.metadataKey != null && it.dataKey == null) {
                 logger.error("Data file not found for the metadata file ${it.metadataKey}")
             }
         }
