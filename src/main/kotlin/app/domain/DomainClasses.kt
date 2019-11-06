@@ -12,7 +12,7 @@ data class EncryptionMetadata(val keyEncryptionKeyId: String = "",
                               var plaintextDatakey: String = "",
                               val encryptedEncryptionKey: String = "",
                               val initialisationVector: String = "",
-                              val keyEncryptionKeyHash: String)
+                              val keyEncryptionKeyHash: String = "")
 
 data class EncryptedStream(val dataInputStream: InputStream, val encryptionMetadata: EncryptionMetadata, val s3key: String)
 data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKey: String, val ciphertextDataKey: String)
