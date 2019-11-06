@@ -24,7 +24,7 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
         } catch (e: MetadataException) {
             throw e
         } catch (e: Exception) {
-            val message = "Failed to parse encryption metadata for '${item.s3key}'."
+            val message = "Failed to parse encryption metadata for '${item.s3key}': '$e'"
             logger.error(message)
             throw MetadataException(message, e)
         }
@@ -33,10 +33,9 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
     private fun encryptionMetadata(item: InputStreamPair): EncryptionMetadata {
         val metadata = ObjectMapper().readValue(item.metadataInputStream,
                 EncryptionMetadata::class.java)
-        assertNotBlank(item.s3key, "plaintextDatakey", metadata.plaintextDatakey)
         assertNotBlank(item.s3key, "encryptedEncryptionKey", metadata.encryptedEncryptionKey)
-        assertNotBlank(item.s3key, "iv", metadata.iv)
-        assertNotBlank(item.s3key, "encryptionKeyId", metadata.encryptionKeyId)
+        assertNotBlank(item.s3key, "initialisationVector", metadata.initialisationVector)
+        assertNotBlank(item.s3key, "keyEncryptionKeyId", metadata.keyEncryptionKeyId)
         return metadata
     }
 

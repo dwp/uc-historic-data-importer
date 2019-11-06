@@ -25,7 +25,7 @@ class EncryptionMetadataProcessorTest {
 
         val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(validJson), "S3_KEY", 100L)
         val result = EncryptionMetadataProcessor().process(pair)
-        val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv)
+        val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv, "")
         assertEquals(expected, result.encryptionMetadata)
     }
 
@@ -72,7 +72,7 @@ class EncryptionMetadataProcessorTest {
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             val result = EncryptionMetadataProcessor().process(pair)
-            val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv)
+            val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv, "")
             assertEquals(expected, result.encryptionMetadata)
         } catch (e: MetadataException) {
             val expected = "Failed to parse encryption metadata for '$s3Key'."
