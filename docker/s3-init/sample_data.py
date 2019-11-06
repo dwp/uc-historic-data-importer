@@ -43,7 +43,7 @@ def main():
 
         dks_response = requests.get(data_key_service).json()
         encryption_metadata = {
-            'encryptionKeyId': dks_response['dataKeyEncryptionKeyId'],
+            'keyEncryptionKeyId': dks_response['dataKeyEncryptionKeyId'],
             'encryptedEncryptionKey': dks_response['ciphertextDataKey'],
             'plaintextDatakey': dks_response['plaintextDataKey']
         }
@@ -83,12 +83,12 @@ def main():
         if args.compress:
             print("Compressing.")
             compressed = gzip.compress(contents.encode("ascii"))
-            [encryption_metadata['iv'], encrypted_contents] = \
+            [encryption_metadata['initialisationVector'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'], compressed,
                         args.encrypt)
         else:
             print("Not compressing.")
-            [encryption_metadata['iv'], encrypted_contents] = \
+            [encryption_metadata['initialisationVector'], encrypted_contents] = \
                 encrypt(encryption_metadata['plaintextDatakey'],
                         contents.encode("utf8"), args.encrypt)
 
