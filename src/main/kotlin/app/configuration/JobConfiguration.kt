@@ -37,7 +37,7 @@ class JobConfiguration {
     @Bean
     fun step() =
             stepBuilderFactory.get("step")
-                    .chunk<InputStreamPair, DecompressedStream>(10)
+                    .chunk<InputStreamPair, DecompressedStream>(chunkSize.toInt())
                     .reader(itemReader)
                     .processor(itemProcessor())
                     .writer(itemWriter)
@@ -88,4 +88,6 @@ class JobConfiguration {
     @Value("\${thread.count:10}")
     lateinit var threadCount: String
 
+    @Value("\${chunk.size:1}")
+    lateinit var chunkSize: String
 }
