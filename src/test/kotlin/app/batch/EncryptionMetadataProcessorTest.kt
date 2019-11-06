@@ -17,15 +17,15 @@ class EncryptionMetadataProcessorTest {
         val encryptedEncryptionKey = "encryptedEncryptionKey"
         val iv = "iv"
         val validJson = """{
-            "encryptionKeyId": "$encryptionKeyId",
+            "keyEncryptionKeyId": "$encryptionKeyId",
             "plaintextDatakey": "$plaintextDatakey",   
             "encryptedEncryptionKey": "$encryptedEncryptionKey",   
-            "iv": "$iv"   
+            "initialisationVector": "$iv"   
         }""".trimIndent().toByteArray()
 
         val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(validJson), "S3_KEY", 100L)
         val result = EncryptionMetadataProcessor().process(pair)
-        val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv)
+        val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv, "")
         assertEquals(expected, result.encryptionMetadata)
     }
 
@@ -39,10 +39,10 @@ class EncryptionMetadataProcessorTest {
             val encryptedEncryptionKey = "encryptedEncryptionKey"
             val iv = "iv"
             val malformedJson = """{
-            "encryptionKeyId": "$encryptionKeyId",
+            "keyEncryptionKeyId": "$encryptionKeyId",
             "plaintextDatakey": "$plaintextDatakey",   
             "encryptedEncryptionKey": "$encryptedEncryptionKey",   
-            "iv": "$iv"""".trimIndent().toByteArray()
+            "initialisationVector": "$iv"""".trimIndent().toByteArray()
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(malformedJson), "S3_KEY", 100L)
             EncryptionMetadataProcessor().process(pair)
@@ -54,7 +54,7 @@ class EncryptionMetadataProcessorTest {
     }
 
     @Test(expected = MetadataException::class)
-    fun testEncryptionMetadataWithExtraFieldsNotOk() {
+    fun testEncryptionMetadataWithExtraFieldsOk() {
         val s3Key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
@@ -64,15 +64,15 @@ class EncryptionMetadataProcessorTest {
             val iv = "iv"
             val invalidJson = """{
                 "unexpectedKey": "unexpectedValue", 
-                "encryptionKeyId": "$encryptionKeyId",
+                "keyEncryptionKeyId": "$encryptionKeyId",
                 "plaintextDatakey": "$plaintextDatakey",   
                 "encryptedEncryptionKey": "$encryptedEncryptionKey",   
-                "iv": "$iv"   
+                "initialisationVector": "$iv"   
             }""".trimIndent().replace("\n", " ").toByteArray()
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             val result = EncryptionMetadataProcessor().process(pair)
-            val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv)
+            val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv, "")
             assertEquals(expected, result.encryptionMetadata)
         } catch (e: MetadataException) {
             val expected = "Failed to parse encryption metadata for '$s3Key'."
@@ -92,13 +92,13 @@ class EncryptionMetadataProcessorTest {
             val invalidJson = """{
                 "plaintextDatakey": "$plaintextDatakey",   
                 "encryptedEncryptionKey": "$encryptedEncryptionKey",   
-                "iv": "$iv"   
+                "initialisationVector": "$iv"   
             }""".trimIndent().replace("\n", " ").toByteArray()
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
-            val expected = "Failed to process encryption metadata for '$s3Key': 'encryptionKeyId' encryption metadata field must not be blank."
+            val expected = "Failed to process encryption metadata for '$s3Key': 'keyEncryptionKeyId' encryption metadata field must not be blank."
             assertEquals(expected, e.message)
             throw e
         }
@@ -113,7 +113,7 @@ class EncryptionMetadataProcessorTest {
             val plaintextDatakey = "plaintextDatakey"
             val encryptedEncryptionKey = "encryptedEncryptionKey"
             val invalidJson = """{
-                "encryptionKeyId": "$encryptionKeyId",
+                "keyEncryptionKeyId": "$encryptionKeyId",
                 "plaintextDatakey": "$plaintextDatakey",   
                 "encryptedEncryptionKey": "$encryptedEncryptionKey"   
             }""".trimIndent().replace("\n", " ").toByteArray()
@@ -121,34 +121,12 @@ class EncryptionMetadataProcessorTest {
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
         } catch (e: MetadataException) {
-            val expected = "Failed to process encryption metadata for '$s3Key': 'iv' encryption metadata field must not be blank."
+            val expected = "Failed to process encryption metadata for '$s3Key': 'initialisationVector' encryption metadata field must not be blank."
             assertEquals(expected, e.message)
             throw e
         }
     }
 
-    @Test(expected = MetadataException::class)
-    fun testEncryptionMetadataWithMissingPlaintextDatakeyNotOk() {
-        val s3Key = "S3_KEY"
-        try {
-            val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
-            val encryptionKeyId = "encryptionKeyId"
-            val encryptedEncryptionKey = "encryptedEncryptionKey"
-            val iv = "iv"
-            val invalidJson = """{
-                "encryptionKeyId": "$encryptionKeyId",
-                "encryptedEncryptionKey": "$encryptedEncryptionKey",
-                "iv": "$iv"  
-            }""".trimIndent().replace("\n", " ").toByteArray()
-
-            val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
-            EncryptionMetadataProcessor().process(pair)
-        } catch (e: MetadataException) {
-            val expected = "Failed to process encryption metadata for '$s3Key': 'plaintextDatakey' encryption metadata field must not be blank."
-            assertEquals(expected, e.message)
-            throw e
-        }
-    }
 
     @Test(expected = MetadataException::class)
     fun testEncryptionMetadataWithMissingEncryptedEncryptionKeyDatakeyNotOk() {
@@ -160,8 +138,8 @@ class EncryptionMetadataProcessorTest {
             val iv = "iv"
             val invalidJson = """{
                 "plaintextDatakey": "$plaintextDatakey",
-                "encryptionKeyId": "$encryptionKeyId",
-                "iv": "$iv"  
+                "keyEncryptionKeyId": "$encryptionKeyId",
+                "initialisationVector": "$iv"  
             }""".trimIndent().replace("\n", " ").toByteArray()
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)

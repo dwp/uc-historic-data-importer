@@ -27,7 +27,7 @@ class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : 
     override fun process(item: EncryptedStream): DecryptedStream {
         try {
             val dataKey = item.encryptionMetadata.plaintextDatakey
-            val iv = item.encryptionMetadata.iv
+            val iv = item.encryptionMetadata.initialisationVector
             val inputStream = item.dataInputStream
             val keySpec: Key = SecretKeySpec(dataKey.toByteArray(), "AES")
 

@@ -8,10 +8,11 @@ data class InputStreamPair(val dataInputStream: InputStream, val metadataInputSt
                            val s3key: String, val objectSize: Long)
 data class S3ObjectSummaryPair(val data: S3ObjectSummary?, val metadata: S3ObjectSummary?)
 
-data class EncryptionMetadata(val encryptionKeyId: String = "",
+data class EncryptionMetadata(val keyEncryptionKeyId: String = "",
                               var plaintextDatakey: String = "",
                               val encryptedEncryptionKey: String = "",
-                              val iv: String = "")
+                              val initialisationVector: String = "",
+                              val keyEncryptionKeyHash: String = "")
 
 data class EncryptedStream(val dataInputStream: InputStream, val encryptionMetadata: EncryptionMetadata, val s3key: String)
 data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKey: String, val ciphertextDataKey: String)

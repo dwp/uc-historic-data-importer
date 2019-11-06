@@ -17,7 +17,7 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
     override fun process(item: EncryptedStream): EncryptedStream {
         try {
             val encryptionMetadata = item.encryptionMetadata
-            val plaintextKey = keyService.decryptKey(encryptionMetadata.encryptionKeyId,
+            val plaintextKey = keyService.decryptKey(encryptionMetadata.keyEncryptionKeyId,
                     encryptionMetadata.encryptedEncryptionKey)
             encryptionMetadata.plaintextDatakey = plaintextKey
             return item
