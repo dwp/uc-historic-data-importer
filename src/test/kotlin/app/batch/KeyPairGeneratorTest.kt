@@ -19,11 +19,11 @@ class KeyPairGeneratorTest {
     @Test
     fun Should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+            KeyPair("cdb.Collection_1.0000.json.gz.enc", "cdb.Collection_1.0000.json.gz.encryption.json"),
             KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
-        val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-            "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
+        val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.Collection_1.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
+            "adb.collection.0000.json.gz.encryption.json", "cdb.Collection_1.0000.json.gz.encryption.json",
             "sdb.collection.0000.json.gz.encryption.json")
 
         val actualKeyPairs = keyPairGenerator.generateKeyPairs(keys, fileFormatRegex, dataFileExtensionRegex, metadataFileExtensionRegex)
@@ -38,11 +38,11 @@ class KeyPairGeneratorTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
-            KeyPair("cdb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.encryption.json"),
+            KeyPair("cdb.Collection_1.0000.json.gz.enc", "cdb.Collection_1.0000.json.gz.encryption.json"),
             KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
 
-        val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
-            "adb.collection.0000.json.gz.encryption.json", "cdb.collection.0000.json.gz.encryption.json",
+        val keys = listOf("adb.collection.0000.json.gz.enc", "cdb.Collection_1.0000.json.gz.enc", "sdb.collection.0000.json.gz.enc",
+            "adb.collection.0000.json.gz.encryption.json", "cdb.Collection_1.0000.json.gz.encryption.json",
             "sdb.collection.0000.json.gz.encryption.json", "abc.json", "edf.json")
 
         val actualKeyPairs = keyPairGenerator.generateKeyPairs(keys, fileFormatRegex, dataFileExtensionRegex, metadataFileExtensionRegex)
