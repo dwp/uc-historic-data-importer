@@ -36,7 +36,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
 
-    private val filenamePattern = """(?<database>[A-Za-z0-9-]+)\.(?<collection>[[A-Za-z0-9-]+]+)\.[0-9]+\.json\.gz\.enc$"""
+    private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.[0-9]+\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
 
     override fun write(items: MutableList<out DecompressedStream>) {

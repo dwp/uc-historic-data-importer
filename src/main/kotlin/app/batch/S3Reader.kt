@@ -21,7 +21,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String
 
-    @Value("\${filename.format.regex:([A-Za-z0-9-]+\\.[A-Za-z0-9-]+\\.[0-9]+\\.json\\.gz)}")
+    @Value("\${filename.format.regex:([\\w-]+\\\.[\\w-]+\\\.[0-9]+\\\.json\\\.gz)}")
     private lateinit var fileNameFormat: String
 
     @Value("\${filename.format.data.extension:\\.enc$}")
