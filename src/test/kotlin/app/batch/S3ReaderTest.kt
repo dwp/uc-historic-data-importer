@@ -33,7 +33,7 @@ import java.nio.charset.StandardCharsets
     "aws.region=eu-west-1",
     "s3.bucket=bucket1",
     "s3.prefix.folder=test/output/",
-    "s3.key.regex=([A-Za-z]*\\.[A-Za-z]*\\.[0-9]{4}\\.json\\.gz)",
+    "s3.key.regex=([\\w]*\\.[\\w]*\\.[0-9]{4}\\.json\\.gz)",
     "s3.data.key.extension=\\.enc$",
     "s3.metadata.key.extension=\\.encryption\\.json$"
 ])
