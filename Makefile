@@ -86,7 +86,7 @@ up: build-image up-ancillary ## Run the ecosystem of containers.
 up-all: build-image up
 
 .PHONY: integration
-integration: destroy up-all integration-test-image
+integration: up-all integration-test-image
 	docker-compose run --rm integration-test
 
 .PHONY: destroy
