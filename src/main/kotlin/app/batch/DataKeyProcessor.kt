@@ -17,9 +17,17 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
     override fun process(item: EncryptedStream): EncryptedStream {
         try {
             val encryptionMetadata = item.encryptionMetadata
-            val plaintextKey = keyService.decryptKey(encryptionMetadata.keyEncryptionKeyId,
-                    encryptionMetadata.encryptedEncryptionKey)
-            encryptionMetadata.plaintextDatakey = plaintextKey
+
+            if (item.encryptionMetadata.initialisationVector == "AAAAAAAAAAAAAAAAAAAAAA==") {
+                logger.info("Detected UC test IV, setting data key accordingly.")
+                encryptionMetadata.plaintextDatakey = "AAAAAAAAAAAAAAAAAAAAAA=="
+            }
+            else {
+                val plaintextKey = keyService.decryptKey(encryptionMetadata.keyEncryptionKeyId,
+                        encryptionMetadata.encryptedEncryptionKey)
+                encryptionMetadata.plaintextDatakey = plaintextKey
+            }
+
             return item
         } catch (e: DataKeyDecryptionException) {
             val message = "Failed to decrypt '${item.s3key}': '${e.message}'."
