@@ -29,7 +29,7 @@ class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : 
             val dataKey = item.encryptionMetadata.plaintextDatakey
             val iv = item.encryptionMetadata.initialisationVector
             val inputStream = item.dataInputStream
-            val keySpec: Key = SecretKeySpec(dataKey.toByteArray(), "AES")
+            val keySpec: Key = SecretKeySpec(Base64.getDecoder().decode(dataKey), "AES")
 
             val cipher = cipherInstanceProvider.cipherInstance().apply {
                 init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(iv)))
