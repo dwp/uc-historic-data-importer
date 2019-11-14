@@ -109,7 +109,7 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
     initialisation_vector = Random.new().read(AES.block_size)
     iv_int = int(binascii.hexlify(initialisation_vector), 16)
     counter = Counter.new(AES.block_size * 8, initial_value=iv_int)
-    aes = AES.new(datakey.encode("ascii"), AES.MODE_CTR, counter=counter)
+    aes = AES.new(base64.b64decode(datakey), AES.MODE_CTR, counter=counter)
 
 
     if do_encryption:
