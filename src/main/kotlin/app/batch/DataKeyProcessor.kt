@@ -19,6 +19,7 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
             val encryptionMetadata = item.encryptionMetadata
 
             if (item.encryptionMetadata.initialisationVector == "AAAAAAAAAAAAAAAAAAAAAA==") {
+                logger.info("Detected UC test IV, setting data key accordingly.")
                 encryptionMetadata.plaintextDatakey = "AAAAAAAAAAAAAAAAAAAAAA=="
             }
             else {
