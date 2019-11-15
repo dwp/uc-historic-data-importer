@@ -7,17 +7,15 @@ import com.google.gson.JsonObject
 import io.kotlintest.fail
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
-import io.kotlintest.specs.StringSpec
+import io.kotlintest.spring.SpringListener
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Assert
-import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.boot.test.context.SpringBootTest
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.Reader
@@ -30,10 +28,10 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-@RunWith(SpringRunner::class)
-@ContextConfiguration(classes = [S3DummyConfiguration::class])
+@SpringBootTest(classes = [S3DummyConfiguration::class])
 class UCHistoricDataImporterSpec : FunSpec() {
 
+    override fun listeners() = listOf(SpringListener)
     private val log = Logger.getLogger(UCHistoricDataImporterSpec::class.toString())
 
     @Autowired
@@ -120,13 +118,10 @@ class UCHistoricDataImporterSpec : FunSpec() {
 
         test("Test manifest generation in S3") {
             val expected = """
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462009,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462009,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462009,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462009,database-2,collection-3,IMPORT
             """.trimMargin().trimIndent()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
@@ -141,7 +136,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
     }
 
     fun decrypt(key: String, initializationVector: String, encrypted: String): String {
-        val keySpec: Key = SecretKeySpec(key.toByteArray(), "AES")
+        val keySpec: Key = SecretKeySpec(Base64.getDecoder().decode(key), "AES")
         val cipher = Cipher.getInstance("AES/CTR/NoPadding", "BC").apply {
             init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(Base64.getDecoder().decode(initializationVector)))
         }

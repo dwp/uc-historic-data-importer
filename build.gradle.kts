@@ -53,7 +53,8 @@ dependencies {
         testImplementation("org.springframework.batch:spring-batch-test")
         testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
         testImplementation("com.github.everit-org.json-schema:org.everit.json.schema:1.12.0")
-        testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
+        testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.3")
+        testImplementation("io.kotlintest:kotlintest-extensions-spring:3.3.3")
 }
 
 tasks.withType<KotlinCompile> {

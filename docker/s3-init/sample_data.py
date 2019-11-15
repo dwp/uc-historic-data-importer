@@ -116,7 +116,7 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
         print("Encrypting.")
         ciphertext = aes.encrypt(unencrypted_bytes)
         return (base64.b64encode(initialisation_vector).decode('ascii'),
-                base64.b64encode(ciphertext))
+                ciphertext)
     else:
         print("Not encrypting.")
         return (base64.b64encode(initialisation_vector).decode('ascii'),
