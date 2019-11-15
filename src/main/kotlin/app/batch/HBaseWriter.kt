@@ -93,7 +93,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT" )
                         manifestWriter.generateManifest(manifestRecord,fileNumber)
                     } catch (e: Exception) {
-
+                        e.printStackTrace(System.out)
+                        e.printStackTrace(System.err)
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
                     }
 

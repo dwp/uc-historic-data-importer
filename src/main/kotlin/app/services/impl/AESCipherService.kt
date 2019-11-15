@@ -27,7 +27,7 @@ class AESCipherService(private val secureRandom: SecureRandom) : CipherService {
             secureRandom.nextBytes(this)
         }
 
-        val keySpec: Key = SecretKeySpec(key.toByteArray(), "AES")
+        val keySpec: Key = SecretKeySpec(Base64.getDecoder().decode(key), "AES")
         val cipher = Cipher.getInstance(targetCipherAlgorithm, "BC").apply {
             init(Cipher.ENCRYPT_MODE, keySpec, IvParameterSpec(initialisationVector))
         }
