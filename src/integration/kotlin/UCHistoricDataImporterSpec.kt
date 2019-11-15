@@ -1,4 +1,3 @@
-
 import app.batch.HbaseClient
 import app.configuration.S3DummyConfiguration
 import com.amazonaws.services.s3.AmazonS3
@@ -61,7 +60,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             count shouldBe 4
         }
 
-       test( "Topics in Hbase should match the count 3") {
+        test("Topics in Hbase should match the count 3") {
             val hbase = HbaseClient.connect()
             val scan = Scan()
             val count = hbase.connection.getTable(TableName.valueOf("k2hb:ingest-topic")).use { table ->
@@ -84,7 +83,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
 
                     val familyMap = result.noVersionMap
 
-                    if (familyMap.size == 0){
+                    if (familyMap.size == 0) {
                         fail("No column family on the table.")
                     }
 
@@ -106,8 +105,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                                 } catch (e: Exception) {
                                     fail("Decrypted db object should be parseable as json.")
                                 }
-                            }
-                            else {
+                            } else {
                                 fail("No encrypted db object.")
                             }
                         }

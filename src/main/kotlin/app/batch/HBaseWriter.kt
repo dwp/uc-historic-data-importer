@@ -68,7 +68,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                         val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
                         val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
-                                database, collection)
+                            database, collection)
                         val messageJsonObject = messageUtils.parseJson(message)
                         val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
 
@@ -84,14 +84,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                         val topic = "$kafkaTopicPrefix.$database.$collection"
                         hbase.putVersion(
-                                topic = topic.toByteArray(),
-                                key = formattedKey,
-                                body = message.toByteArray(),
-                                version = lastModifiedTimestampLong
+                            topic = topic.toByteArray(),
+                            key = formattedKey,
+                            body = message.toByteArray(),
+                            version = lastModifiedTimestampLong
                         )
                         logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
-                        val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT" )
-                        manifestWriter.generateManifest(manifestRecord,fileNumber)
+                        val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT")
+                        manifestWriter.generateManifest(manifestRecord, fileNumber)
                     } catch (e: Exception) {
                         e.printStackTrace(System.out)
                         e.printStackTrace(System.err)

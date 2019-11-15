@@ -7,6 +7,7 @@ import java.io.InputStream
 data class KeyPair(val dataKey: String?, val metadataKey: String?)
 data class InputStreamPair(val dataInputStream: InputStream, val metadataInputStream: InputStream,
                            val s3key: String, val objectSize: Long)
+
 data class S3ObjectSummaryPair(val data: S3ObjectSummary?, val metadata: S3ObjectSummary?)
 
 @JsonIgnoreProperties(ignoreUnknown = true)

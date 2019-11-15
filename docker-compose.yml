@@ -105,4 +105,3 @@ services:
     command: "gradle --rerun-tasks integration"
     environment:
       - SPRING_PROFILES_ACTIVE=localS3
-      - SPRING_CONFIG_LOCATION=application_integration.properties
