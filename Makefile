@@ -55,7 +55,7 @@ add-containers-to-hosts:
 ancillary-images: gradle-image java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
-	./gradlew clean build
+	./gradlew clean build -x test
 
 dist: ## Assemble distribution files in build/dist.
 	./gradlew assembleDist

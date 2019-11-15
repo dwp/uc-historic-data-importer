@@ -47,6 +47,8 @@ dependencies {
         implementation("org.springframework.boot:spring-boot-starter-aop")
         implementation("com.beust:klaxon:4.0.2")
         implementation("com.jcabi:jcabi-manifests:1.1")
+        implementation("org.apache.commons:commons-text:1.8")
+
         testImplementation("org.springframework.boot:spring-boot-starter-test")
         testImplementation("org.springframework.batch:spring-batch-test")
         testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")

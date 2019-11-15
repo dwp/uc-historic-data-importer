@@ -3,6 +3,7 @@ package app.batch
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
+import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
 import org.apache.commons.lang3.StringUtils
@@ -33,10 +34,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var messageUtils: MessageUtils
 
+    @Autowired
+    private lateinit var manifestWriter: ManifestWriter
+
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
 
-    private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.[0-9]+\.json\.gz\.enc$"""
+    private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
 
     override fun write(items: MutableList<out DecompressedStream>) {
@@ -48,6 +52,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
+                val fileNumber = groups[3]!!.value
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var lineNo = 0
                 BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
@@ -85,6 +90,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 version = lastModifiedTimestampLong
                         )
                         logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
+                        val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT" )
+                        manifestWriter.generateManifest(manifestRecord,fileNumber)
                     } catch (e: Exception) {
 
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)

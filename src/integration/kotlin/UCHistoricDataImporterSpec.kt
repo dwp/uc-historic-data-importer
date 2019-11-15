@@ -1,14 +1,26 @@
 
 import app.batch.HbaseClient
+import app.configuration.S3DummyConfiguration
+import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import io.kotlintest.fail
 import io.kotlintest.shouldBe
+import io.kotlintest.specs.FunSpec
 import io.kotlintest.specs.StringSpec
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.junit.Assert
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringRunner
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.Reader
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.security.Key
@@ -18,15 +30,26 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@RunWith(SpringRunner::class)
+@ContextConfiguration(classes = [S3DummyConfiguration::class])
+class UCHistoricDataImporterSpec : FunSpec() {
 
-class Kafka2HBaseSpec : StringSpec() {
+    private val log = Logger.getLogger(UCHistoricDataImporterSpec::class.toString())
 
-    private val log = Logger.getLogger(Kafka2HBaseSpec::class.toString())
+    @Autowired
+    private lateinit var s3Client: AmazonS3
+
+    @Value("\${s3.manifest.bucket:manifestbucket}")
+    private lateinit var s3BucketName: String
+
+    @Value("\${s3.manifest.prefix.folder:test-manifest-exporter}")
+    private lateinit var s3ManifestPrefixFolder: String
+
 
     init {
         Security.addProvider(BouncyCastleProvider())
 
-        "Messages in Hbase should match the count 4" {
+        test("Messages in Hbase should match the count 4") {
             val hbase = HbaseClient.connect()
             val scan = Scan()
             val count = hbase.connection.getTable(TableName.valueOf("k2hb:ingest")).use { table ->
@@ -40,7 +63,7 @@ class Kafka2HBaseSpec : StringSpec() {
             count shouldBe 4
         }
 
-        "Topics in Hbase should match the count 3" {
+       test( "Topics in Hbase should match the count 3") {
             val hbase = HbaseClient.connect()
             val scan = Scan()
             val count = hbase.connection.getTable(TableName.valueOf("k2hb:ingest-topic")).use { table ->
@@ -54,7 +77,7 @@ class Kafka2HBaseSpec : StringSpec() {
             count shouldBe 3
         }
 
-        "Messages in Hbase are decipherable" {
+        test("Messages in Hbase are decipherable") {
             val hbase = HbaseClient.connect()
             hbase.connection.getTable(TableName.valueOf("k2hb:ingest")).use { table ->
                 val scan = Scan()
@@ -93,6 +116,27 @@ class Kafka2HBaseSpec : StringSpec() {
                     }
                 }
             }
+        }
+
+        test("Test manifest generation in S3") {
+            val expected = """
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":1234}",1544799662000,penalties-and-deductions,sanction,EXPORT
+            """.trimMargin().trimIndent()
+
+            val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
+            val list = summaries.map {
+                val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
+                BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
+            }
+            val joinedContent = list.joinToString("\n")
+            log.info(joinedContent)
+            Assert.assertEquals(expected, joinedContent)
         }
     }
 

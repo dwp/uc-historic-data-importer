@@ -23,3 +23,4 @@ data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKe
 data class DecryptedStream(val inputStream: InputStream, val fileName: String)
 data class DecompressedStream(val inputStream: InputStream, val fileName: String)
 data class EncryptionResult(val initialisationVector: String, val encrypted: String)
+data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String, val source: String)
