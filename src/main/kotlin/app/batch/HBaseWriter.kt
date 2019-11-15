@@ -86,7 +86,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         )
                         logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        e.printStackTrace(System.out)
                         e.printStackTrace(System.err)
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
                     }
