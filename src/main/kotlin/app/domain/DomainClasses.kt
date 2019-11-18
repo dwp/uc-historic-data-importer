@@ -7,6 +7,7 @@ import java.io.InputStream
 data class KeyPair(val dataKey: String?, val metadataKey: String?)
 data class InputStreamPair(val dataInputStream: InputStream, val metadataInputStream: InputStream,
                            val s3key: String, val objectSize: Long)
+
 data class S3ObjectSummaryPair(val data: S3ObjectSummary?, val metadata: S3ObjectSummary?)
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -23,3 +24,4 @@ data class DataKeyResult(val dataKeyEncryptionKeyId: String, val plaintextDataKe
 data class DecryptedStream(val inputStream: InputStream, val fileName: String)
 data class DecompressedStream(val inputStream: InputStream, val fileName: String)
 data class EncryptionResult(val initialisationVector: String, val encrypted: String)
+data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String, val source: String)

@@ -64,6 +64,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=aws-secret-access-key
       - S3_BUCKET=uc-historic-data
       - S3_PREFIX=test/prefix/
+      - S3_MANIFEST_BUCKET=manifestbucket
 
   uc-historic-data-importer:
     image: uc-historic-data-importer
@@ -90,6 +91,8 @@ services:
       --kafka.topic.prefix=db
       --trace.id=1234
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng
+      --s3.manifest.prefix.folder=test-manifest-exporter
+      --s3.manifest.bucket=manifestbucket
 
   integration-test:
     image: integration-test:latest
@@ -100,3 +103,5 @@ services:
     depends_on:
       - uc-historic-data-importer
     command: "gradle --rerun-tasks integration"
+    environment:
+      - SPRING_PROFILES_ACTIVE=localS3
