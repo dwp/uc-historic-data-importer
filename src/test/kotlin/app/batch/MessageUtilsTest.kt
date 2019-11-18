@@ -8,6 +8,7 @@ import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
+import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -112,7 +113,7 @@ class MessageUtilsTest {
                 "            \"_id\": {\n" +
                 "                \"exampleId\": \"aaaa1111-abcd-4567-1234-1234567890ab\"\n" +
                 "            },\n" +
-                "           \"_lastModifiedDateTime\": \"2018-12-14T15:01:02.000+0000\",\n" +
+                "           \"_lastModifiedDateTime\": \"2018-12-14T15:01:02.000Z\",\n" +
                 "            \"encryption\": {\n" +
                 "                \"encryptionKeyId\": \"55556666-abcd-89ab-1234-1234567890ab\",\n" +
                 "                \"encryptedEncryptionKey\": \"bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab\",\n" +
@@ -126,7 +127,7 @@ class MessageUtilsTest {
         val json: JsonObject = messageUtils.parseJson(jsonString)
         val timestamp = messageUtils.getLastModifiedTimestamp(json)
         val timeStampAsLong = messageUtils.getTimestampAsLong(timestamp)
-        timestamp shouldBe "2018-12-14T15:01:02.000+0000"
+        timestamp shouldBe "2018-12-14T15:01:02.000Z"
         timeStampAsLong shouldBe 1544799662000
     }
 
