@@ -3,6 +3,7 @@ package app.batch
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -14,6 +15,7 @@ import java.util.zip.CRC32
 @Component
 class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
+    val EPOCH = "1980-01-01T00:00:00.000Z"
 
     fun getTimestampAsLong(timeStampAsStr: String?): Long {
         val validTimestamps = listOf(
@@ -34,12 +36,15 @@ class MessageUtils {
     }
 
     fun getLastModifiedTimestamp(json: JsonObject?): String? {
-        try {
-            return json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
-        } catch (e: Exception) {
-            logger.warn("Record body does not contain valid json object with  _lastModifiedDateTime field")
-            return null
+        val lastModified = json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
+        logger.info("lastModified: '$lastModified'.")
+
+        if (lastModified != null) {
+            return lastModified
         }
+
+        logger.warn("No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
+        return EPOCH
     }
 
     fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
