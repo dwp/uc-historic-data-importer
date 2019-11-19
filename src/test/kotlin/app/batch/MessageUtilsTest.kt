@@ -8,7 +8,6 @@ import io.kotlintest.should
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
-import junit.framework.Assert.assertEquals
 import org.junit.Test
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -100,29 +99,29 @@ class MessageUtilsTest {
 
     @Test
     fun valid_timestamp_format_in_the_message_gets_parsed_as_long_correctly() {
-        val jsonString = "{\n" +
-                "        \"traceId\": \"00001111-abcd-4567-1234-1234567890ab\",\n" +
-                "        \"unitOfWorkId\": \"00002222-abcd-4567-1234-1234567890ab\",\n" +
-                "        \"@type\": \"V4\",\n" +
-                "        \"version\": \"core-X.release_XXX.XX\",\n" +
-                "        \"timestamp\": \"2018-12-14T15:01:02.000+0000\",\n" +
-                "        \"message\": {\n" +
-                "            \"@type\": \"MONGO_UPDATE\",\n" +
-                "            \"collection\": \"exampleCollectionName\",\n" +
-                "            \"db\": \"exampleDbName\",\n" +
-                "            \"_id\": {\n" +
-                "                \"exampleId\": \"aaaa1111-abcd-4567-1234-1234567890ab\"\n" +
-                "            },\n" +
-                "           \"_lastModifiedDateTime\": \"2018-12-14T15:01:02.000Z\",\n" +
-                "            \"encryption\": {\n" +
-                "                \"encryptionKeyId\": \"55556666-abcd-89ab-1234-1234567890ab\",\n" +
-                "                \"encryptedEncryptionKey\": \"bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab\",\n" +
-                "                \"initialisationVector\": \"kjGyvY67jhJHVdo2\",\n" +
-                "                \"keyEncryptionKeyId\": \"example-key_2019-12-14_01\"\n" +
-                "            },\n" +
-                "            \"dbObject\": \"bubHJjhg2Jb0uyidkl867gtFkjl4fgh9AbubHJjhg2Jb0uyidkl867gtFkjl4fgh9AbubHJjhg2Jb0uyidkl867gtFkjl4fgh9A\"\n" +
-                "        }\n" +
-                "    }"
+        val jsonString = """{
+            "traceId": "00001111-abcd-4567-1234-1234567890ab",
+            "unitOfWorkId": "00002222-abcd-4567-1234-1234567890ab",
+            "@type": "V4",
+            "version": "core-X.release_XXX.XX",
+            "timestamp": "2018-12-14T15:01:02.000+0000",
+            "message": {
+                "@type": "MONGO_UPDATE",
+                "collection": "exampleCollectionName",
+                "db": "exampleDbName",
+                "_id": {
+                    "exampleId": "aaaa1111-abcd-4567-1234-1234567890ab"
+                },
+               "_lastModifiedDateTime": "2018-12-14T15:01:02.000Z",
+                "encryption": {
+                    "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
+                    "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
+                    "initialisationVector": "kjGyvY67jhJHVdo2",
+                    "keyEncryptionKeyId": "example-key_2019-12-14_01"
+                },
+                "dbObject": "bubHJjhg2Jb0uyidkl867gtFkjl4fgh9AbubHJjhg2Jb0uyidkl867gtFkjl4fgh9AbubHJjhg2Jb0uyidkl867gtFkjl4fgh9A"
+            }
+        }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
         val timestamp = messageUtils.getLastModifiedTimestamp(json)
@@ -133,11 +132,11 @@ class MessageUtilsTest {
 
     @Test
     fun Invalid_timestamp_format_in_the_message_throws_Exception() {
-        val jsonString = "{\n" +
-                "        \"message\": {\n" +
-                "           \"_lastModifiedDateTime\":  \"2018-12-14\",\n" +
-                "        }\n" +
-                "    }"
+        val jsonString = """{
+            "message": {
+               "_lastModifiedDateTime":  "2018-12-14",
+            }
+        }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
         val timestamp = messageUtils.getLastModifiedTimestamp(json)
@@ -148,31 +147,15 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun Invalid_json_with_missing_message_attribute_throws_Exception() {
-        val jsonString = "{\n" +
-                "           \"_lastModifiedDateTime1\": {\"\$date\" : \"2018-12-14T15:01:02.000+0000\"},\n" +
-                "    }"
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
-        shouldThrow<Exception> {
-            val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
-            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
-        }
-    }
-
-    @Test
     fun Invalid_json_with_missing_lastModifiedDateTime_attribute_throws_Exception() {
-        val jsonString = "{\n" +
-                "        \"message\": {\n" +
-                "           \"_lastModifiedDateTime1\": \"2018-12-14T15:01:02.000+0000\",\n" +
-                "        }\n" +
-                "    }"
+        val jsonString = """{
+            "message": {
+               "_lastModifiedDateTimeNotTheCorrectName": "2018-12-14T15:01:02.000+0000",
+            }
+        }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        shouldThrow<ParseException> {
-            val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
-            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
-        }
+        messageUtils.getLastModifiedTimestamp(json) shouldBe messageUtils.EPOCH
     }
 
     @Test
@@ -203,11 +186,11 @@ class MessageUtilsTest {
 
     @Test
     fun Invalid_json_with_lastModifiedDateTime_attribute_value_as_empty_throws_Exception() {
-        val jsonString = "{\n" +
-                "        \"message\": {\n" +
-                "           \"_lastModifiedDateTime\": \"\",\n" +
-                "        }\n" +
-                "    }"
+        val jsonString = """{
+            "message": {
+               "_lastModifiedDateTime": "",
+            }
+        }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
         shouldThrow<ParseException> {
@@ -218,11 +201,11 @@ class MessageUtilsTest {
 
     @Test
     fun Invalid_json_with_lastModifiedDateTime_attribute_value_as_blank_throws_Exception() {
-        val jsonString = "{\n" +
-                "        \"message\": {\n" +
-                "           \"_lastModifiedDateTime\": \"   \",\n" +
-                "        }\n" +
-                "    }"
+        val jsonString = """{
+            "message": {
+               "_lastModifiedDateTime": "   ",
+            }
+        }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
         shouldThrow<ParseException> {
