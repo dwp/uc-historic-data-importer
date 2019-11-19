@@ -103,9 +103,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             manifestWriter.generateManifest(manifestRecord, fileNumber)
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace(System.out)
-                        e.printStackTrace(System.err)
-                        logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
+                        logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
 
                     logger.info("Processed $lineNo records in the file $fileName")
