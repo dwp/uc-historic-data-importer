@@ -40,8 +40,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
 
+    @Value("\${run-mode:import_and_manifest}")
+    private lateinit var runMode: String
+
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
+
+    private val RUN_MODE_MANIFEST = "manifest"
+    private val RUN_MODE_IMPORT = "import"
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach {
@@ -83,15 +89,19 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         logger.info("Formatted key for the record '$id' is '$formattedKeyString'")
 
                         val topic = "$kafkaTopicPrefix.$database.$collection"
-                        hbase.putVersion(
-                            topic = topic.toByteArray(),
-                            key = formattedKey,
-                            body = message.toByteArray(),
-                            version = lastModifiedTimestampLong
-                        )
-                        logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
-                        val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT")
-                        manifestWriter.generateManifest(manifestRecord, fileNumber)
+                        if (runMode != RUN_MODE_MANIFEST) {
+                            hbase.putVersion(
+                                topic = topic.toByteArray(),
+                                key = formattedKey,
+                                body = message.toByteArray(),
+                                version = lastModifiedTimestampLong
+                            )
+                            logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
+                        }
+                        if (runMode != RUN_MODE_IMPORT) {
+                            val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT")
+                            manifestWriter.generateManifest(manifestRecord, fileNumber)
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace(System.out)
                         e.printStackTrace(System.err)
