@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.nio.ByteBuffer
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.zip.CRC32
 
@@ -14,9 +15,22 @@ import java.util.zip.CRC32
 class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
 
-    fun getTimestampAsLong(timeStampAsStr: String?, timeStampPattern: String = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"): Long {
-        val df = SimpleDateFormat(timeStampPattern)
-        return df.parse(timeStampAsStr).time
+    fun getTimestampAsLong(timeStampAsStr: String?): Long {
+        val validTimestamps = listOf(
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+            )
+
+        validTimestamps.forEach {
+            try {
+                val df = SimpleDateFormat(it)
+                return df.parse(timeStampAsStr).time
+            }
+            catch (e: Exception) {
+                logger.debug("'$timeStampAsStr' did not match date format '$it'")
+            }
+        }
+        throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
     }
 
     fun getLastModifiedTimestamp(json: JsonObject?): String? {

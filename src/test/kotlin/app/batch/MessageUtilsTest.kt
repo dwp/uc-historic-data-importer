@@ -169,10 +169,36 @@ class MessageUtilsTest {
                 "    }"
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        shouldThrow<RuntimeException> {
+        shouldThrow<ParseException> {
             val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
             messageUtils.getTimestampAsLong(lastModifiedTimestamp)
         }
+    }
+
+    @Test
+    fun valid_dates_without_timezone_parses_without_exception() {
+        val jsonString = """{
+            "message": {
+               "_lastModifiedDateTime": "2018-12-14T15:01:02.000Z",
+            }
+        }"""
+
+        val json: JsonObject = messageUtils.parseJson(jsonString)
+        val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
+        1544799662000L shouldBe messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+    }
+
+    @Test
+    fun valid_date_with_timezone_parses_without_exception() {
+        val jsonString = """{
+            "message": {
+               "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000",
+            }
+        }"""
+
+        val json: JsonObject = messageUtils.parseJson(jsonString)
+        val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
+        1544799662000L shouldBe messageUtils.getTimestampAsLong(lastModifiedTimestamp)
     }
 
     @Test
@@ -203,14 +229,6 @@ class MessageUtilsTest {
             val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
             messageUtils.getTimestampAsLong(lastModifiedTimestamp)
         }
-    }
-
-    @Test
-    fun Invalid_with_lastModifiedDateTime_attribute_value_as_blank_throws_Exception() {
-        val tz = TimeZone.getTimeZone("UTC")
-        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ") // Quoted "Z" to indicate UTC, no timezone offset
-        df.timeZone = tz
-        println(df.format(Date()))
     }
 
     @Test
