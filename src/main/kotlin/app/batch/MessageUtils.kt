@@ -37,7 +37,6 @@ class MessageUtils {
 
     fun getLastModifiedTimestamp(json: JsonObject?): String? {
         val lastModified = json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
-        logger.info("lastModified: '$lastModified'.")
 
         if (lastModified != null) {
             return lastModified
