@@ -169,7 +169,7 @@ def db_object(i):
         },
         "_version": 2,
         "_lastModifiedDateTime": {
-            "$date": f'2018-12-01T15:01:02.{i:03d}+0000'
+            "$date": f'2018-12-01T15:01:02.{i:03d}Z'
         }
     }
 
