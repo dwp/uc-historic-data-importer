@@ -27,10 +27,9 @@ class ManifestWriter {
             val manifestFileName = generateManifestFileFormat(topicName, fileNumber.toInt())
             val manifestRecordString = generateEscapedCSV(manifestRecords)
             logger.info("Manifest record: $manifestRecordString")
-
-                writeManifest(manifestRecordString, manifestFileName)
+            writeManifest(manifestRecordString, manifestFileName)
         } catch (e: Exception) {
-            val joinedIds = manifestRecords.map{it.id}.joinToString(":")
+            val joinedIds = manifestRecords.map { it.id }.joinToString(":")
             logger.error("Exception while writing ids: '${joinedIds}' of db: '${manifestRecords[0].db}, collection: ${manifestRecords[0].collection}' to manifest files in S3", e)
         }
     }
@@ -63,7 +62,7 @@ class ManifestWriter {
 
     fun generateEscapedCSV(manifestRecords: List<ManifestRecord>): String {
         val manifestData = manifestRecords.map { "${escape(it.id)},${escape(it.timestamp.toString())},${escape(it.db)},${escape(it.collection)},${escape(it.source)}" }
-        return  manifestData.joinToString("\n")
+        return manifestData.joinToString("\n")
     }
 
     fun generateManifestFileMetadata(manifestFileName: String, bytesSize: Long): ObjectMetadata {

@@ -12,6 +12,7 @@ import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -114,7 +115,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             }
         }
 
-        test("Test manifest generation in S3") {
+        test("Should match  manifest file count, content  generated in S3") {
             val expected = """
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462000,database-1,collection-1,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462001,database-1,collection-1,IMPORT
@@ -160,13 +161,18 @@ class UCHistoricDataImporterSpec : FunSpec() {
             """.trimMargin().trimIndent()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
+            val fileCount = summaries.size
             val list = summaries.map {
                 val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
-                BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
+                val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
+                val noOfRecordsPerFile = fileContent.split("\n").size
+                assertEquals(10,noOfRecordsPerFile)
+                fileContent
             }
             val joinedContent = list.joinToString("\n")
             log.info("all content $joinedContent")
-            Assert.assertEquals(expected, joinedContent)
+            assertEquals(4, fileCount)
+            assertEquals(expected, joinedContent)
         }
     }
 
