@@ -12,6 +12,7 @@ import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -114,22 +115,64 @@ class UCHistoricDataImporterSpec : FunSpec() {
             }
         }
 
-        test("Test manifest generation in S3") {
+        test("Should match  manifest file count, content  generated in S3") {
             val expected = """
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462000,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462001,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462002,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462003,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462004,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462005,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462006,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462007,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462008,database-1,collection-1,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462009,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462000,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462001,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462002,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462003,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462004,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462005,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462006,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462007,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462008,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462009,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462000,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462001,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462002,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462003,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462004,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462005,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462006,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462007,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462008,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462009,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462000,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462001,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462002,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462003,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462004,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462005,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462006,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462007,database-2,collection-3,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462008,database-2,collection-3,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462009,database-2,collection-3,IMPORT
+            
             """.trimMargin().trimIndent()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
+            val fileCount = summaries.size
             val list = summaries.map {
                 val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
-                BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
+                val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
+                val noOfRecordsPerFile = fileContent.split("\n").size
+                assertEquals(10,noOfRecordsPerFile)
+                fileContent
             }
             val joinedContent = list.joinToString("\n")
-            log.info(joinedContent)
-            Assert.assertEquals(expected, joinedContent)
+            log.info("all content $joinedContent")
+            assertEquals(4, fileCount)
+            assertEquals(expected, joinedContent)
         }
     }
 

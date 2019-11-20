@@ -76,7 +76,7 @@ class HbaseWriterTest {
         val formattedKey = "0000-0000-00001"
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
 
-        doNothing().whenever(manifestWriter).generateManifest(any(), any())
+        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
 
         val topic = "adb.collection".toByteArray()
         val key = formattedKey.toByteArray()
@@ -126,7 +126,7 @@ class HbaseWriterTest {
         val message1 = message.toByteArray()
 
         doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
-        doNothing().whenever(manifestWriter).generateManifest(any(), any())
+        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
 
         val data = listOf(invalidJson2, validJsonWithoutId)
         val inputStreams = mutableListOf(getInputStream(data, validFileName))
@@ -164,7 +164,7 @@ class HbaseWriterTest {
 
         val formattedKey = "0000-0000-00001"
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
-        doNothing().whenever(manifestWriter).generateManifest(any(), any())
+        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
 
         val topic = "adb.collection".toByteArray()
         val key = formattedKey.toByteArray()
