@@ -116,9 +116,12 @@ workflows:
   build-and-deploy:
     jobs:
       - build
+      - integration-test:
+          requires:
+            - build
       - publish-github-release:
-         requires:
-           - build
-         filters:
-           branches:
-             only: master
+          requires:
+            - integration-test
+          filters:
+            branches:
+              only: master
