@@ -18,41 +18,52 @@ import java.nio.charset.StandardCharsets
 
 @Component
 class ManifestWriter {
-    fun generateManifest(manifestRecord: ManifestRecord, fileNumber: String) {
+
+    @Synchronized
+    fun generateManifest(manifestRecords: List<ManifestRecord>, db: String, collection: String, fileNumber: String) {
 
         try {
-            val topicName = getTopicName(manifestRecord.db, manifestRecord.collection)
+            val topicName = getTopicName(db, collection)
             val manifestFileName = generateManifestFileFormat(topicName, fileNumber.toInt())
-            val manifestFileContent = generateEscapedCSV(manifestRecord)
+            val manifestRecordString = generateEscapedCSV(manifestRecords)
+            logger.info("Manifest record: $manifestRecordString")
 
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            BufferedOutputStream(byteArrayOutputStream).use {
-                it.write(manifestFileContent.toByteArray(StandardCharsets.UTF_8))
-            }
-
-            val manifestFileBytes = byteArrayOutputStream.toByteArray()
-            val bytesSize = manifestFileBytes.size.toLong()
-            logger.info("Writing file 's3://$s3ManifestBucketName/$manifestFileName' of '$bytesSize' bytes.")
-
-            val inputStream = ByteArrayInputStream(manifestFileBytes)
-            val bufferedInputStream = BufferedInputStream(inputStream)
-
-            val manifestFileMetadata = generateManifestFileMetadata(manifestFileName, bytesSize)
-
-            val request = PutObjectRequest(s3ManifestBucketName, manifestFileName, bufferedInputStream, manifestFileMetadata)
-
-            s3Client.putObject(request)
+                writeManifest(manifestRecordString, manifestFileName)
         } catch (e: Exception) {
-            logger.error("Exception while writing id: '${manifestRecord.id}' of db: '${manifestRecord.db}, collection: ${manifestRecord.collection}' to manifest file in S3", e)
+            val joinedIds = manifestRecords.map{it.id}.joinToString(":")
+            logger.error("Exception while writing ids: '${joinedIds}' of db: '${manifestRecords[0].db}, collection: ${manifestRecords[0].collection}' to manifest files in S3", e)
         }
     }
+
+    fun writeManifest(manifestContent: String, fileName: String) {
+
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        BufferedOutputStream(byteArrayOutputStream).use {
+            it.write(manifestContent.toByteArray(StandardCharsets.UTF_8))
+        }
+
+        val manifestFileBytes = byteArrayOutputStream.toByteArray()
+        val bytesSize = manifestFileBytes.size.toLong()
+        logger.info("Writing file 's3://$s3ManifestBucketName/$fileName' of '$bytesSize' bytes.")
+
+        val inputStream = ByteArrayInputStream(manifestFileBytes)
+        val bufferedInputStream = BufferedInputStream(inputStream)
+
+        val manifestFileMetadata = generateManifestFileMetadata(fileName, bytesSize)
+
+        val request = PutObjectRequest(s3ManifestBucketName, fileName, bufferedInputStream, manifestFileMetadata)
+        s3Client.putObject(request)
+
+    }
+
 
     fun generateManifestFileFormat(topicName: String, fileNumber: Int): String {
         return "${s3ManifestPrefixFolder}/$topicName-%06d.csv".format(fileNumber)
     }
 
-    fun generateEscapedCSV(it: ManifestRecord): String {
-        return "${escape(it.id)},${escape(it.timestamp.toString())},${escape(it.db)},${escape(it.collection)},${escape(it.source)}"
+    fun generateEscapedCSV(manifestRecords: List<ManifestRecord>): String {
+        val manifestData = manifestRecords.map { "${escape(it.id)},${escape(it.timestamp.toString())},${escape(it.db)},${escape(it.collection)},${escape(it.source)}" }
+        return  manifestData.joinToString("\n")
     }
 
     fun generateManifestFileMetadata(manifestFileName: String, bytesSize: Long): ObjectMetadata {

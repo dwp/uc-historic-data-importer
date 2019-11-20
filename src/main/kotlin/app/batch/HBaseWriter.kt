@@ -61,6 +61,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val fileNumber = groups[3]!!.value
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var lineNo = 0
+                val manifestRecords = mutableListOf<ManifestRecord>()
                 BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
                     lineNo++
                     try {
@@ -100,7 +101,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         }
                         if (runMode != RUN_MODE_IMPORT) {
                             val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT")
-                            manifestWriter.generateManifest(manifestRecord, fileNumber)
+                            manifestRecords.add(manifestRecord)
                         }
                     } catch (e: Exception) {
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
@@ -108,6 +109,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                     logger.info("Processed $lineNo records in the file $fileName")
 
+                }
+                if (runMode != RUN_MODE_IMPORT) {
+                    manifestWriter.generateManifest(manifestRecords, database, collection, fileNumber)
                 }
             }
         }
