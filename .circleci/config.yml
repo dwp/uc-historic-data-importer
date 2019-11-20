@@ -122,6 +122,6 @@ workflows:
       - publish-github-release:
         requires:
           - integration-test
-          filters:
-            branches:
-              only: master
+        filters:
+          branches:
+            only: master
