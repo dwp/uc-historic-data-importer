@@ -180,23 +180,46 @@ class MessageProducerTest {
         val jsonObject = parser.parse(stringBuilder) as JsonObject
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val mockAppender: Appender<ILoggingEvent> = mock()
-        val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
-        logger.addAppender(mockAppender)
-        val captor = argumentCaptor<ILoggingEvent>()
 
-        val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val actual = parser.parse(StringBuilder(message)) as JsonObject
+        val unitOfWorkId = actual["unitOfWorkId"]
+        val timestamp = actual["timestamp"]
+        assertNotNull(unitOfWorkId)
+        assertNotNull(timestamp)
+        actual.remove("unitOfWorkId")
+        actual.remove("timestamp")
 
-        val expected = ""
-        assertEquals(expected, actual)
-        verify(mockAppender, times(1)).doAppend(captor.capture())
-        val formattedMessages = captor.allValues.map { it.formattedMessage }
-        val expectedMessage = """No '_lastModifiedDateTime' in record '{"idField":"$idFieldValue","anotherIdField":"$anotherIdFieldValue"}' from '$database/$collection'."""
-        assertEquals(expectedMessage, formattedMessages[0])
+        validate(message)
+
+        val expected = """{
+              "traceId": "1",
+              "@type": "HDI",
+              "version": "1.0.0",
+              "message": {
+                "@type": "$type",
+                "_id": {
+                  "idField": "$idFieldValue",
+                  "anotherIdField": "$anotherIdFieldValue"
+                },
+                "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
+                "collection": "$collection",
+                "db": "$database",
+                "dbObject": "$encrypted",
+                "encryption": {
+                  "keyEncryptionKeyId": "$dataKeyEncryptionKeyId",
+                  "initialisationVector": "$initialisationVector",
+                  "encryptedEncryptionKey": "$ciphertextDataKey"
+                }
+              }
+            }""".trimIndent()
+
+        val expectedObject = parser.parse(StringBuilder(expected)) as JsonObject
+        assertEquals(expectedObject, actual)
     }
 
     @Test
-    fun testRecordRejectedIfNoModifiedDate() {
+    fun testEpochUsedIfNoModifiedDate() {
         val type = "type"
         val validJson = """{
             "_id": {
@@ -216,15 +239,36 @@ class MessageProducerTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
         logger.addAppender(mockAppender)
-        val captor = argumentCaptor<ILoggingEvent>()
-        val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val actual = parser.parse(StringBuilder(message)) as JsonObject
 
-        val expected = ""
+        val expectedMessage = """{
+           "traceId": "1",
+           "@type": "HDI",
+           "version": "1.0.0",
+           "message": {
+               "@type": "type",
+               "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
+               "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
+               "collection" : "collection",
+               "db": "database",
+               "dbObject": "encrypted",
+               "encryption": {
+                   "keyEncryptionKeyId": "cloudhsm:1,2",
+                   "initialisationVector": "initialisationVector",
+                   "encryptedEncryptionKey": "ciphertextDataKey"
+               }
+           }
+        }"""
+        val expected = parser.parse(StringBuilder(expectedMessage)) as JsonObject
+
+        val unitOfWorkId = actual["unitOfWorkId"]
+        val timestamp = actual["timestamp"]
+        assertNotNull(unitOfWorkId)
+        assertNotNull(timestamp)
+        actual.remove("unitOfWorkId")
+        actual.remove("timestamp")
         assertEquals(expected, actual)
-        verify(mockAppender, times(1)).doAppend(captor.capture())
-        val formattedMessages = captor.allValues.map { it.formattedMessage }
-        val expectedMessage = """No '_lastModifiedDateTime' in record '{"idField":"$idFieldValue","anotherIdField":"$anotherIdFieldValue"}' from '$database/$collection'."""
-        assertEquals(expectedMessage, formattedMessages[0])
     }
 
     @Test
@@ -243,17 +287,36 @@ class MessageProducerTest {
         val jsonObject = parser.parse(stringBuilder) as JsonObject
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val expected = ""
-        val mockAppender: Appender<ILoggingEvent> = mock()
-        val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
-        logger.addAppender(mockAppender)
-        val captor = argumentCaptor<ILoggingEvent>()
-        val actual = MessageProducer().produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, database, collection)
+        val actual = parser.parse(StringBuilder(message)) as JsonObject
+        val unitOfWorkId = actual["unitOfWorkId"]
+        val timestamp = actual["timestamp"]
+        assertNotNull(unitOfWorkId)
+        assertNotNull(timestamp)
+        actual.remove("unitOfWorkId")
+        actual.remove("timestamp")
+
+        val expectedMessage = """{
+           "traceId": "1",
+           "@type": "HDI",
+           "version": "1.0.0",
+           "message": {
+               "@type": "type",
+               "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
+               "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
+               "collection" : "collection",
+               "db": "database",
+               "dbObject": "encrypted",
+               "encryption": {
+                   "keyEncryptionKeyId": "cloudhsm:1,2",
+                   "initialisationVector": "initialisationVector",
+                   "encryptedEncryptionKey": "ciphertextDataKey"
+               }
+           }
+        }"""
+        val expected = parser.parse(StringBuilder(expectedMessage)) as JsonObject
+
         assertEquals(expected, actual)
-        verify(mockAppender, times(1)).doAppend(captor.capture())
-        val formattedMessages = captor.allValues.map { it.formattedMessage }
-        val expectedMessage = """No '_lastModifiedDateTime' in record '{"idField":"$idFieldValue","anotherIdField":"$anotherIdFieldValue"}' from '$database/$collection'."""
-        assertEquals(expectedMessage, formattedMessages[0])
     }
 
     private fun validate(json: String) = schemaLoader().load().build().validate(JSONObject(json))
