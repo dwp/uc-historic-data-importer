@@ -23,14 +23,14 @@ class MessageProducer {
                        database: String,
                        collection: String): String {
         val id = jsonObject.obj("_id")?.toJsonString()!!
+        val messageUtils = MessageUtils()
         val modified = jsonObject.obj("_lastModifiedDateTime")
         val date = modified?.get("\$date")
-        val dateStr = if (date != null) date as String else ""
+        val dateStr = if (date != null && (date as String).isNotBlank()) date as String else "1980-01-01T00:00:00.000"
         val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(Date())
 
-        return if (StringUtils.isNotBlank(dateStr)) {
-            """{
+        return """{
                 |   "unitOfWorkId": "$unitOfWorkId",
                 |   "timestamp": "$timestamp",
                 |   "traceId": "$traceId",
@@ -39,7 +39,7 @@ class MessageProducer {
                 |   "message": {
                 |       "@type": "$type",
                 |       "_id": $id,
-                |       "_lastModifiedDateTime": "$date",
+                |       "_lastModifiedDateTime": "$dateStr",
                 |       "collection" : "$collection",
                 |       "db": "$database",
                 |       "dbObject": "${encryptionResult.encrypted}",
@@ -50,10 +50,6 @@ class MessageProducer {
                 |       }
                 |   }
                 |}""".trimMargin()
-        } else {
-            logger.error("No '_lastModifiedDateTime' in record '$id' from '$database/$collection'.")
-            ""
-        }
     }
 
     companion object {
