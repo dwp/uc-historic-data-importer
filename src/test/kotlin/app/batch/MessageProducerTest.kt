@@ -202,7 +202,7 @@ class MessageProducerTest {
                   "idField": "$idFieldValue",
                   "anotherIdField": "$anotherIdFieldValue"
                 },
-                "_lastModifiedDateTime": "1980-01-01T00:00:00.000",
+                "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -249,7 +249,7 @@ class MessageProducerTest {
            "message": {
                "@type": "type",
                "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
-               "_lastModifiedDateTime": "1980-01-01T00:00:00.000",
+               "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
                "collection" : "collection",
                "db": "database",
                "dbObject": "encrypted",
@@ -303,7 +303,7 @@ class MessageProducerTest {
            "message": {
                "@type": "type",
                "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
-               "_lastModifiedDateTime": "1980-01-01T00:00:00.000",
+               "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
                "collection" : "collection",
                "db": "database",
                "dbObject": "encrypted",
