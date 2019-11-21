@@ -26,7 +26,7 @@ class MessageProducer {
         val messageUtils = MessageUtils()
         val modified = jsonObject.obj("_lastModifiedDateTime")
         val date = modified?.get("\$date")
-        val dateStr = if (date != null) date as String else messageUtils.EPOCH
+        val dateStr = if (date != null && (date as String).isNotBlank()) date as String else "1980-01-01T00:00:00.000"
         val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(Date())
 
