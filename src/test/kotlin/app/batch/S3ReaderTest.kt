@@ -6,6 +6,8 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
+import com.nhaarman.mockitokotlin2.doReturn
+import com.nhaarman.mockitokotlin2.mock
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -60,9 +62,36 @@ class S3ReaderTest {
 
     @Before
     fun setUp() {
-
         s3Reader.reset()
         Mockito.reset(s3Client)
+    }
+
+    @Test
+    fun should_page_when_results_truncated() {
+
+
+        val objectSummaryPage1Object1 = S3ObjectSummary()
+        val objectSummaryPage1Object2 = S3ObjectSummary()
+        val page1Summaries = listOf(objectSummaryPage1Object1, objectSummaryPage1Object2)
+        val continuationToken = "NEXT_CONTINUATION_TOKEN"
+        val resultsPage1 = mock<ListObjectsV2Result> {
+            on { objectSummaries } doReturn page1Summaries
+            on { isTruncated } doReturn true
+            on { nextContinuationToken } doReturn continuationToken
+        }
+
+        val objectSummaryPage2Object1 = S3ObjectSummary()
+        val objectSummaryPage2Object2 = S3ObjectSummary()
+        val page2Summaries = listOf(objectSummaryPage2Object1, objectSummaryPage2Object2)
+        val resultsPage2 = mock<ListObjectsV2Result> {
+            on { objectSummaries } doReturn page2Summaries
+            on { isTruncated } doReturn false
+        }
+
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(resultsPage1)
+        given(s3Client.listObjectsV2(continuationToken)).willReturn(resultsPage2)
+
+        val encryptedStream = s3Reader.read()
     }
 
     @Test

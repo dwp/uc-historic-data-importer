@@ -21,7 +21,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Value("\${s3.prefix.folder}")
     private lateinit var s3PrefixFolder: String
 
-    @Value("\${filename.format.regex:([\\w-]+\\\.[\\w-]+\\\.[0-9]+\\\.json\\\.gz)}")
+    @Value("\${filename.format.regex:([\\w-]+\\\\.[\\w-]+\\\\.[0-9]+\\\\.json\\\\.gz)}")
     private lateinit var fileNameFormat: String
 
     @Value("\${filename.format.data.extension:\\.enc$}")
@@ -51,7 +51,21 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
         if (null == iterator) {
-            val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
+            val queryResults = s3Client.listObjectsV2(bucketName, s3PrefixFolder)
+            val objectSummaries: MutableList<S3ObjectSummary> = mutableListOf()
+            objectSummaries.addAll(queryResults.objectSummaries)
+
+            var isTruncated = queryResults.isTruncated
+            var nextContinuationToken = queryResults.nextContinuationToken
+            while (isTruncated) {
+                logger.info("Results were truncated, listing again: '${queryResults.nextContinuationToken}'.")
+                val nextResult = s3Client.listObjectsV2(nextContinuationToken)
+                isTruncated = nextResult.isTruncated
+                nextContinuationToken = nextResult.nextContinuationToken
+                objectSummaries.addAll(nextResult.objectSummaries)
+            }
+
+            logger.info("Found ${objectSummaries.size} objects in s3")
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
             val keyPairs =
                     keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },
@@ -65,6 +79,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 S3ObjectSummaryPair(obj, meta)
             }
             iterator = pairs.listIterator()
+            logger.info("Found ${pairs.size} valid object key pairs in s3")
         }
         return iterator!!
     }
