@@ -9,7 +9,10 @@ import org.springframework.stereotype.Component
 class KeyPairGenerator {
 
     fun generateKeyPairs(keys: List<String>, fileFormat: Regex, dataFileExtension: Regex, metadataFileExtension: Regex): List<KeyPair> {
-        val keysMap = keys.groupBy { fileFormat.find(it)?.value }
+        val keysMap = keys.groupBy {
+            fileFormat.find(it)?.value
+        }
+
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
 
