@@ -26,7 +26,6 @@ class ManifestWriter {
             val topicName = getTopicName(db, collection)
             val manifestFileName = generateManifestFileFormat(topicName, fileNumber.toInt())
             val manifestRecordString = generateEscapedCSV(manifestRecords)
-            logger.info("Manifest record: $manifestRecordString")
             writeManifest(manifestRecordString, manifestFileName)
         } catch (e: Exception) {
             val joinedIds = manifestRecords.map { it.id }.joinToString(":")
