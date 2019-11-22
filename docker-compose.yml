@@ -64,7 +64,9 @@ services:
       - AWS_SECRET_ACCESS_KEY=aws-secret-access-key
       - S3_BUCKET=uc-historic-data
       - S3_PREFIX=test/prefix/
+      - S3_PAGING_PREFIX=test/prefix
       - S3_MANIFEST_BUCKET=manifestbucket
+      - CREATE_PAGINATED_DATA=${CREATE_PAGINATED_DATA:-no}
 
   uc-historic-data-importer:
     image: uc-historic-data-importer

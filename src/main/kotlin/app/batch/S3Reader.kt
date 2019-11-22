@@ -3,12 +3,15 @@ package app.batch
 import app.domain.InputStreamPair
 import app.domain.S3ObjectSummaryPair
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.ListObjectsV2Request
+import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+
 
 @Component
 class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: KeyPairGenerator) : ItemReader<InputStreamPair> {
@@ -51,7 +54,23 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Synchronized
     private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
         if (null == iterator) {
-            val objectSummaries = s3Client.listObjectsV2(bucketName, s3PrefixFolder).objectSummaries
+            val request = ListObjectsV2Request().apply {
+                withBucketName(bucketName)
+                withPrefix(s3PrefixFolder)
+            }
+
+            var results: ListObjectsV2Result? = null
+            val objectSummaries: MutableList<S3ObjectSummary> = mutableListOf()
+
+            do {
+                logger.info("Getting paginated results.")
+                results = s3Client.listObjectsV2(request)
+                objectSummaries.addAll(results.objectSummaries)
+                request.continuationToken = results.nextContinuationToken
+            }
+            while (results != null && results?.isTruncated)
+
+            logger.info("Found ${objectSummaries.size} objects in s3")
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
             val keyPairs =
                     keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },
@@ -65,6 +84,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 S3ObjectSummaryPair(obj, meta)
             }
             iterator = pairs.listIterator()
+            logger.info("Found ${pairs.size} valid object key pairs in s3")
         }
         return iterator!!
     }
