@@ -127,6 +127,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462007,database-1,collection-1,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462008,database-1,collection-1,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462009,database-1,collection-1,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",315532800000,database-1,collection-1,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462000,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462001,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462002,database-1,collection-2,IMPORT
@@ -137,6 +138,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462007,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462008,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462009,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",315532800000,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462000,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462001,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462002,database-1,collection-2,IMPORT
@@ -147,6 +149,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462007,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462008,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462009,database-1,collection-2,IMPORT
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",315532800000,database-1,collection-2,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462000,database-2,collection-3,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462001,database-2,collection-3,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462002,database-2,collection-3,IMPORT
@@ -157,7 +160,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462007,database-2,collection-3,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462008,database-2,collection-3,IMPORT
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462009,database-2,collection-3,IMPORT
-            
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",315532800000,database-2,collection-3,IMPORT
             """.trimMargin().trimIndent()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
@@ -166,7 +169,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.split("\n").size
-                assertEquals(10,noOfRecordsPerFile)
+                assertEquals(11,noOfRecordsPerFile)
                 fileContent
             }
             val joinedContent = list.joinToString("\n")

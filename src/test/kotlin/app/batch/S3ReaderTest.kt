@@ -2,17 +2,17 @@ package app.batch
 
 import app.configuration.S3Configuration
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.ListObjectsV2Result
-import com.amazonaws.services.s3.model.S3Object
-import com.amazonaws.services.s3.model.S3ObjectInputStream
-import com.amazonaws.services.s3.model.S3ObjectSummary
+import com.amazonaws.services.s3.model.*
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
 import org.apache.http.client.methods.HttpGet
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,52 +69,90 @@ class S3ReaderTest {
     @Test
     fun should_page_when_results_truncated() {
 
-//        private val VALID_DATA_KEY = "test/output/adb.collection.00001.json.gz.enc"
-//        private val VALID_METADATA_KEY = "test/output/adb.collection.00001.json.gz.encryption.json"
+        val bucket = "bucket1"
+        val page1Object1Key = "database1.collection1.0001.json.gz.enc"
+        val page1Object2Key = "database1.collection1.0001.json.gz.encryption.json"
+        val page2Object1Key = "database1.collection2.0001.json.gz.enc"
+        val page2Object2Key = "database1.collection2.0001.json.gz.encryption.json"
+        val continuationToken = "CONTINUATION_TOKEN"
 
-        val objectSummaryPage1Object1 = mock<S3ObjectSummary> {
-            on { key } doReturn "database1.collection1.0001.json.gz.enc"
-        }
+        val page1ObjectSummary1 = mockS3ObjectSummary(page1Object1Key)
+        val page1ObjectSummary2 = mockS3ObjectSummary(page1Object2Key)
 
-        val objectSummaryPage1Object2 = mock<S3ObjectSummary> {
-            on { key } doReturn "database1.collection1.0001.json.gz.encryption.json"
-        }
-
-        val page1Summaries = listOf(objectSummaryPage1Object1, objectSummaryPage1Object2)
-        val continuationToken = "NEXT_CONTINUATION_TOKEN"
         val resultsPage1 = mock<ListObjectsV2Result> {
-            on { objectSummaries } doReturn page1Summaries
+            on { objectSummaries } doReturn listOf(page1ObjectSummary1, page1ObjectSummary2)
             on { isTruncated } doReturn true
             on { nextContinuationToken } doReturn continuationToken
         }
 
-        val objectSummaryPage2Object1 = mock<S3ObjectSummary> {
-            on { key } doReturn "database1.collection2.0001.json.gz.enc"
-        }
+        val page2ObjectSummary1 = mockS3ObjectSummary(page2Object1Key)
+        val page2ObjectSummary2 = mockS3ObjectSummary(page2Object2Key)
 
-        val objectSummaryPage2Object2 = mock<S3ObjectSummary> {
-            on { key } doReturn "database1.collection2.0001.json.gz.encryption.json"
-        }
-
-        val page2Summaries = listOf(objectSummaryPage2Object1, objectSummaryPage2Object2)
         val resultsPage2 = mock<ListObjectsV2Result> {
-            on { objectSummaries } doReturn page2Summaries
+            on { objectSummaries } doReturn listOf(page2ObjectSummary1, page2ObjectSummary2)
             on { isTruncated } doReturn false
         }
 
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(resultsPage1)
-        given(s3Client.listObjectsV2(continuationToken)).willReturn(resultsPage2)
+        given(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
+                .willReturn(resultsPage1)
+                .willReturn(resultsPage2)
 
-        val page1Object1 = mock<S3Object>()
-        val page1Object2 = mock<S3Object>()
-        val page2Object1 = mock<S3Object>()
-        val page2Object2 = mock<S3Object>()
-        given(s3Client.getObject("bucket1", "database1.collection1.0001.json.gz.enc")).willReturn(page1Object1)
-        given(s3Client.getObject("bucket1", "database1.collection1.0001.json.gz.encryption.json")).willReturn(page1Object2)
-        given(s3Client.getObject("bucket1", "database1.collection2.0001.json.gz.enc")).willReturn(page2Object1)
-        given(s3Client.getObject("bucket1", "database1.collection1.0001.json.gz.encryption.json")).willReturn(page2Object2)
-        val encryptedStream = s3Reader.read()
+        val page1Object1 = mockS3Object()
+        val page1Object2 = mockS3Object()
+        val page2Object1 = mockS3Object()
+        val page2Object2 = mockS3Object()
+
+        given(s3Client.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
+        given(s3Client.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
+        given(s3Client.getObject(bucket, page2Object1Key)).willReturn(page2Object1)
+        given(s3Client.getObject(bucket, page2Object2Key)).willReturn(page2Object2)
+
+        s3Reader.read()
+
+        verify(s3Client, times(2))
+                .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+
     }
+
+    @Test
+    fun should_not_page_when_results_not_truncated() {
+
+        val bucket = "bucket1"
+        val page1Object1Key = "database1.collection1.0001.json.gz.enc"
+        val page1Object2Key = "database1.collection1.0001.json.gz.encryption.json"
+
+        val page1ObjectSummary1 = mockS3ObjectSummary(page1Object1Key)
+        val page1ObjectSummary2 = mockS3ObjectSummary(page1Object2Key)
+
+        val resultsPage1 = mock<ListObjectsV2Result> {
+            on { objectSummaries } doReturn listOf(page1ObjectSummary1, page1ObjectSummary2)
+            on { isTruncated } doReturn false
+        }
+        given(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java)))
+                .willReturn(resultsPage1)
+        val page1Object1 = mockS3Object()
+        val page1Object2 = mockS3Object()
+
+        given(s3Client.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
+        given(s3Client.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
+
+        s3Reader.read()
+
+        verify(s3Client, times(1))
+                .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
+
+    }
+
+    private fun mockS3Object() =
+            mock<S3Object> {
+                on { objectContent } doReturn mock<S3ObjectInputStream>()
+            }
+
+    private fun mockS3ObjectSummary(objectKey: String)=
+            mock<S3ObjectSummary> {
+                on { key } doReturn objectKey
+            }
+
 
     @Test
     fun should_Read_Data_And_Metadata_Files_In_A_Given_Prefix() {
@@ -142,7 +180,7 @@ class S3ReaderTest {
         s3Object2.key = VALID_METADATA_KEY
         s3Object2.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT2.toByteArray()), HttpGet())
 
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result)
+        given(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
         given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY)).willReturn(s3Object1)
         given(s3Client.getObject(BUCKET_NAME1, VALID_METADATA_KEY)).willReturn(s3Object2)
 
