@@ -47,7 +47,7 @@ class MessageUtils {
         return EPOCH
     }
 
-    fun getType(json: JsonObject?): String? {
+    fun getType(json: JsonObject?): String {
         val type = json?.lookup<String?>("message.@type")?.get(0)
 
         if (type != null) {
