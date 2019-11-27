@@ -458,4 +458,28 @@ class MessageUtilsTest {
 
         key shouldBe ByteArray(0)
     }
+
+    @Test
+    fun type_is_returned_from_valid_input() {
+        val jsonString = """{
+            "message": {
+               "@type": "HDI",
+            }
+        }"""
+
+        val json: JsonObject = messageUtils.parseJson(jsonString)
+        messageUtils.getType(json) shouldBe "HDI"
+    }
+
+    @Test
+    fun default_type_is_returned_from_invalid_input() {
+        val jsonString = """{
+            "message": {
+               "notype": "HDI",
+            }
+        }"""
+
+        val json: JsonObject = messageUtils.parseJson(jsonString)
+        messageUtils.getType(json) shouldBe messageUtils.typeDefault
+    }
 }
