@@ -16,6 +16,7 @@ import java.util.zip.CRC32
 class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
     val EPOCH = "1980-01-01T00:00:00.000Z"
+    val typeDefault = "HDI"
 
     fun getTimestampAsLong(timeStampAsStr: String?): Long {
         val validTimestamps = listOf(
@@ -44,6 +45,17 @@ class MessageUtils {
 
         logger.warn("No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
         return EPOCH
+    }
+
+    fun getType(json: JsonObject?): String {
+        val type = json?.lookup<String?>("message.@type")?.get(0)
+
+        if (type != null) {
+            return type
+        }
+
+        logger.warn("No @type in message defaulting to '$typeDefault'.")
+        return typeDefault
     }
 
     fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {

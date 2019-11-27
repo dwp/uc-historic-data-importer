@@ -99,8 +99,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             )
                             logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
                         }
+
+                        val type = messageUtils.getType(messageJsonObject)
                         if (runMode != RUN_MODE_IMPORT) {
-                            val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT")
+                            val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", type)
                             manifestRecords.add(manifestRecord)
                         }
                     } catch (e: Exception) {
