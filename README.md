@@ -129,3 +129,4 @@ Then bring up the containers:
 
 Note that you are at the mercy of the quarry house wifi here as there are a
 number of large docker image downloads.
+
