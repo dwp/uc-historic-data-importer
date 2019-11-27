@@ -1,5 +1,7 @@
 package app.configuration
 
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.ClientConfigurationFactory
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
@@ -17,13 +19,22 @@ class S3Configuration {
     fun awss3(): AmazonS3 {
         val updatedRegion = region.toUpperCase().replace("-", "_")
         val clientRegion = Regions.valueOf(updatedRegion)
+
+        val clientConfiguration = ClientConfiguration().apply {
+            maxConnections = maximumS3Connections.toInt()
+
+        }
+
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(DefaultAWSCredentialsProviderChain())
                 .withRegion(clientRegion)
+                .withClientConfiguration(clientConfiguration)
                 .build()
     }
 
     @Value("\${aws.region}")
     private lateinit var region: String
 
+    @Value("\${aws.s3.max.connections:50}")
+    private lateinit var maximumS3Connections: String
 }
