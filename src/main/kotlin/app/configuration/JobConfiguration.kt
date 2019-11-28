@@ -89,7 +89,7 @@ class JobConfiguration {
     @Value("\${thread.count:10}")
     lateinit var threadCount: String
 
-    @Value("\${throttle.limit:10}")
+    @Value("\${throttle.limit:50}")
     lateinit var throttleLimit: String
 
     @Value("\${chunk.size:1}")
