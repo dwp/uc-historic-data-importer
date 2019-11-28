@@ -42,6 +42,7 @@ class JobConfiguration {
                     .processor(itemProcessor())
                     .writer(itemWriter)
                     .taskExecutor(taskExecutor())
+                    .throttleLimit(throttleLimit.toInt())
                     .build()
 
     @Bean
@@ -87,6 +88,9 @@ class JobConfiguration {
 
     @Value("\${thread.count:10}")
     lateinit var threadCount: String
+
+    @Value("\${throttle.limit:10}")
+    lateinit var throttleLimit: String
 
     @Value("\${chunk.size:1}")
     lateinit var chunkSize: String
