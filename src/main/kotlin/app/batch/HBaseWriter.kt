@@ -50,6 +50,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     private val RUN_MODE_IMPORT = "import"
 
     override fun write(items: MutableList<out DecompressedStream>) {
+        val cpus = Runtime.getRuntime().availableProcessors()
+        logger.info("AVAILABLE PROCESSORS: $cpus")
         items.forEach {
             logger.info("Processing '${it.fileName}'.")
             val fileName = it.fileName
