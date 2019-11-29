@@ -115,6 +115,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         logger.info("Processed $lineNo records in the file $fileName")
                     }
                 }
+                logger.info("Processed $lineNo records in the file $fileName")
                 if (runMode != RUN_MODE_IMPORT) {
                     manifestWriter.generateManifest(manifestRecords, database, collection, fileNumber)
                 }
