@@ -99,6 +99,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 body = message.toByteArray(),
                                 version = lastModifiedTimestampLong
                             )
+                            logger.debug("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
                         }
 
                         val type = messageUtils.getType(messageJsonObject)
