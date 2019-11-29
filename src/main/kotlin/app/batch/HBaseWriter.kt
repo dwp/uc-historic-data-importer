@@ -89,7 +89,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                         val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                         val formattedKeyString = formattedKey.contentToString()
-                        logger.info("Formatted key for the record '$id' is '$formattedKeyString'")
+                        //logger.info("Formatted key for the record '$id' is '$formattedKeyString'")
 
                         val topic = "$kafkaTopicPrefix.$database.$collection"
                         if (runMode != RUN_MODE_MANIFEST) {
@@ -99,7 +99,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 body = message.toByteArray(),
                                 version = lastModifiedTimestampLong
                             )
-                            logger.info("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
+                            logger.debug("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
                         }
 
                         val type = messageUtils.getType(messageJsonObject)
@@ -111,9 +111,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
 
-                    logger.info("Processed $lineNo records in the file $fileName")
-
+                    if (lineNo % 10000 == 0) {
+                        logger.info("Processed $lineNo records in the file $fileName")
+                    }
                 }
+                logger.info("Processed $lineNo records in the file $fileName")
                 if (runMode != RUN_MODE_IMPORT) {
                     manifestWriter.generateManifest(manifestRecords, database, collection, fileNumber)
                 }
