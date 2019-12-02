@@ -26,8 +26,3 @@ data class DecompressedStream(val inputStream: InputStream, val fileName: String
 data class EncryptionResult(val initialisationVector: String, val encrypted: String)
 data class ManifestRecord(val id: String, val timestamp: Long, val db: String, val collection: String, val source: String, val externalSource: String)
 data class HBaseRecord(val topic: ByteArray, val key: ByteArray, val body: ByteArray, val version: Long)
-
-//topic = topic.toByteArray(),
-//key = formattedKey,
-//body = message.toByteArray(),
-//version = lastModifiedTimestampLong
