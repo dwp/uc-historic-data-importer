@@ -43,3 +43,27 @@ create_paginated_data() {
         aws_s3 cp $metadata_file s3://${S3_BUCKET}/${S3_PAGING_PREFIX}/${metadata_file}
     done
 }
+
+create_voluminous_data() {
+    for file in database-1.collection-1.*; do
+        aws --endpoint-url=$(aws_s3_endpoint) s3 cp \
+            $file s3://$(aws_s3_prefix)/$file
+    done
+
+}
+
+aws_clear_down() {
+    aws --endpoint-url=$(aws_s3_endpoint) s3 ls $(aws_s3_prefix)/  | \
+        awk '{print $4}' | while read; do
+        aws --endpoint-url=$(aws_s3_endpoint) s3 rm s3://$(aws_s3_prefix)/$REPLY
+    done
+}
+
+aws_s3_endpoint() {
+    echo http://s3:4572
+}
+
+
+aws_s3_prefix() {
+    echo uc-historic-data/test/prefix
+}

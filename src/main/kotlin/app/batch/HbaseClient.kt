@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.HBaseRecord
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
@@ -24,6 +25,24 @@ open class HbaseClient(
                 Config.Hbase.topicFamily.toByteArray(),
                 Config.Hbase.topicQualifier.toByteArray()
         )
+    }
+
+    open fun putBatch(inserts: List<HBaseRecord>) {
+        if (inserts.size > 0) {
+            connection.getTable(TableName.valueOf(dataTable)).use { table ->
+                
+                table.put(inserts.map {
+                    Put(it.key).apply {
+                        this.addColumn(dataFamily, it.topic, it.version, it.body)
+                    }
+                })
+            }
+            connection.getTable(TableName.valueOf(topicTable)).use { table ->
+                table.increment(Increment(inserts[0].topic).apply {
+                    addColumn(topicFamily, topicQualifier,inserts.size.toLong())
+                })
+            }
+        }
     }
 
     open fun putVersion(topic: ByteArray, key: ByteArray, body: ByteArray, version: Long) {
