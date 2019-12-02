@@ -95,8 +95,7 @@ class ManifestWriterTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(1)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        Assert.assertTrue(formattedMessages.contains("Exception while writing ids: 'id1' of db: 'db1, collection: collection1' to manifest files in S3"))
-
+        Assert.assertTrue(formattedMessages.contains("Exception while writing ids of db: 'db1', collection: 'collection1' to manifest files in S3"))
     }
 
     @SpyBean

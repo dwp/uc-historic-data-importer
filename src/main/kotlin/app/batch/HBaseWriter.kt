@@ -1,11 +1,10 @@
 package app.batch
 
-import app.domain.DataKeyResult
-import app.domain.DecompressedStream
-import app.domain.EncryptionResult
-import app.domain.ManifestRecord
+import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -40,6 +39,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
 
+    @Value("\${hbase.batch.size:10000}")
+    private lateinit var hbaseBatchSize: String
+
     @Value("\${run-mode:import_and_manifest}")
     private lateinit var runMode: String
 
@@ -57,6 +59,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             val fileName = it.fileName
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
+                var batch = mutableListOf<HBaseRecord>()
+                val maxBatchSize = hbaseBatchSize.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
@@ -64,42 +68,46 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var lineNo = 0
                 val manifestRecords = mutableListOf<ManifestRecord>()
+                val gson = Gson()
                 BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
                     lineNo++
                     try {
-                        val json = messageUtils.parseJson(line)
-                        val id = messageUtils.getIdFromDbObject(json)?.toJsonString()
+                        val json = messageUtils.parseGson(line)
+                        val id = gson.toJson(json.getAsJsonObject("_id"))
 
-                        if (StringUtils.isBlank(id)) {
-                            logger.info("Skipping record $lineNo in the file $fileName due to absence of id")
+                        //val json = messageUtils.parseJson(line)
+                        //val id = messageUtils.getIdFromDbObject(json)?.toJsonString()
+                        if (StringUtils.isBlank(id) || id == "null") {
+                            logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
                             return@forEachLine
                         }
 
                         val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
-                        val message = messageProducer.produceMessage(json, encryptionResult, dataKeyResult,
+                        val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
                             database, collection)
                         val messageJsonObject = messageUtils.parseJson(message)
                         val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
 
                         if (StringUtils.isBlank(lastModifiedTimestampStr)) {
-                            logger.info("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                            logger.warn("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
                             return@forEachLine
                         }
 
                         val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                         val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
-                        val formattedKeyString = formattedKey.contentToString()
-                        //logger.info("Formatted key for the record '$id' is '$formattedKeyString'")
 
                         val topic = "$kafkaTopicPrefix.$database.$collection"
                         if (runMode != RUN_MODE_MANIFEST) {
-                            hbase.putVersion(
-                                topic = topic.toByteArray(),
-                                key = formattedKey,
-                                body = message.toByteArray(),
-                                version = lastModifiedTimestampLong
-                            )
-                            logger.debug("Written record $lineNo id $id as key $formattedKey to HBase topic $topic.")
+                            batch.add(HBaseRecord(topic.toByteArray(),
+                                    formattedKey,
+                                    message.toByteArray(),
+                                    lastModifiedTimestampLong))
+
+                            if (batch.size >= maxBatchSize) {
+                                hbase.putBatch(batch)
+                                logger.info("Written $lineNo records to HBase topic $topic.")
+                                batch = mutableListOf()
+                            }
                         }
 
                         val type = messageUtils.getType(messageJsonObject)
@@ -110,11 +118,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     } catch (e: Exception) {
                         logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
-
-                    if (lineNo % 10000 == 0) {
-                        logger.info("Processed $lineNo records in the file $fileName")
-                    }
                 }
+
+                if (batch.size > 0) {
+                    hbase.putBatch(batch)
+                    logger.info("Written $lineNo records to HBase.")
+                    batch = mutableListOf()
+                }
+
                 logger.info("Processed $lineNo records in the file $fileName")
                 if (runMode != RUN_MODE_IMPORT) {
                     manifestWriter.generateManifest(manifestRecords, database, collection, fileNumber)
@@ -122,6 +133,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             }
         }
     }
+
 
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?): EncryptionResult {
         try {

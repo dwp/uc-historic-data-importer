@@ -3,6 +3,7 @@ package app.batch
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
+import com.google.gson.Gson
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,6 +18,9 @@ class MessageUtils {
     val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
     val EPOCH = "1980-01-01T00:00:00.000Z"
     val typeDefault = "HDI"
+
+    fun parseGson(line: String): com.google.gson.JsonObject =
+            Gson().fromJson(line, com.google.gson.JsonObject::class.java)
 
     fun getTimestampAsLong(timeStampAsStr: String?): Long {
         val validTimestamps = listOf(

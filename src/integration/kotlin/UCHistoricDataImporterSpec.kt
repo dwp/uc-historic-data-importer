@@ -102,7 +102,6 @@ class UCHistoricDataImporterSpec : FunSpec() {
                                     val decryptedKey = decryptedDatakey(encryptedEncryptionKey)
                                     val decryptedDbObject = decrypt(decryptedKey, initializationVector, encryptedDbObject)
                                     val jsonObject = Gson().fromJson(decryptedDbObject, JsonObject::class.java)
-                                    println(jsonObject)
                                 } catch (e: Exception) {
                                     fail("Decrypted db object should be parseable as json.")
                                 }
