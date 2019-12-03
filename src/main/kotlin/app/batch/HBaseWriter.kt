@@ -75,8 +75,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         val json = messageUtils.parseGson(line)
                         val id = gson.toJson(json.getAsJsonObject("_id"))
 
-                        //val json = messageUtils.parseJson(line)
-                        //val id = messageUtils.getIdFromDbObject(json)?.toJsonString()
                         if (StringUtils.isBlank(id) || id == "null") {
                             logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
                             return@forEachLine
@@ -110,9 +108,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             }
                         }
 
-                        val type = messageUtils.getType(messageJsonObject)
                         if (runMode != RUN_MODE_IMPORT) {
-                            val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", type)
+                            val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
                             manifestRecords.add(manifestRecord)
                         }
                     } catch (e: Exception) {
