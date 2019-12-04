@@ -3,9 +3,11 @@ package app.batch
 import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
+import com.amazonaws.services.s3.model.ObjectMetadata
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
@@ -38,6 +40,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
+
+    @Value("\${manifest.output.directory}")
+    private lateinit var manifestOutputDirectory: String
 
     @Value("\${hbase.batch.size:10000}")
     private lateinit var hbaseBatchSize: String
@@ -148,6 +153,20 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             logger.error("Error while creating data key for the file  $fileName: $e")
             throw e
         }
+    }
+
+    fun manifestOutputFile(topicName: String, fileNumber: Int) =  "${manifestOutputDirectory}/$topicName-%06d.csv".format(fileNumber)
+
+
+    fun csv(manifestRecord: ManifestRecord) =
+            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}"
+
+
+
+    fun topicName(db: String, collection: String) = "db.$db.$collection"
+
+    private fun escape(value: String): String {
+        return StringEscapeUtils.escapeCsv(value)
     }
 
     companion object {
