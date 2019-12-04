@@ -3,6 +3,7 @@ package app.batch
 import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
+import ch.qos.logback.core.OutputStreamAppender
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -14,8 +15,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.io.*
 
 @Component
 class HBaseWriter : ItemWriter<DecompressedStream> {
@@ -74,6 +74,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 var lineNo = 0
                 val manifestRecords = mutableListOf<ManifestRecord>()
                 val gson = Gson()
+
+                val topic = "db.$database.$collection"
+                val manifestOutputFile = "${manifestOutputDirectory}/$topic-%06d.csv".format(fileNumber)
+
+                BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use {
+
+                }
                 BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
                     lineNo++
                     try {
@@ -155,14 +162,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    fun manifestOutputFile(topicName: String, fileNumber: Int) =  "${manifestOutputDirectory}/$topicName-%06d.csv".format(fileNumber)
-
-
     fun csv(manifestRecord: ManifestRecord) =
             "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}"
-
-
-
     fun topicName(db: String, collection: String) = "db.$db.$collection"
 
     private fun escape(value: String): String {
