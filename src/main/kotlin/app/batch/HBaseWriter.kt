@@ -59,9 +59,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
         logger.info("AVAILABLE PROCESSORS: $cpus")
-        items.forEach {
-            logger.info("Processing '${it.fileName}'.")
-            val fileName = it.fileName
+        items.forEach { input ->
+            logger.info("Processing '${input.fileName}'.")
+            val fileName = input.fileName
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 var batch = mutableListOf<HBaseRecord>()
@@ -78,56 +78,56 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val topic = "db.$database.$collection"
                 val manifestOutputFile = "${manifestOutputDirectory}/$topic-%06d.csv".format(fileNumber)
 
-                BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use {
+                BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { manifestWriter ->
+                    BufferedReader(InputStreamReader(input.inputStream)).forEachLine { line ->
+                        lineNo++
+                        try {
+                            val json = messageUtils.parseGson(line)
+                            val id = gson.toJson(json.getAsJsonObject("_id"))
 
-                }
-                BufferedReader(InputStreamReader(it.inputStream)).forEachLine { line ->
-                    lineNo++
-                    try {
-                        val json = messageUtils.parseGson(line)
-                        val id = gson.toJson(json.getAsJsonObject("_id"))
-
-                        if (StringUtils.isBlank(id) || id == "null") {
-                            logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
-                            return@forEachLine
-                        }
-
-                        val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
-                        val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
-                            database, collection)
-                        val messageJsonObject = messageUtils.parseJson(message)
-                        val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
-
-                        if (StringUtils.isBlank(lastModifiedTimestampStr)) {
-                            logger.warn("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
-                            return@forEachLine
-                        }
-
-                        val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                        val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
-
-                        val topic = "$kafkaTopicPrefix.$database.$collection"
-                        if (runMode != RUN_MODE_MANIFEST) {
-                            batch.add(HBaseRecord(topic.toByteArray(),
-                                    formattedKey,
-                                    message.toByteArray(),
-                                    lastModifiedTimestampLong))
-
-                            if (batch.size >= maxBatchSize) {
-                                hbase.putBatch(batch)
-                                logger.info("Written $lineNo records to HBase topic $topic.")
-                                batch = mutableListOf()
+                            if (StringUtils.isBlank(id) || id == "null") {
+                                logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
+                                return@forEachLine
                             }
-                        }
 
-                        if (runMode != RUN_MODE_IMPORT) {
-                            val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
-                            manifestRecords.add(manifestRecord)
+                            val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
+                            val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
+                                    database, collection)
+                            val messageJsonObject = messageUtils.parseJson(message)
+                            val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
+
+                            if (StringUtils.isBlank(lastModifiedTimestampStr)) {
+                                logger.warn("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                                return@forEachLine
+                            }
+
+                            val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                            val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
+
+                            val topic = "$kafkaTopicPrefix.$database.$collection"
+                            if (runMode != RUN_MODE_MANIFEST) {
+                                batch.add(HBaseRecord(topic.toByteArray(),
+                                        formattedKey,
+                                        message.toByteArray(),
+                                        lastModifiedTimestampLong))
+
+                                if (batch.size >= maxBatchSize) {
+                                    hbase.putBatch(batch)
+                                    logger.info("Written $lineNo records to HBase topic $topic.")
+                                    batch = mutableListOf()
+                                }
+                            }
+
+                            if (runMode != RUN_MODE_IMPORT) {
+                                val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
+                                manifestRecords.add(manifestRecord)
+                            }
+                        } catch (e: Exception) {
+                            logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                         }
-                    } catch (e: Exception) {
-                        logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                     }
                 }
+
 
                 if (batch.size > 0) {
                     hbase.putBatch(batch)
