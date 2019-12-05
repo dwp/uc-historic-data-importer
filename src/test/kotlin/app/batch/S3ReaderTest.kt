@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.lang.RuntimeException
+import java.lang.UnsupportedOperationException
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -311,6 +312,20 @@ class S3ReaderTest {
             assertEquals("java.lang.IllegalStateException: results must not be null", expected.toString())
 
             verify(s3Client, times(1)).listObjectsV2(any(ListObjectsV2Request::class.java))
+            verifyNoMoreInteractions(s3Client)
+        }
+    }
+
+    @Test
+    fun should_throw_exception_when_csv_prefix_is_missing() {
+
+        s3Reader.s3SuffixesCsv = ""
+        try {
+            s3Reader.read()
+            fail("Expected an exception")
+        } catch (expected: UnsupportedOperationException) {
+            assertEquals("java.lang.UnsupportedOperationException: Parameter s3SuffixesCsv must be set but was ''", expected.toString())
+
             verifyNoMoreInteractions(s3Client)
         }
     }

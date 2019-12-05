@@ -7,6 +7,7 @@ import org.slf4j.*
 import org.springframework.batch.item.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.stereotype.*
+import java.lang.UnsupportedOperationException
 
 
 @Component
@@ -53,6 +54,9 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Synchronized
     private fun getS3ObjectSummariesIterator(awsS3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
         if (null == iterator) {
+            if (s3SuffixesCsv.isBlank()) {
+                throw UnsupportedOperationException("Parameter s3SuffixesCsv must be set but was '$s3SuffixesCsv'")
+            }
             val allSuffixes = s3SuffixesCsv.trim().split(",")
             val allPairs = mutableListOf<S3ObjectSummaryPair>()
             allSuffixes.forEach { suffix ->
