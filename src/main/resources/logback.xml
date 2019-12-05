@@ -11,7 +11,13 @@
             </appender>
         </sift>
     </appender>
-
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} ${topic.name} [%thread] %level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
     <!--
     The org.apache http library is used by the aws sdk to perform http requests with the aws backend.
     This library (the http one) outputs as debug the body of all the responses that come back from aws.
@@ -20,10 +26,12 @@
     parameter store. The following config silences the http library.
     -->
     <logger name="org.apache" level="ERROR" additivity="true">
-        <appender-ref ref="SIFT"/>
+<!--        <appender-ref ref="SIFT"/>-->
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <root level="INFO">
-        <appender-ref ref="SIFT"/>
+<!--        <appender-ref ref="SIFT"/>-->
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

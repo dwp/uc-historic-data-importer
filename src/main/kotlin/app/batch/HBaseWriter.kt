@@ -41,7 +41,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
 
-    @Value("\${manifest.output.directory}")
+    @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
 
     @Value("\${hbase.batch.size:10000}")
@@ -58,7 +58,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
-        logger.info("AVAILABLE PROCESSORS: $cpus")
+        logger.info("AVAILABLE PROCESSORS: $cpus, runMode: '$runMode'.")
         items.forEach { input ->
             logger.info("Processing '${input.fileName}'.")
             val fileName = input.fileName
@@ -72,11 +72,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val fileNumber = groups[3]!!.value
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var lineNo = 0
-                val manifestRecords = mutableListOf<ManifestRecord>()
                 val gson = Gson()
-
-                val topic = "db.$database.$collection"
-                val manifestOutputFile = "${manifestOutputDirectory}/$topic-%06d.csv".format(fileNumber)
+                val manifestOutputFile = "${manifestOutputDirectory}/db.$database.$collection-%06d.csv".format(fileNumber.toInt())
 
                 BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { manifestWriter ->
                     BufferedReader(InputStreamReader(input.inputStream)).forEachLine { line ->
@@ -113,14 +110,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                 if (batch.size >= maxBatchSize) {
                                     hbase.putBatch(batch)
-                                    logger.info("Written $lineNo records to HBase topic $topic.")
+                                    logger.info("Written $lineNo records to HBase topic db.$topic from '$fileName'.")
                                     batch = mutableListOf()
                                 }
                             }
-
                             if (runMode != RUN_MODE_IMPORT) {
                                 val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
-                                manifestRecords.add(manifestRecord)
+                                manifestWriter.write(csv(manifestRecord))
                             }
                         } catch (e: Exception) {
                             logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
@@ -128,17 +124,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     }
                 }
 
-
                 if (batch.size > 0) {
                     hbase.putBatch(batch)
-                    logger.info("Written $lineNo records to HBase.")
+                    logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
                     batch = mutableListOf()
                 }
 
-                logger.info("Processed $lineNo records in the file $fileName")
-                if (runMode != RUN_MODE_IMPORT) {
-                    manifestWriter.generateManifest(manifestRecords, database, collection, fileNumber)
-                }
+                logger.info("Processed $lineNo records from the file $fileName")
             }
         }
     }
@@ -163,7 +155,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     }
 
     fun csv(manifestRecord: ManifestRecord) =
-            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}"
+            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
     fun topicName(db: String, collection: String) = "db.$db.$collection"
 
     private fun escape(value: String): String {

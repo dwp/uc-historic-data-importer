@@ -31,6 +31,7 @@ class MessageProducer {
 
         lastModified = if (StringUtils.isNotBlank(lastModified)) lastModified else "1980-01-01T00:00:00.000Z"
 
+        //println("lastModified: '$lastModified'.")
         val type = jsonObject.getAsJsonPrimitive("@type")?.asString ?: "MONGO_UPDATE"
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(Date())
 
