@@ -21,7 +21,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     private lateinit var s3PrefixFolder: String
 
     @Value("\${s3.suffixes.csv}")
-    private lateinit var s3SuffixesCsv: String
+    lateinit var s3SuffixesCsv: String
 
     @Value("\${filename.format.regex:([\\w-]+\\\.[\\w-]+\\\.[0-9]+\\\.json\\\.gz)}")
     private lateinit var fileNameFormat: String
@@ -51,12 +51,12 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     }
 
     @Synchronized
-    private fun getS3ObjectSummariesIterator(s3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
+    private fun getS3ObjectSummariesIterator(awsS3Client: AmazonS3, bucketName: String): ListIterator<S3ObjectSummaryPair> {
         if (null == iterator) {
             val allSuffixes = s3SuffixesCsv.trim().split(",")
             val allPairs = mutableListOf<S3ObjectSummaryPair>()
             allSuffixes.forEach { suffix ->
-                val somePairs = getS3ObjectSummariesList(s3client, bucketName, "$s3PrefixFolder/$suffix")
+                val somePairs = getS3ObjectSummariesList(awsS3Client, bucketName, "$s3PrefixFolder/$suffix")
                 allPairs.addAll(somePairs)
             }
             iterator = allPairs.toList().listIterator()
@@ -65,7 +65,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     }
 
     @Synchronized
-    private fun getS3ObjectSummariesList(s3Client: AmazonS3, bucketName: String, fullPrefix: String): List<S3ObjectSummaryPair> {
+    private fun getS3ObjectSummariesList(awsS3Client: AmazonS3, bucketName: String, fullPrefix: String): List<S3ObjectSummaryPair> {
 
         val request = ListObjectsV2Request().apply {
             withBucketName(bucketName)
@@ -77,7 +77,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
 
         do {
             logger.info("Getting paginated results.")
-            results = s3Client.listObjectsV2(request)
+            results = awsS3Client.listObjectsV2(request)
             objectSummaries.addAll(results.objectSummaries)
             request.continuationToken = results.nextContinuationToken
         } while (results != null && results?.isTruncated)

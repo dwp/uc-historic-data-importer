@@ -8,7 +8,7 @@ import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import org.apache.http.client.methods.HttpGet
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +25,7 @@ import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.lang.RuntimeException
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -34,7 +35,8 @@ import java.nio.charset.StandardCharsets
 @TestPropertySource(properties = [
     "aws.region=eu-west-1",
     "s3.bucket=bucket1",
-    "s3.prefix.folder=test/output/",
+    "s3.prefix.folder=test",
+    "s3.suffixes.csv=output1",
     "s3.key.regex=([\\w]*\\.[\\w]*\\.[0-9]{4}\\.json\\.gz)",
     "s3.data.key.extension=\\.enc$",
     "s3.metadata.key.extension=\\.encryption\\.json$"
@@ -42,17 +44,16 @@ import java.nio.charset.StandardCharsets
 class S3ReaderTest {
 
     private val BUCKET_NAME1 = "bucket1"
-    private val S3_PREFIX_FOLDER = "test/output/"
-    private val VALID_DATA_KEY = "test/output/adb.collection.00001.json.gz.enc"
-    private val VALID_METADATA_KEY = "test/output/adb.collection.00001.json.gz.encryption.json"
+    private val S3_PREFIX_FOLDER = "test"
+    private val S3_SUFFIXES_CSV = "output1,output2"
+    private val S3_SUFFIX_1 = "output1"
+    private val S3_SUFFIX_2 = "output2"
+    private val VALID_DATA_KEY_1 = "test/output1/adb.collection.00001.json.gz.enc"
+    private val VALID_METADATA_KEY_1 = "test/output1/adb.collection.00001.json.gz.encryption.json"
+    private val VALID_DATA_KEY_2 = "test/output2/adb.other-collection.00002.json.gz.enc"
+    private val VALID_METADATA_KEY_2 = "test/output2/adb.other-collection.00002.json.gz.encryption.json"
     private val OBJECT_CONTENT1 = "SAMPLE1"
     private val OBJECT_CONTENT2 = "SAMPLE2"
-
-    private lateinit var listObjectsV2Result: ListObjectsV2Result
-    private lateinit var s3ObjectSummary1: S3ObjectSummary
-    private lateinit var s3ObjectSummary2: S3ObjectSummary
-    private lateinit var s3Object1: S3Object
-    private lateinit var s3Object2: S3Object
 
     @MockBean
     private lateinit var s3Client: AmazonS3
@@ -68,7 +69,6 @@ class S3ReaderTest {
 
     @Test
     fun should_page_when_results_truncated() {
-
         val bucket = "bucket1"
         val page1Object1Key = "database1.collection1.0001.json.gz.enc"
         val page1Object2Key = "database1.collection1.0001.json.gz.encryption.json"
@@ -107,16 +107,15 @@ class S3ReaderTest {
         given(s3Client.getObject(bucket, page2Object1Key)).willReturn(page2Object1)
         given(s3Client.getObject(bucket, page2Object2Key)).willReturn(page2Object2)
 
+        s3Reader.s3SuffixesCsv = S3_SUFFIX_1
         s3Reader.read()
 
         verify(s3Client, times(2))
                 .listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))
-
     }
 
     @Test
     fun should_not_page_when_results_not_truncated() {
-
         val bucket = "bucket1"
         val page1Object1Key = "database1.collection1.0001.json.gz.enc"
         val page1Object2Key = "database1.collection1.0001.json.gz.encryption.json"
@@ -136,6 +135,7 @@ class S3ReaderTest {
         given(s3Client.getObject(bucket, page1Object1Key)).willReturn(page1Object1)
         given(s3Client.getObject(bucket, page1Object2Key)).willReturn(page1Object2)
 
+        s3Reader.s3SuffixesCsv = S3_SUFFIX_1
         s3Reader.read()
 
         verify(s3Client, times(1))
@@ -148,7 +148,7 @@ class S3ReaderTest {
                 on { objectContent } doReturn mock<S3ObjectInputStream>()
             }
 
-    private fun mockS3ObjectSummary(objectKey: String)=
+    private fun mockS3ObjectSummary(objectKey: String) =
             mock<S3ObjectSummary> {
                 on { key } doReturn objectKey
             }
@@ -156,34 +156,36 @@ class S3ReaderTest {
 
     @Test
     fun should_Read_Data_And_Metadata_Files_In_A_Given_Prefix() {
-        listObjectsV2Result = ListObjectsV2Result()
-        listObjectsV2Result.prefix = S3_PREFIX_FOLDER
 
-        s3ObjectSummary1 = S3ObjectSummary()
-        s3ObjectSummary1.bucketName = BUCKET_NAME1
-        s3ObjectSummary1.key = VALID_DATA_KEY
+        val listObjectsV2Result_1 = ListObjectsV2Result()
+        listObjectsV2Result_1.prefix = "$S3_PREFIX_FOLDER/$S3_SUFFIX_1"
 
-        s3ObjectSummary2 = S3ObjectSummary()
-        s3ObjectSummary2.bucketName = BUCKET_NAME1
-        s3ObjectSummary2.key = VALID_METADATA_KEY
+        val s3ObjectSummary_1a = S3ObjectSummary()
+        s3ObjectSummary_1a.bucketName = BUCKET_NAME1
+        s3ObjectSummary_1a.key = VALID_DATA_KEY_1
 
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary2)
+        val s3ObjectSummary_1b = S3ObjectSummary()
+        s3ObjectSummary_1b.bucketName = BUCKET_NAME1
+        s3ObjectSummary_1b.key = VALID_METADATA_KEY_1
 
-        s3Object1 = S3Object()
-        s3Object1.bucketName = BUCKET_NAME1
-        s3Object1.key = VALID_DATA_KEY
-        s3Object1.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT1.toByteArray()), HttpGet())
+        listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1a)
+        listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1b)
 
-        s3Object2 = S3Object()
-        s3Object2.bucketName = BUCKET_NAME1
-        s3Object2.key = VALID_METADATA_KEY
-        s3Object2.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT2.toByteArray()), HttpGet())
+        val s3Object_1a = S3Object()
+        s3Object_1a.bucketName = BUCKET_NAME1
+        s3Object_1a.key = VALID_DATA_KEY_1
+        s3Object_1a.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT1.toByteArray()), HttpGet())
 
-        given(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result)
-        given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY)).willReturn(s3Object1)
-        given(s3Client.getObject(BUCKET_NAME1, VALID_METADATA_KEY)).willReturn(s3Object2)
+        val s3Object_1b = S3Object()
+        s3Object_1b.bucketName = BUCKET_NAME1
+        s3Object_1b.key = VALID_METADATA_KEY_1
+        s3Object_1b.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT2.toByteArray()), HttpGet())
 
+        given(s3Client.listObjectsV2(ArgumentMatchers.any(ListObjectsV2Request::class.java))).willReturn(listObjectsV2Result_1)
+        given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY_1)).willReturn(s3Object_1a)
+        given(s3Client.getObject(BUCKET_NAME1, VALID_METADATA_KEY_1)).willReturn(s3Object_1b)
+
+        s3Reader.s3SuffixesCsv = S3_SUFFIX_1
         val encryptedStream1 = s3Reader.read()
         val dataStream = encryptedStream1?.dataInputStream
         val metadataStream = encryptedStream1?.metadataInputStream
@@ -192,33 +194,36 @@ class S3ReaderTest {
         assertObjectContent(OBJECT_CONTENT2, metadataStream)
     }
 
-    @Test(expected = RuntimeException::class)
+    @Test
     fun should_Throw_Exception_When_Metadata_File_Missing_In_A_Given_Prefix() {
 
-        listObjectsV2Result = ListObjectsV2Result()
-        listObjectsV2Result.prefix = S3_PREFIX_FOLDER
+        val listObjectsV2Result_1 = ListObjectsV2Result()
+        listObjectsV2Result_1.prefix = S3_PREFIX_FOLDER
 
-        s3ObjectSummary1 = S3ObjectSummary()
-        s3ObjectSummary1.bucketName = BUCKET_NAME1
-        s3ObjectSummary1.key = VALID_DATA_KEY
+        val s3ObjectSummary_1a = S3ObjectSummary()
+        s3ObjectSummary_1a.bucketName = BUCKET_NAME1
+        s3ObjectSummary_1a.key = VALID_DATA_KEY_1
 
+        listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1a)
 
-        listObjectsV2Result.objectSummaries.add(s3ObjectSummary1)
+        val s3Object_1a = S3Object()
+        s3Object_1a.bucketName = BUCKET_NAME1
+        s3Object_1a.key = VALID_DATA_KEY_1
+        s3Object_1a.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT1.toByteArray()), HttpGet())
 
-        s3Object1 = S3Object()
-        s3Object1.bucketName = BUCKET_NAME1
-        s3Object1.key = VALID_DATA_KEY
-        s3Object1.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT1.toByteArray()), HttpGet())
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result_1)
+        given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY_1)).willReturn(s3Object_1a)
 
+        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result_1)
+        given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY_1)).willReturn(s3Object_1a)
 
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result)
-        given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY)).willReturn(s3Object1)
-
-        given(s3Client.listObjectsV2(BUCKET_NAME1, S3_PREFIX_FOLDER)).willReturn(listObjectsV2Result)
-        given(s3Client.getObject(BUCKET_NAME1, VALID_DATA_KEY)).willReturn(s3Object1)
-
-        s3Reader.read()
-
+        s3Reader.s3SuffixesCsv = S3_SUFFIX_1
+        try {
+            s3Reader.read()
+            fail("Expected an exception")
+        } catch (expected: RuntimeException) {
+            assertEquals("java.lang.IllegalStateException: results must not be null", expected.toString())
+        }
     }
 
     private fun assertObjectContent(objectContent: String, actualStream: InputStream?) {
