@@ -3,12 +3,9 @@ package app.batch
 import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
-import ch.qos.logback.core.OutputStreamAppender
-import com.amazonaws.services.s3.model.ObjectMetadata
+import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
@@ -19,6 +16,9 @@ import java.io.*
 
 @Component
 class HBaseWriter : ItemWriter<DecompressedStream> {
+
+    @Autowired
+    private lateinit var s3: AmazonS3
 
     @Autowired
     private lateinit var cipherService: CipherService
@@ -35,9 +35,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var messageUtils: MessageUtils
 
-    @Autowired
-    private lateinit var manifestWriter: ManifestWriter
-
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
 
@@ -49,6 +46,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Value("\${run-mode:import_and_manifest}")
     private lateinit var runMode: String
+
+    @Value("\${s3.manifest.prefix.folder}")
+    private lateinit var manifestPrefix: String
+
+    @Value("\${s3.manifest.bucket}")
+    private lateinit var manifestBucket: String
 
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
@@ -73,9 +76,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var lineNo = 0
                 val gson = Gson()
-                val manifestOutputFile = "${manifestOutputDirectory}/db.$database.$collection-%06d.csv".format(fileNumber.toInt())
-
-                BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { manifestWriter ->
+                val manifestWriter = StreamingManifestWriter()
+                val manifestOutputFile = "${manifestOutputDirectory}/${manifestWriter.topicName(database, collection)}-%06d.csv".format(fileNumber.toInt())
+                BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { writer ->
                     BufferedReader(InputStreamReader(input.inputStream)).forEachLine { line ->
                         lineNo++
                         try {
@@ -116,7 +119,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             }
                             if (runMode != RUN_MODE_IMPORT) {
                                 val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
-                                manifestWriter.write(csv(manifestRecord))
+                                writer.write(manifestWriter.csv(manifestRecord))
                             }
                         } catch (e: Exception) {
                             logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
@@ -124,10 +127,16 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     }
                 }
 
-                if (batch.size > 0) {
-                    hbase.putBatch(batch)
-                    logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
-                    batch = mutableListOf()
+                if (runMode != RUN_MODE_MANIFEST) {
+                    if (batch.size > 0) {
+                        hbase.putBatch(batch)
+                        logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
+                        batch = mutableListOf()
+                    }
+                }
+
+                if (runMode != RUN_MODE_IMPORT) {
+                    manifestWriter.sendManifest(s3, manifestOutputFile, manifestBucket, manifestPrefix)
                 }
 
                 logger.info("Processed $lineNo records from the file $fileName")
@@ -136,31 +145,19 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     }
 
 
-    fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?): EncryptionResult {
-        try {
-            return cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
-        } catch (e: Exception) {
-            logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
-            throw e
-        }
-    }
+    fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?) = cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
+//        } catch (e: Exception) {
+//            logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
+//            throw e
+//        }
+//    }
 
-    fun getDataKey(fileName: String): DataKeyResult {
-        try {
-            return keyService.batchDataKey()
-        } catch (e: Exception) {
-            logger.error("Error while creating data key for the file  $fileName: $e")
-            throw e
-        }
-    }
-
-    fun csv(manifestRecord: ManifestRecord) =
-            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
-    fun topicName(db: String, collection: String) = "db.$db.$collection"
-
-    private fun escape(value: String): String {
-        return StringEscapeUtils.escapeCsv(value)
-    }
+    fun getDataKey(fileName: String) = keyService.batchDataKey()
+//        } catch (e: Exception) {
+//            logger.error("Error while creating data key for the file  $fileName: $e")
+//            throw e
+//        }
+//    }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())

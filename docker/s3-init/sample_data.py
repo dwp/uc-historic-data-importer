@@ -57,6 +57,7 @@ def main():
         record_count = int(args.batch_size if args.batch_size else 10)
 
         for j in range(record_count):
+            print(f"Making record {j}/{record_count}.")
             contents = contents + \
                 db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
 
