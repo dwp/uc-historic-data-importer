@@ -146,18 +146,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
 
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?) = cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
-//        } catch (e: Exception) {
-//            logger.error("Error while encrypting db object id $id in file  ${fileName}: $e")
-//            throw e
-//        }
-//    }
 
     fun getDataKey(fileName: String) = keyService.batchDataKey()
-//        } catch (e: Exception) {
-//            logger.error("Error while creating data key for the file  $fileName: $e")
-//            throw e
-//        }
-//    }
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
