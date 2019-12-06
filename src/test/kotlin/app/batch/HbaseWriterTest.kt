@@ -7,6 +7,7 @@ import app.services.CipherService
 import app.services.KeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
+import com.amazonaws.services.s3.AmazonS3
 import com.beust.klaxon.JsonObject
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertTrue
@@ -32,6 +33,9 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var s3: AmazonS3
 
     @MockBean
     private lateinit var cipherService: CipherService
@@ -89,7 +93,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(5)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
     }
@@ -132,7 +136,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(5)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))

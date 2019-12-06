@@ -59,7 +59,8 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 withPrefix(s3PrefixFolder)
             }
 
-            var results: ListObjectsV2Result? = null
+
+            var results: ListObjectsV2Result?
             val objectSummaries: MutableList<S3ObjectSummary> = mutableListOf()
 
             do {
@@ -68,7 +69,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 objectSummaries.addAll(results.objectSummaries)
                 request.continuationToken = results.nextContinuationToken
             }
-            while (results != null && results?.isTruncated)
+            while (results != null && results.isTruncated)
 
             logger.info("Found ${objectSummaries.size} objects in s3")
             val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()

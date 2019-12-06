@@ -136,7 +136,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 }
 
                 if (runMode != RUN_MODE_IMPORT) {
-                    manifestWriter.sendManifest(s3, manifestOutputFile, manifestBucket, manifestPrefix)
+                    manifestWriter.sendManifest(s3, File(manifestOutputFile), manifestBucket, manifestPrefix)
                 }
 
                 logger.info("Processed $lineNo records from the file $fileName")
