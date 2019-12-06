@@ -7,6 +7,7 @@ import io.kotlintest.fail
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import io.kotlintest.spring.SpringListener
+import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
@@ -167,9 +168,9 @@ class UCHistoricDataImporterSpec : FunSpec() {
             val list = summaries.map {
                 val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
-                val noOfRecordsPerFile = fileContent.split("\n").size
+                val noOfRecordsPerFile = fileContent.trim().split("\n").size
                 assertEquals(11,noOfRecordsPerFile)
-                fileContent
+                fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
             log.info("all content $joinedContent")
