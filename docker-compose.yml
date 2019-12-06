@@ -85,7 +85,7 @@ services:
       --aws.secret.key=aws-secret-key
       --data.key.service.url=https://dks:8443/
       --s3.bucket=uc-historic-data
-      --s3.prefix.folder=test/
+      --s3.prefix.folder=test
       --s3.suffixes.csv=prefix,prefix2
       --s3.service.endpoint=http://s3:4572
       --filename.format.regex=([A-Za-z0-9-]+\.[A-Za-z0-9-]+\.[0-9]+\.json\.gz)
