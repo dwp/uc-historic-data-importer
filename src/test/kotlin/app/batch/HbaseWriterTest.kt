@@ -7,6 +7,7 @@ import app.services.CipherService
 import app.services.KeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
+import com.amazonaws.services.s3.AmazonS3
 import com.beust.klaxon.JsonObject
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertTrue
@@ -32,6 +33,9 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var s3: AmazonS3
 
     @MockBean
     private lateinit var cipherService: CipherService
@@ -63,7 +67,7 @@ class HbaseWriterTest {
         val encryptionResult = EncryptionResult("", "")
         whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
 
-        whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
+        whenever(messageUtils.parseGson(invalidJson2)).thenThrow(RuntimeException("parse error"))
         val jsonObject = JsonObject()
         whenever(messageUtils.parseJson(validJson)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
@@ -71,7 +75,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("something")
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
-        whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 
         val formattedKey = "0000-0000-00001"
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
@@ -89,10 +93,8 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(4)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        formattedMessages.forEach { println(it) }
-
         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
     }
 
@@ -108,15 +110,16 @@ class HbaseWriterTest {
         val encryptionResult = EncryptionResult("", "")
         whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
 
-        whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
+        whenever(messageUtils.parseGson(invalidJson2)).thenThrow(RuntimeException("parse error"))
         val jsonObject = JsonObject()
-        whenever(messageUtils.parseJson(validJsonWithoutId)).thenReturn(jsonObject)
+        whenever(messageUtils.parseGson(validJsonWithoutId)).thenReturn(com.google.gson.JsonObject())
         whenever(messageUtils.getIdFromDbObject(jsonObject)).thenReturn(null)
 
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
-        whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""",
+                encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
@@ -133,55 +136,13 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(4)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
-        assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of id"))
 
     }
 
-    @Test
-    fun should_Log_Error_For_Json_Without_Timestamp() {
-
-        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
-        val mockAppender: Appender<ILoggingEvent> = mock()
-        root.addAppender(mockAppender)
-
-        val dataKeyResult = DataKeyResult("", "", "")
-        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
-        val encryptionResult = EncryptionResult("", "")
-        whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
-
-        whenever(messageUtils.parseJson(invalidJson2)).thenThrow(RuntimeException("parse error"))
-        val jsonObject = JsonObject()
-        whenever(messageUtils.parseJson(validJsonWithoutTimeStamp)).thenReturn(jsonObject)
-        whenever(messageUtils.getIdFromDbObject(jsonObject)).thenReturn(jsonObject)
-
-        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn(null)
-        val message = "message"
-        whenever(messageProducer.produceMessage(jsonObject, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
-
-        val formattedKey = "0000-0000-00001"
-        whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
-        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
-
-        val topic = "adb.collection".toByteArray()
-        val key = formattedKey.toByteArray()
-        val message1 = message.toByteArray()
-
-        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
-
-        val data = listOf(invalidJson2, validJsonWithoutTimeStamp)
-        val inputStreams = mutableListOf(getInputStream(data, validFileName))
-        hBaseWriter.write(inputStreams)
-
-        val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(4)).doAppend(captor.capture())
-        val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("Error processing record 1 from '$validFileName': 'parse error'."))
-        assertTrue(formattedMessages.contains("Skipping record 2 in the file $validFileName due to absence of lastModifiedTimeStamp"))
-    }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()

@@ -60,6 +60,11 @@ build-jar: ## Build the jar.
 dist: ## Assemble distribution files in build/dist.
 	./gradlew assembleDist
 
+.PHONY: s3-init-paging
+s3-init-paging: ## Populate s3 with > 500 objects and run the importer to see paging.
+	CREATE_PAGINATED_DATA=yes docker-compose up s3-init
+
+
 .PHONY: build-all
 build-all: build-jar build-image ## Build the jar file and the images.
 

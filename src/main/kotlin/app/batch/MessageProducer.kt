@@ -2,7 +2,8 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
-import com.beust.klaxon.JsonObject
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
@@ -18,38 +19,43 @@ import java.util.*
 @Component
 class MessageProducer {
     fun produceMessage(jsonObject: JsonObject,
+                       id: String,
                        encryptionResult: EncryptionResult,
                        dataKeyResult: DataKeyResult,
                        database: String,
                        collection: String): String {
-        val id = jsonObject.obj("_id")?.toJsonString()!!
-        val messageUtils = MessageUtils()
-        val modified = jsonObject.obj("_lastModifiedDateTime")
-        val date = modified?.get("\$date")
-        val dateStr = if (date != null && (date as String).isNotBlank()) date as String else "1980-01-01T00:00:00.000Z"
-        val type = jsonObject.get("@type") ?: "MONGO_UPDATE"
+        var lastModified = jsonObject.getAsJsonObject("_lastModifiedDateTime")
+                ?.getAsJsonPrimitive("\$date")
+                ?.asString
+                ?: "1980-01-01T00:00:00.000Z"
+
+        lastModified = if (StringUtils.isNotBlank(lastModified)) lastModified else "1980-01-01T00:00:00.000Z"
+
+        //println("lastModified: '$lastModified'.")
+        val type = jsonObject.getAsJsonPrimitive("@type")?.asString ?: "MONGO_UPDATE"
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(Date())
 
+
         return """{
-                |   "unitOfWorkId": "$unitOfWorkId",
-                |   "timestamp": "$timestamp",
-                |   "traceId": "$traceId",
-                |   "@type": "HDI",
-                |   "version": "$hdiVersion",
-                |   "message": {
-                |       "@type": "$type",
-                |       "_id": $id,
-                |       "_lastModifiedDateTime": "$dateStr",
-                |       "collection" : "$collection",
-                |       "db": "$database",
-                |       "dbObject": "${encryptionResult.encrypted}",
-                |       "encryption": {
-                |           "keyEncryptionKeyId": "${dataKeyResult.dataKeyEncryptionKeyId}",
-                |           "initialisationVector": "${encryptionResult.initialisationVector}",
-                |           "encryptedEncryptionKey": "${dataKeyResult.ciphertextDataKey}"
-                |       }
-                |   }
-                |}""".trimMargin()
+   "unitOfWorkId": "$unitOfWorkId",
+   "timestamp": "$timestamp",
+   "traceId": "$traceId",
+   "@type": "HDI",
+   "version": "$hdiVersion",
+   "message": {
+       "@type": "$type",
+       "_id": $id,
+       "_lastModifiedDateTime": "$lastModified",
+       "collection" : "$collection",
+       "db": "$database",
+       "dbObject": "${encryptionResult.encrypted}",
+       "encryption": {
+           "keyEncryptionKeyId": "${dataKeyResult.dataKeyEncryptionKeyId}",
+           "initialisationVector": "${encryptionResult.initialisationVector}",
+           "encryptedEncryptionKey": "${dataKeyResult.ciphertextDataKey}"
+       }
+   }
+}"""
     }
 
     companion object {

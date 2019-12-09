@@ -19,19 +19,25 @@ else
     stderr Not making bucket \'$S3_BUCKET\': already exists.
 fi
 
-. ./venv/bin/activate
+if [[ $CREATE_PAGINATED_DATA == "yes" ]]; then
+    stderr creating paginated data
+    create_paginated_data
+else
 
-if create_sample_data; then
+    stderr activating python environment.
 
-    dd if=/dev/zero of=a-spurious.file bs=10M count=1
+    . ./venv/bin/activate
 
-    aws_s3 cp a-spurious.file s3://${S3_BUCKET}/${S3_PREFIX}
+    stderr creating sample data
 
-    ls *.json.gz.enc | head -n1 | xargs rm -v
+    if create_sample_data; then
 
-    for file in *.json.gz.enc *.json.gz.encryption.json; do
-        aws_s3 cp $file s3://${S3_BUCKET}/${S3_PREFIX}
-    done
-
-    aws_s3 ls $S3_BUCKET/$S3_PREFIX
+        dd if=/dev/zero of=a-spurious.file bs=10M count=1
+        aws_s3 cp a-spurious.file s3://${S3_BUCKET}/${S3_PREFIX}
+        ls *.json.gz.enc | head -n1 | xargs rm -v
+        for file in *.json.gz.enc *.json.gz.encryption.json; do
+            aws_s3 cp $file s3://${S3_BUCKET}/${S3_PREFIX}
+        done
+        aws_s3 ls $S3_BUCKET/$S3_PREFIX
+    fi
 fi

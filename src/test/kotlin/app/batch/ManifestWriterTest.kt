@@ -48,14 +48,14 @@ class ManifestWriterTest {
 
     @Test
     fun testGenerateEscapedCSV() {
-        val manifestRecord1 = ManifestRecord("\"_id\":{\"declarationId\": \"1234567890\"}", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "IMPORT")
-        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT")
+        val manifestRecord1 = ManifestRecord("\"_id\":{\"declarationId\": \"1234567890\"}", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "IMPORT", "HDI")
+        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "EXPORT", "@V4")
         val list = mutableListOf<ManifestRecord>()
         list.add(manifestRecord1)
         list.add(manifestRecord2)
         val actual = manifestWriter.generateEscapedCSV(list)
-        val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\",100000000,\"dbwithcomma,\",\"collectionwithdoublequote\"\"\",IMPORT\n" +
-            "id2,200000000,db2,collection2,EXPORT"
+        val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\",100000000,\"dbwithcomma,\",\"collectionwithdoublequote\"\"\",IMPORT,HDI\n" +
+            "id2,200000000,db2,collection2,EXPORT,@V4"
         assertEquals(expected, actual)
     }
 
@@ -71,8 +71,8 @@ class ManifestWriterTest {
 
     @Test
     fun testManifest() {
-        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "IMPORT")
-        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "IMPORT")
+        val manifestRecord1 = ManifestRecord("id1", 100000000, "db1", "collection1", "IMPORT", "HDI")
+        val manifestRecord2 = ManifestRecord("id2", 200000000, "db2", "collection2", "IMPORT", "HDI")
         val list = mutableListOf<ManifestRecord>()
         list.add(manifestRecord1)
         list.add(manifestRecord2)
@@ -88,15 +88,14 @@ class ManifestWriterTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
         doThrow(RuntimeException()).whenever(manifestWriter).generateManifestFileFormat(anyString(), anyInt())
-        val manifestRecord = ManifestRecord("id1", 100000000, "db1", "collection1", "IMPORT")
+        val manifestRecord = ManifestRecord("id1", 100000000, "db1", "collection1", "IMPORT", "HDI")
         val list = mutableListOf<ManifestRecord>()
         list.add(manifestRecord)
         manifestWriter.generateManifest(list, "db", "collection", "000001")
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(1)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        Assert.assertTrue(formattedMessages.contains("Exception while writing ids: 'id1' of db: 'db1, collection: collection1' to manifest files in S3"))
-
+        Assert.assertTrue(formattedMessages.contains("Exception while writing ids of db: 'db1', collection: 'collection1' to manifest files in S3"))
     }
 
     @SpyBean
