@@ -10,3 +10,5 @@ class MetadataException : Exception {
 }
 
 class DecryptionException(message: String, e: Throwable) : Exception(message, e)
+
+class S3Exception(message: String) : Exception(message)

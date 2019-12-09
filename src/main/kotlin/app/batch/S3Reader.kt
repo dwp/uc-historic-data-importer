@@ -1,13 +1,17 @@
 package app.batch
 
-import app.domain.*
-import com.amazonaws.services.s3.*
-import com.amazonaws.services.s3.model.*
-import org.slf4j.*
-import org.springframework.batch.item.*
-import org.springframework.beans.factory.annotation.*
-import org.springframework.stereotype.*
-import java.lang.UnsupportedOperationException
+import app.domain.InputStreamPair
+import app.domain.S3ObjectSummaryPair
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.ListObjectsV2Request
+import com.amazonaws.services.s3.model.ListObjectsV2Result
+import com.amazonaws.services.s3.model.S3ObjectSummary
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.batch.item.ItemReader
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
 
 @Component
@@ -33,13 +37,16 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Value("\${filename.format.metadata.extension:\\.encryption\\.json$}")
     private lateinit var fileNameFormatMetadataExtension: String
 
+    @Autowired
+    private lateinit var s3Helper: S3Helper
+
     override fun read(): InputStreamPair? {
         val iterator = getS3ObjectSummariesIterator(s3client, s3BucketName)
         return if (iterator.hasNext()) {
             iterator.next().let {
                 logger.info("s3objectSummaryPair: '$it'.")
-                val dataInputStream = it.data?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
-                val metadataInputStream = it.metadata?.let { it1 -> getS3ObjectInputStream(it1, s3client, s3BucketName) }
+                val dataInputStream = it.data?.let { it1 -> s3Helper.getS3ObjectInputStream(it1, s3client, s3BucketName) }
+                val metadataInputStream = it.metadata?.let { it1 -> s3Helper.getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key, it.data.size)
             }
         } else {
@@ -82,9 +89,8 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
 
         do {
             logger.info("Getting paginated results for s3://$bucketName/$fullPrefix")
-            results = awsS3Client.listObjectsV2(request)
-            objectSummaries.addAll(results.objectSummaries)
-            request.continuationToken = results.nextContinuationToken
+            results = s3Helper.listObjectsV2Result(awsS3Client, request, objectSummaries)
+            request.continuationToken = results?.nextContinuationToken
         } while (results != null && results.isTruncated)
 
         logger.info("Found ${objectSummaries.size} objects in s3://$bucketName/$fullPrefix")
@@ -103,9 +109,6 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         logger.info("Found ${pairs.size} valid object key pairs in s3://$bucketName/$fullPrefix")
         return pairs
     }
-
-    private fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String) =
-        s3Client.getObject(bucketName, os.key).objectContent
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(S3Reader::class.toString())
