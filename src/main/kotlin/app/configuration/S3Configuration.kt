@@ -28,7 +28,7 @@ class S3Configuration {
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(DefaultAWSCredentialsProviderChain())
                 .withRegion(clientRegion)
-                .withClientConfiguration(clientConfiguration)
+                .withClientConfiguration(clientConfiguration.withTcpKeepAlive(true))
                 .build()
     }
 
