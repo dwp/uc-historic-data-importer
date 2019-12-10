@@ -38,7 +38,7 @@ class S3Configuration {
 
     @Value("\${aws.s3.max.connections:50}")
     private lateinit var maximumS3Connections: String
-
+  
     @Value("\${s3.socket.timeout:1800000}")
     private lateinit var socketTimeOut: String
 }

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -52,7 +53,7 @@ class HbaseWriterTest {
     @MockBean
     private lateinit var manifestWriter: ManifestWriter
 
-    @Autowired
+    @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
 
     @Test
@@ -143,6 +144,32 @@ class HbaseWriterTest {
 
     }
 
+    @Test
+    fun should_Log_Error_When_Streaming_Line_Of_File_Fails() {
+
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
+
+        val dataKeyResult = DataKeyResult("", "", "")
+        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
+
+        val inputStream = ByteArrayInputStream(ByteArray(0))
+        whenever(hBaseWriter.getBufferedReader(inputStream)).thenReturn(null)
+
+        doNothing().whenever(hbase).putBatch(any())
+        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
+
+        val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName))
+        hBaseWriter.write(inputStreams)
+
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(5)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+
+        assertTrue(formattedMessages.contains("Error streaming record 0 from '$validFileName': 'Parameter specified as non-null is null: method kotlin.io.TextStreamsKt.forEachLine, parameter receiver\$0'."))
+
+    }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()
