@@ -143,6 +143,29 @@ class HbaseWriterTest {
 
     }
 
+    @Test
+    fun should_Log_Error_When_Streaming_Line_Of_File_Fails() {
+
+        val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
+        val mockAppender: Appender<ILoggingEvent> = mock()
+        root.addAppender(mockAppender)
+
+        val dataKeyResult = DataKeyResult("", "", "")
+        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
+        val mockInput: DecompressedStream = mock()
+        whenever(mockInput.fileName).thenReturn(validFileName)
+        whenever(mockInput.inputStream).thenReturn(null)
+
+        val inputStreams = mutableListOf(mockInput)
+        hBaseWriter.write(inputStreams)
+
+        val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(6)).doAppend(captor.capture())
+        val formattedMessages = captor.allValues.map { it.formattedMessage }
+
+        assertTrue(formattedMessages.contains("Error streaming record 1 from '$validFileName': 'parse error'."))
+
+    }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()
