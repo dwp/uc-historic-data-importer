@@ -156,6 +156,15 @@ class HbaseWriterTest {
         val inputStream = ByteArrayInputStream(ByteArray(0))
         whenever(hBaseWriter.getBufferedReader(inputStream)).thenReturn(null)
 
+        val topic = "adb.collection".toByteArray()
+        val message = "message"
+        val formattedKey = "0000-0000-00001"
+        val key = formattedKey.toByteArray()
+        val message1 = message.toByteArray()
+
+        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
+        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
+
         val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName))
         hBaseWriter.write(inputStreams)
 
