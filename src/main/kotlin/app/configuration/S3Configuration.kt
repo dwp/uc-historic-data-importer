@@ -28,7 +28,7 @@ class S3Configuration {
         return AmazonS3ClientBuilder.standard()
                 .withCredentials(DefaultAWSCredentialsProviderChain())
                 .withRegion(clientRegion)
-                .withClientConfiguration(clientConfiguration.withTcpKeepAlive(true))
+                .withClientConfiguration(clientConfiguration.withSocketTimeout(s3SocketTimeout.toInt()))
                 .build()
     }
 
@@ -37,4 +37,7 @@ class S3Configuration {
 
     @Value("\${aws.s3.max.connections:50}")
     private lateinit var maximumS3Connections: String
+
+    @Value("\${aws.s3.socket.timeout:3600}")
+    private lateinit var s3SocketTimeout: String
 }

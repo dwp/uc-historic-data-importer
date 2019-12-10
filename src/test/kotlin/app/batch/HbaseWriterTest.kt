@@ -153,9 +153,10 @@ class HbaseWriterTest {
         val dataKeyResult = DataKeyResult("", "", "")
         whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
 
-        whenever(hBaseWriter.getBufferedReader(any())).thenReturn(null)
+        val inputStream = ByteArrayInputStream(ByteArray(0))
+        whenever(hBaseWriter.getBufferedReader(inputStream)).thenReturn(null)
 
-        val inputStreams = mutableListOf(DecompressedStream(ByteArrayInputStream(ByteArray(0)), validFileName))
+        val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName))
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
