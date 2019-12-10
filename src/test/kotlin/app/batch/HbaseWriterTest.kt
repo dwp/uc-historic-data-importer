@@ -153,7 +153,9 @@ class HbaseWriterTest {
         val dataKeyResult = DataKeyResult("", "", "")
         whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
 
-        val inputStreams = mutableListOf(getInputStream(listOf(), validFileName))
+        whenever(hBaseWriter.getBufferedReader(any())).thenReturn(null)
+
+        val inputStreams = mutableListOf(DecompressedStream(ByteArrayInputStream(ByteArray(0)), validFileName))
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
@@ -164,18 +166,13 @@ class HbaseWriterTest {
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
-        if (data1.size > 0) {
-            val baos = ByteArrayOutputStream()
-            data1.forEach {
-                val nl = it + "\n"
-                baos.write(nl.toByteArray())
-            }
-            val inputStream = ByteArrayInputStream(baos.toByteArray())
-            return DecompressedStream(inputStream, fileName)
+        val baos = ByteArrayOutputStream()
+        data1.forEach {
+            val nl = it + "\n"
+            baos.write(nl.toByteArray())
         }
-        else {
-            return DecompressedStream(ByteArrayInputStream(ByteArray(0)), fileName)
-        }
+        val inputStream = ByteArrayInputStream(baos.toByteArray())
+        return DecompressedStream(inputStream, fileName)
     }
 }
 

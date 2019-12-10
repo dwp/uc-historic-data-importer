@@ -80,7 +80,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val manifestOutputFile = "${manifestOutputDirectory}/${manifestWriter.topicName(database, collection)}-%06d.csv".format(fileNumber.toInt())
                 BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { writer ->
                     try {
-                        BufferedReader(InputStreamReader(input.inputStream)).forEachLine { line ->
+                        getBufferedReader(input.inputStream).forEachLine { line ->
                             lineNo++
                             try {
                                 val json = messageUtils.parseGson(line)
@@ -148,6 +148,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
+    fun getBufferedReader(inputStream: InputStream): BufferedReader {
+        return BufferedReader(InputStreamReader(inputStream))
+    }
 
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?) = cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
 
