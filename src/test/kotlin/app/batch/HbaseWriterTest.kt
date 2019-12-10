@@ -175,7 +175,7 @@ class HbaseWriterTest {
             return DecompressedStream(inputStream, fileName)
         }
         else {
-            return DecompressedStream(ByteArrayInputStream(null), fileName)
+            return DecompressedStream(ByteArrayInputStream(ByteArray(0)), fileName)
         }
     }
 }
