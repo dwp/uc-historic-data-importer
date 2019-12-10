@@ -1,6 +1,7 @@
 package app.batch
 
 import app.configuration.S3Configuration
+import app.exceptions.S3Exception
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.*
 import com.nhaarman.mockitokotlin2.*
@@ -29,7 +30,7 @@ import java.nio.charset.StandardCharsets
 
 @RunWith(SpringRunner::class)
 @ActiveProfiles("awsS3")
-@SpringBootTest(classes = [S3Reader::class, S3Configuration::class, KeyPairGenerator::class])
+@SpringBootTest(classes = [S3Reader::class, S3Configuration::class, KeyPairGenerator::class, S3Helper::class])
 @TestPropertySource(properties = [
     "aws.region=eu-west-1",
     "s3.bucket=bucket1",
@@ -308,8 +309,8 @@ class S3ReaderTest {
         try {
             s3Reader.read()
             fail("Expected an exception")
-        } catch (expected: RuntimeException) {
-            assertEquals("java.lang.IllegalStateException: results must not be null", expected.toString())
+        } catch (expected: S3Exception) {
+            assertEquals("app.exceptions.S3Exception: Error retrieving object summary from S3", expected.toString())
 
             verify(s3Client, times(1)).listObjectsV2(any(ListObjectsV2Request::class.java))
             verifyNoMoreInteractions(s3Client)
