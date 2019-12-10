@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -52,7 +53,7 @@ class HbaseWriterTest {
     @MockBean
     private lateinit var manifestWriter: ManifestWriter
 
-    @Autowired
+    @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
 
     @Test
@@ -163,9 +164,10 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
+        verify(mockAppender, times(5)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
-        assertTrue(formattedMessages.contains("Error streaming record 0 from '$validFileName': 'parse error'."))
+        assertTrue(formattedMessages.contains("Error streaming record 0 from '$validFileName': 'Parameter specified as non-null is null: method kotlin.io.TextStreamsKt.forEachLine, parameter receiver\$0'."))
 
     }
 
