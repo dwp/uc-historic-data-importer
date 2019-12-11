@@ -44,6 +44,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${hbase.batch.size:10000}")
     private lateinit var hbaseBatchSize: String
 
+    @Value("\${max.stream.attempts:10}")
+    private lateinit var maxStreamAttempts: String
+
     @Value("\${run-mode:import_and_manifest}")
     private lateinit var runMode: String
 
@@ -52,6 +55,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Value("\${s3.manifest.bucket}")
     private lateinit var manifestBucket: String
+
+    @Value("\${s3.bucket}")
+    private lateinit var s3bucket: String
 
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
@@ -79,55 +85,64 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val manifestWriter = StreamingManifestWriter()
                 val manifestOutputFile = "${manifestOutputDirectory}/${manifestWriter.topicName(database, collection)}-%06d.csv".format(fileNumber.toInt())
                 BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { writer ->
-                    try {
-                        getBufferedReader(input.inputStream).forEachLine { line ->
-                            lineNo++
-                            try {
-                                val json = messageUtils.parseGson(line)
-                                val id = gson.toJson(json.getAsJsonObject("_id"))
+                    var succeeded = false
+                    var attempts = 0
+                    var inputStream = input.inputStream
+                    while (!succeeded && attempts < maxStreamAttempts.toInt()) {
+                        try {
+                            ++attempts
+                            getBufferedReader(inputStream).forEachLine { line ->
+                                lineNo++
+                                try {
+                                    val json = messageUtils.parseGson(line)
+                                    val id = gson.toJson(json.getAsJsonObject("_id"))
 
-                                if (StringUtils.isBlank(id) || id == "null") {
-                                    logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
-                                    return@forEachLine
-                                }
-
-                                val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
-                                val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
-                                        database, collection)
-                                val messageJsonObject = messageUtils.parseJson(message)
-                                val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
-
-                                if (StringUtils.isBlank(lastModifiedTimestampStr)) {
-                                    logger.warn("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
-                                    return@forEachLine
-                                }
-
-                                val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
-                                val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
-
-                                val topic = "$kafkaTopicPrefix.$database.$collection"
-                                if (runMode != RUN_MODE_MANIFEST) {
-                                    batch.add(HBaseRecord(topic.toByteArray(),
-                                            formattedKey,
-                                            message.toByteArray(),
-                                            lastModifiedTimestampLong))
-
-                                    if (batch.size >= maxBatchSize) {
-                                        hbase.putBatch(batch)
-                                        logger.info("Written $lineNo records to HBase topic db.$topic from '$fileName'.")
-                                        batch = mutableListOf()
+                                    if (StringUtils.isBlank(id) || id == "null") {
+                                        logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
+                                        return@forEachLine
                                     }
+
+                                    val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
+                                    val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
+                                            database, collection)
+                                    val messageJsonObject = messageUtils.parseJson(message)
+                                    val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
+
+                                    if (StringUtils.isBlank(lastModifiedTimestampStr)) {
+                                        logger.warn("Skipping record $lineNo in the file $fileName due to absence of lastModifiedTimeStamp")
+                                        return@forEachLine
+                                    }
+
+                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                                    val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
+
+                                    val topic = "$kafkaTopicPrefix.$database.$collection"
+                                    if (runMode != RUN_MODE_MANIFEST) {
+                                        batch.add(HBaseRecord(topic.toByteArray(),
+                                                formattedKey,
+                                                message.toByteArray(),
+                                                lastModifiedTimestampLong))
+
+                                        if (batch.size >= maxBatchSize) {
+                                            hbase.putBatch(batch)
+                                            logger.info("Written $lineNo records to HBase topic db.$topic from '$fileName'.")
+                                            batch = mutableListOf()
+                                        }
+                                    }
+                                    if (runMode != RUN_MODE_IMPORT) {
+                                        val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
+                                        writer.write(manifestWriter.csv(manifestRecord))
+                                    }
+                                } catch (e: Exception) {
+                                    logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                                 }
-                                if (runMode != RUN_MODE_IMPORT) {
-                                    val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
-                                    writer.write(manifestWriter.csv(manifestRecord))
-                                }
-                            } catch (e: Exception) {
-                                logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                             }
+                            succeeded = true
+                        } catch (e: Exception) {
+                            logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
+                            inputStream.close()
+                            inputStream = s3.getObject(s3bucket, fileName).objectContent
                         }
-                    } catch (e: Exception) {
-                        logger.error("Error streaming record $lineNo from '$fileName': '${e.message}'.")
                     }
                 }
 

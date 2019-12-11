@@ -30,7 +30,6 @@ import org.springframework.test.context.junit4.SpringRunner
     "s3.manifest.prefix.folder=test-manifest-exporter",
     "s3.manifest.bucket=manifestbucket"
 ])
-
 class ManifestWriterTest {
 
 
