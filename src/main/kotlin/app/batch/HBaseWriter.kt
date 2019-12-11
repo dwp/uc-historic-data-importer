@@ -92,7 +92,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         try {
                             ++attempts
                             getBufferedReader(inputStream).forEachLine { line ->
-                                lineNo++
+                                ++lineNo
                                 try {
                                     val json = messageUtils.parseGson(line)
                                     val id = gson.toJson(json.getAsJsonObject("_id"))
@@ -139,8 +139,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             }
                             succeeded = true
                         } catch (e: Exception) {
-                            logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
-                            inputStream.close()
+                            try {
+                                logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
+                                inputStream.close()
+                            }
+                            catch (e: Exception) {
+                                logger.warn("Failed to close stream.")
+                            }
                             inputStream = s3.getObject(s3bucket, fileName).objectContent
                         }
                     }
