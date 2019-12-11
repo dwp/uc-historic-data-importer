@@ -8,22 +8,29 @@ import app.services.KeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.model.S3Object
+import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.beust.klaxon.JsonObject
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
+@TestPropertySource(properties = [
+    "s3.bucket=bucket"
+])
 class HbaseWriterTest {
 
     val validJsonWithoutTimeStamp = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
@@ -145,7 +152,7 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun should_Log_Error_When_Streaming_Line_Of_File_Fails() {
+    fun should_Log_Error_And_Retry_10_Times_When_Streaming_Line_Of_File_Fails() {
 
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
@@ -155,21 +162,32 @@ class HbaseWriterTest {
         whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
 
         val inputStream = ByteArrayInputStream(ByteArray(0))
-        whenever(hBaseWriter.getBufferedReader(inputStream)).thenReturn(null)
+        val s3InputStream = mock<S3ObjectInputStream>()
 
+        val s3Object = mock<S3Object>() {
+            on { objectContent } doReturn s3InputStream
+        }
+
+        given(s3.getObject("bucket", validFileName)).willReturn(s3Object)
+        whenever(hBaseWriter.getBufferedReader(inputStream)).thenReturn(null)
         doNothing().whenever(hbase).putBatch(any())
         doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
 
         val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName))
         hBaseWriter.write(inputStreams)
+        verify(s3, times(10)).getObject("bucket", validFileName)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(5)).doAppend(captor.capture())
+        verify(mockAppender, times(14)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
-        assertTrue(formattedMessages.contains("Error streaming record 0 from '$validFileName': 'Parameter specified as non-null is null: method kotlin.io.TextStreamsKt.forEachLine, parameter receiver\$0'."))
+        assertTrue(formattedMessages.contains("Error on attempt 1 streaming '$validFileName': 'Parameter specified as non-null is null: method kotlin.io.TextStreamsKt.forEachLine, parameter receiver\$0'."))
 
+        for (i in 2..10) {
+            assertTrue(formattedMessages.contains("Error on attempt $i streaming '$validFileName': 'Underlying input stream returned zero bytes'."))
+        }
     }
+
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()
