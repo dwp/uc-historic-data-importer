@@ -188,30 +188,6 @@ class HbaseWriterTest {
         }
     }
 
-    @Test
-    fun should_Retry_Until_Success_When_Streaming_Fails() {
-
-        val dataKeyResult = DataKeyResult("", "", "")
-        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
-
-        val inputStream = ByteArrayInputStream(ByteArray(0))
-        val s3InputStream = mock<S3ObjectInputStream>()
-
-        val s3Object = mock<S3Object>() {
-            on { objectContent } doReturn s3InputStream
-        }
-
-        given(s3.getObject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).willReturn(s3Object)
-
-        whenever(hBaseWriter.getBufferedReader(inputStream))
-                .thenReturn(null)
-
-        doNothing().whenever(hbase).putBatch(any())
-        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
-
-        val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName))
-        hBaseWriter.write(inputStreams)
-    }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()
