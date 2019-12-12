@@ -1,0 +1,66 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-469676:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-472980:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-450207:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-450917:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-455617:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-467014:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-467015:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-467016:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMGOOGLEPROTOBUF-173761:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-174736:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-ORGAPACHECOMMONS-460507:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-ORGAPACHEHADOOP-174573:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+  SNYK-JAVA-ORGAPACHEHADOOP-32047:
+    - '*':
+        reason: removed, ticket raised for project remediation (DW-3136)
+        expires: 2020-01-20T00:00:00.000Z
+patch: {}
