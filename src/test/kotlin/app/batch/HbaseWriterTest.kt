@@ -12,6 +12,7 @@ import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.beust.klaxon.JsonObject
 import com.nhaarman.mockitokotlin2.*
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -188,6 +189,59 @@ class HbaseWriterTest {
         }
     }
 
+    @Test
+    fun testIdObjectReturnedAsObject() {
+        val message = com.google.gson.JsonObject()
+        val id = com.google.gson.JsonObject()
+        id.addProperty("key", "value")
+        message.add("_id", id)
+        val actual = hBaseWriter.idObject(message)
+        val expected = id
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testIdStringReturnedAsObject() {
+        val message = com.google.gson.JsonObject()
+        message.addProperty("_id", "id")
+        val actual = hBaseWriter.idObject(message)
+        val expected = com.google.gson.JsonObject()
+        expected.addProperty("id", "id")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testIdNumberReturnedAsObject() {
+        val message = com.google.gson.JsonObject()
+        message.addProperty("_id", 12345)
+        val actual = hBaseWriter.idObject(message)
+        val expected = com.google.gson.JsonObject()
+        expected.addProperty("id", "12345")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testIdArrayReturnedAsNull() {
+        val message = com.google.gson.JsonObject()
+        val arrayValue = com.google.gson.JsonArray()
+        arrayValue.add("1")
+        arrayValue.add("2")
+        message.add("_id", arrayValue)
+        val actual = hBaseWriter.idObject(message)
+        val expected = null
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testIdNullReturnedAsNull() {
+        val message = com.google.gson.JsonObject()
+        val nullValue = com.google.gson.JsonNull.INSTANCE
+        message.add("_id", nullValue)
+        val actual = hBaseWriter.idObject(message)
+        val expected = null
+        assertEquals(expected, actual)
+
+    }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()

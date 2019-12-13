@@ -5,6 +5,7 @@ import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -95,7 +96,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 ++lineNo
                                 try {
                                     val json = messageUtils.parseGson(line)
-                                    val id = gson.toJson(json.getAsJsonObject("_id"))
+                                    val id = gson.toJson(idObject(json))
 
                                     if (StringUtils.isBlank(id) || id == "null") {
                                         logger.warn("Skipping record $lineNo in the file $fileName due to absence of id")
@@ -144,7 +145,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 inputStream.close()
                             }
                             catch (e: Exception) {
-                                logger.warn("Failed to close stream: '${e.message}'."")
+                                logger.warn("Failed to close stream: '${e.message}'.")
                             }
                             inputStream = s3.getObject(s3bucket, fileName).objectContent
                         }
@@ -160,7 +161,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         }
                         catch (e: Exception) {
                             val batchSize = batch.size
-                            logger.error("Failed to write batch of size $batchSize to HBase topic db.$database.$collection after processing $lineNo records from '$fileName': '${e.message}'."")
+                            logger.error("Failed to write batch of size $batchSize to HBase topic db.$database.$collection after processing $lineNo records from '$fileName': '${e.message}'.")
                         }
                     }
                 }
@@ -171,6 +172,23 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                 logger.info("Processed $lineNo records from the file $fileName")
             }
+        }
+    }
+
+    fun idObject(json: JsonObject): JsonObject? {
+        val id = json.get("_id")
+
+        if (id.isJsonObject) {
+            return id.asJsonObject
+        }
+        else if (id.isJsonPrimitive) {
+            val value = id.asJsonPrimitive
+            val asObject = JsonObject()
+            asObject.addProperty("id", value.asString)
+            return asObject
+        }
+        else {
+            return null
         }
     }
 
