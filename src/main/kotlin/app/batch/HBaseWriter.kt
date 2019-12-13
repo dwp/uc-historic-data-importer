@@ -144,7 +144,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 inputStream.close()
                             }
                             catch (e: Exception) {
-                                logger.warn("Failed to close stream.")
+                                logger.warn("Failed to close stream: '${e.message}'."")
                             }
                             inputStream = s3.getObject(s3bucket, fileName).objectContent
                         }
@@ -153,9 +153,15 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                 if (runMode != RUN_MODE_MANIFEST) {
                     if (batch.size > 0) {
-                        hbase.putBatch(batch)
-                        logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
-                        batch = mutableListOf()
+                        try {
+                            hbase.putBatch(batch)
+                            logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
+                            batch = mutableListOf()
+                        }
+                        catch (e: Exception) {
+                            val batchSize = batch.size
+                            logger.error("Failed to write batch of size $batchSize to HBase topic db.$database.$collection after processing $lineNo records from '$fileName': '${e.message}'."")
+                        }
                     }
                 }
 
