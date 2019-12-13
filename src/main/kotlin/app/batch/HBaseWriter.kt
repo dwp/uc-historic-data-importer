@@ -125,9 +125,16 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 lastModifiedTimestampLong))
 
                                         if (batch.size >= maxBatchSize) {
-                                            hbase.putBatch(batch)
-                                            logger.info("Written $lineNo records to HBase topic db.$topic from '$fileName'.")
-                                            batch = mutableListOf()
+                                            try {
+                                                hbase.putBatch(batch)
+                                                logger.info("Written $lineNo records to HBase topic db.$topic from '$fileName'.")
+                                            }
+                                            catch (e: Exception) {
+                                                logger.error("Error processing batch on record $lineNo from '$fileName': '${e.message}'.")
+                                            }
+                                            finally {
+                                                batch = mutableListOf()
+                                            }
                                         }
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
