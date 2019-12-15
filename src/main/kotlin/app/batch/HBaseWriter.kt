@@ -142,7 +142,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 } catch (e: Exception) {
-                                    logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
+                                    logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
                                 }
                             }
                             succeeded = true
