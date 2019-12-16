@@ -143,6 +143,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                 } catch (e: Exception) {
                                     logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
+                                    e.printStackTrace(System.out)
+                                    e.printStackTrace(System.err)
                                 }
                             }
                             succeeded = true
