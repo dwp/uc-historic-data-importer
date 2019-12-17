@@ -34,7 +34,6 @@ class LintWriterTest {
     @Autowired
     private lateinit var lintWriter: LintWriter
 
-    //data class DecompressedStream(val inputStream: InputStream, val fileName: String)
     @Test
     fun write() {
         val bytes = ByteArrayOutputStream()
@@ -56,40 +55,16 @@ class LintWriterTest {
         val putObjectRequest = captor.firstValue
         val input = putObjectRequest.inputStream
 
+        var expected = ""
 
-        val expected = """
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,1
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},2
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,3
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,4
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},5
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,6
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,7
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},8
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,9
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,10
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},11
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,12
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,13
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},14
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,15
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,16
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},17
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,18
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,19
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},20
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,21
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,22
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},23
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,24
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,25
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},26
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,27
-        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,28
-        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},29
-        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,30
+        for (i in 0..27 step 3) {
+            expected += """
+        "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,${i + 1}
+        },com.google.gson.stream.MalformedJsonException: Expected value at line 1 column 1 path ${'$'},${i + 2}
+        ""${'"'}${'"'}${'"'}${'"'},Expected a com.google.gson.JsonObject but was com.google.gson.JsonPrimitive,${i + 3}
 
-        """.trimIndent()
+""".trimIndent()
+        }
 
         val actualContents = ByteArrayOutputStream()
         BufferedReader(InputStreamReader(input)).forEachLine {
