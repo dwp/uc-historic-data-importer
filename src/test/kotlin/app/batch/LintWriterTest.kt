@@ -99,5 +99,7 @@ class LintWriterTest {
         val actual = actualContents.toByteArray()
 
         assertEquals(expected, String(actual))
+        assertEquals("bucket", putObjectRequest.bucketName)
+        assertEquals("prefix/phoneyfilename.txt", putObjectRequest.key)
     }
 }
