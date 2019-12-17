@@ -129,7 +129,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         if (batch.size >= maxBatchSize) {
                                             try {
                                                 hbase.putBatch(batch)
-                                                logger.info("Written $lineNo records to HBase topic db.$topic from '$fileName'.")
+                                                logger.info("Written $lineNo records to HBase topic $topic from '$fileName'.")
                                             }
                                             catch (e: Exception) {
                                                 logger.error("Error processing batch on record $lineNo from '$fileName': '${e.message}'.")

@@ -102,7 +102,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(LintWriter::class.toString())
     }
 }
 
