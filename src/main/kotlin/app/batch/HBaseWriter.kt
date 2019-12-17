@@ -157,6 +157,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 logger.warn("Failed to close stream: '${e.message}'.")
                             }
                             inputStream = s3.getObject(s3bucket, fileName).objectContent
+                            lineNo = 0
                         }
                     }
                 }
