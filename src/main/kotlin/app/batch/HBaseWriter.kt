@@ -1,5 +1,6 @@
 package app.batch
 
+import app.configuration.CipherInstanceProvider
 import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
@@ -17,7 +18,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
+import java.util.*
+import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
+import javax.crypto.spec.IvParameterSpec
 
 @Component
 @Profile("hbaseWriter")
@@ -25,9 +29,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
     private lateinit var s3: AmazonS3
-
-    @Autowired
-    private lateinit var cipherService: CipherService
 
     @Autowired
     private lateinit var keyService: KeyService
@@ -40,6 +41,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
     private lateinit var messageUtils: MessageUtils
+
+    @Autowired
+    private lateinit var cipherService: CipherService
 
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
@@ -160,8 +164,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 logger.warn("Failed to close stream: '${e.message}'.")
                             }
 
-                            inputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
-                                    CipherInputStream(s3.getObject(s3bucket, fileName).objectContent, input.cipher)) as GzipCompressorInputStream
+                            inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
                             lineNo = 0
                         }
                     }
@@ -207,9 +210,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    fun getBufferedReader(inputStream: InputStream): BufferedReader {
-        return BufferedReader(InputStreamReader(inputStream))
-    }
+    fun getBufferedReader(inputStream: InputStream?) = BufferedReader(InputStreamReader(inputStream))
 
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?) = cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
 

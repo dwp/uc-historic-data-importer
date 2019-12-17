@@ -1,6 +1,8 @@
 package app.batch
 
+import app.configuration.CipherInstanceProvider
 import app.domain.DecompressedStream
+import app.services.CipherService
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -11,16 +13,19 @@ import org.apache.commons.lang.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
+import java.util.*
+import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
+import javax.crypto.spec.IvParameterSpec
 
 @Component
 @Profile("lintWriter")
 class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtils) : ItemWriter<DecompressedStream> {
-
 
     @Value("\${max.stream.attempts:10}")
     private lateinit var maxStreamAttempts: String
@@ -36,6 +41,9 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
 
     @Value("\${s3.bucket}")
     private lateinit var s3bucket: String
+
+    @Autowired
+    private lateinit var cipherService: CipherService
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach { input ->
@@ -92,8 +100,8 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                     catch (e: Exception) {
                         logger.warn("Failed to close stream: '${e.message}'.")
                     }
-                    inputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
-                            CipherInputStream(s3.getObject(s3bucket, fileName).objectContent, input.cipher)) as GzipCompressorInputStream
+
+                    inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
                     lineNo = 0
                 }
             }
