@@ -90,6 +90,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                         logger.warn("Failed to close stream: '${e.message}'.")
                     }
                     inputStream = s3.getObject(s3bucket, fileName).objectContent
+                    lineNo = 0
                 }
             }
 
