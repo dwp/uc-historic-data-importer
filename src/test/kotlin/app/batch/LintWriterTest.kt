@@ -45,9 +45,6 @@ class LintWriterTest {
                 writer.write("\"\"\n")
             }
         }
-
-        println(String(bytes.toByteArray()))
-        println("==")
         val inputStream = ByteArrayInputStream(bytes.toByteArray())
         val decompressedStream = DecompressedStream(inputStream, "phoneyfilename.txt")
         val items = mutableListOf<DecompressedStream>()
@@ -58,6 +55,7 @@ class LintWriterTest {
 
         val putObjectRequest = captor.firstValue
         val input = putObjectRequest.inputStream
+
 
         val expected = """
         "[1, 2, 3]",Expected a com.google.gson.JsonObject but was com.google.gson.JsonArray,1
@@ -95,7 +93,7 @@ class LintWriterTest {
 
         val actualContents = ByteArrayOutputStream()
         BufferedReader(InputStreamReader(input)).forEachLine {
-            actualContents.writeBytes("$it\n".toByteArray())
+            actualContents.write("$it\n".toByteArray())
         }
 
         val actual = actualContents.toByteArray()
