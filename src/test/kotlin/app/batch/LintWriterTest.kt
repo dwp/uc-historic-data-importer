@@ -1,10 +1,12 @@
 package app.batch
 
 import app.domain.DecompressedStream
+import app.services.CipherService
 import ch.qos.logback.classic.spi.ILoggingEvent
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
 import org.junit.Test
@@ -18,9 +20,10 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.*
+import java.security.Key
 
 @RunWith(SpringRunner::class)
-@SpringBootTest(classes = [LintWriter::class, MessageUtils::class])
+@SpringBootTest(classes = [LintWriter::class, MessageUtils::class, CipherService::class])
 @ActiveProfiles("lintWriter")
 @TestPropertySource(properties = [
     "s3.invalid.data.bucket=bucket",
@@ -30,6 +33,9 @@ class LintWriterTest {
 
     @MockBean
     private lateinit var s3: AmazonS3
+
+    @MockBean
+    private lateinit var cipherService: CipherService
 
     @Autowired
     private lateinit var lintWriter: LintWriter
@@ -45,7 +51,9 @@ class LintWriterTest {
             }
         }
         val inputStream = ByteArrayInputStream(bytes.toByteArray())
-        val decompressedStream = DecompressedStream(inputStream, "phoneyfilename.txt")
+        val key = mock<Key>()
+
+        val decompressedStream = DecompressedStream(inputStream, "phoneyfilename.txt", key, "")
         val items = mutableListOf<DecompressedStream>()
         items.add(decompressedStream)
         lintWriter.write(items)

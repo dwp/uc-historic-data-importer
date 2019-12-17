@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
+import java.security.Key
 
 
 class DecompressionProcessorTest {
@@ -85,7 +86,8 @@ class DecompressionProcessorTest {
         zippedStream.close()
 
         val inputStream = ByteArrayInputStream(testOutputStream.toByteArray())
-        val decryptedStream = DecryptedStream(inputStream, fileName)
+        val key = mock<Key>()
+        val decryptedStream = DecryptedStream(inputStream, fileName, key, "")
         val decompressionProcessor = DecompressionProcessor()
         val decompressed = decompressionProcessor.process(decryptedStream)
         return Pair(data, decompressed)

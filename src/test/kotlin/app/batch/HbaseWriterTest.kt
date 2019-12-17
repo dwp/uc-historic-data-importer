@@ -1,5 +1,6 @@
 package app.batch
 
+import app.configuration.CipherInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
@@ -11,6 +12,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.beust.klaxon.JsonObject
+import com.google.gson.Gson
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -26,6 +28,9 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.security.Key
+import javax.crypto.Cipher
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
@@ -162,7 +167,7 @@ class HbaseWriterTest {
         val dataKeyResult = DataKeyResult("", "", "")
         whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
 
-        val inputStream = ByteArrayInputStream(ByteArray(0))
+        val inputStream = ByteArrayInputStream("""{ "_id": {"key": "value"}}""".toByteArray())
         val s3InputStream = mock<S3ObjectInputStream>()
 
         val s3Object = mock<S3Object>() {
@@ -170,22 +175,27 @@ class HbaseWriterTest {
         }
 
         given(s3.getObject("bucket", validFileName)).willReturn(s3Object)
-        whenever(hBaseWriter.getBufferedReader(inputStream)).thenReturn(null)
+        //whenever(hBaseWriter.getBufferedReader(any())).thenThrow(RuntimeException("wtf"))
+        doThrow(RuntimeException("RESET ERROR")).whenever(hBaseWriter).getBufferedReader(any())
         doNothing().whenever(hbase).putBatch(any())
         doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
+        val byteArray = """{ "_id": {"key": "value"}}""".toByteArray()
+        given(cipherService.decompressingDecryptingStream(any(), any(), any())).willReturn(ByteArrayInputStream(byteArray))
+        given(messageUtils.parseGson(any())).willReturn(Gson().fromJson("""{ "_id": {"key": "value"}}""", com.google.gson.JsonObject::class.java))
+        val key = mock<Key>()
 
-        val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName))
+        val inputStreams = mutableListOf(DecompressedStream(inputStream, validFileName, key, ""))
         hBaseWriter.write(inputStreams)
-        verify(s3, times(10)).getObject("bucket", validFileName)
+        verify(cipherService, times(10)).decompressingDecryptingStream(any(), any(), any())
 
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(14)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
-        assertTrue(formattedMessages.contains("Error on attempt 1 streaming '$validFileName': 'Parameter specified as non-null is null: method kotlin.io.TextStreamsKt.forEachLine, parameter receiver\$0'."))
+        assertTrue(formattedMessages.contains("Error on attempt 1 streaming '$validFileName': 'RESET ERROR'."))
 
         for (i in 2..10) {
-            assertTrue(formattedMessages.contains("Error on attempt $i streaming '$validFileName': 'Underlying input stream returned zero bytes'."))
+            assertTrue(formattedMessages.contains("Error on attempt $i streaming '$validFileName': 'RESET ERROR'."))
         }
     }
 
@@ -250,7 +260,8 @@ class HbaseWriterTest {
             baos.write(nl.toByteArray())
         }
         val inputStream = ByteArrayInputStream(baos.toByteArray())
-        return DecompressedStream(inputStream, fileName)
+        val key = mock<Key>()
+        return DecompressedStream(inputStream, fileName, key, "")
     }
 }
 
