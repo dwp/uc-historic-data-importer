@@ -4,6 +4,8 @@ import app.domain.DecompressedStream
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
+import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.lang.StringEscapeUtils
 import org.apache.commons.lang.StringUtils
 import org.slf4j.Logger
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
+import javax.crypto.CipherInputStream
 
 @Component
 @Profile("lintWriter")
@@ -89,7 +92,8 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                     catch (e: Exception) {
                         logger.warn("Failed to close stream: '${e.message}'.")
                     }
-                    inputStream = s3.getObject(s3bucket, fileName).objectContent
+                    inputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
+                            CipherInputStream(s3.getObject(s3bucket, fileName).objectContent, input.cipher)) as GzipCompressorInputStream
                     lineNo = 0
                 }
             }
