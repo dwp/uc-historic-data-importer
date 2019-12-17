@@ -6,6 +6,8 @@ import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
+import javax.crypto.CipherInputStream
 
 @Component
 @Profile("hbaseWriter")
@@ -156,7 +159,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             catch (e: Exception) {
                                 logger.warn("Failed to close stream: '${e.message}'.")
                             }
-                            inputStream = s3.getObject(s3bucket, fileName).objectContent
+
+                            inputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
+                                    CipherInputStream(s3.getObject(s3bucket, fileName).objectContent, input.cipher)) as GzipCompressorInputStream
                             lineNo = 0
                         }
                     }
