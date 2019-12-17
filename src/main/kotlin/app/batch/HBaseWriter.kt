@@ -12,10 +12,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
 
 @Component
+@Profile("hbaseWriter")
 class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
@@ -143,8 +145,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                 } catch (e: Exception) {
                                     logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
-                                    e.printStackTrace(System.out)
-                                    e.printStackTrace(System.err)
                                 }
                             }
                             succeeded = true
