@@ -25,10 +25,10 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
     @Value("\${s3.invalid.data.max.amount.per.error:10}")
     private lateinit var maxErrorsToLog: String
 
-    @Value("\${s3.errors.bucket}")
+    @Value("\${s3.invalid.data.bucket}")
     private lateinit var bucket: String
 
-    @Value("\${s3.errors.prefix}")
+    @Value("\${s3.invalid.data.prefix}")
     private lateinit var prefix: String
 
     @Value("\${s3.bucket}")

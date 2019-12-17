@@ -23,8 +23,8 @@ import java.io.*
 @SpringBootTest(classes = [LintWriter::class, MessageUtils::class])
 @ActiveProfiles("lintWriter")
 @TestPropertySource(properties = [
-    "s3.errors.bucket=bucket",
-    "s3.errors.prefix=prefix"
+    "s3.invalid.data.bucket=bucket",
+    "s3.invalid.data.prefix=prefix"
 ])
 class LintWriterTest {
 
