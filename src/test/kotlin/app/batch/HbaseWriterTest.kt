@@ -4,6 +4,7 @@ import app.configuration.CipherInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
+import app.domain.HBaseRecord
 import app.services.CipherService
 import app.services.KeyService
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -24,11 +25,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.lang.Exception
 import java.security.Key
 import javax.crypto.Cipher
 
@@ -199,6 +202,7 @@ class HbaseWriterTest {
         }
     }
 
+
     @Test
     fun testIdObjectReturnedAsObject() {
         val message = com.google.gson.JsonObject()
@@ -251,6 +255,18 @@ class HbaseWriterTest {
         val expected = null
         assertEquals(expected, actual)
 
+    }
+
+    @Test
+    fun testPutBatchRetries() {
+        try {
+            given(hbase.putBatch(any())).willThrow(java.lang.RuntimeException("wwwww"))
+            val record = HBaseRecord("topic".toByteArray(), "key".toByteArray(), "body".toByteArray(), 1.toLong())
+            hBaseWriter.putBatch(listOf(record))
+        }
+        catch (e: Exception) {
+            verify(hbase, times(5)).putBatch(any())
+        }
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
