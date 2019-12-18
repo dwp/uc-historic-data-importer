@@ -1,14 +1,14 @@
 package app.batch
 
-import app.configuration.CipherInstanceProvider
-import app.domain.*
+import app.domain.DataKeyResult
+import app.domain.DecompressedStream
+import app.domain.HBaseRecord
+import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,14 +16,8 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
-import org.springframework.retry.annotation.Backoff
-import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import java.io.*
-import java.util.*
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.spec.IvParameterSpec
 
 @Component
 @Profile("hbaseWriter")
@@ -46,6 +40,15 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
     private lateinit var cipherService: CipherService
+
+    @Value("\${hbase.retry.max.attempts:5}")
+    private lateinit var maxAttempts: String // = 5
+
+    @Value("\${hbase.retry.initial.backoff:10000}")
+    private lateinit var initialBackoffMillis: String // = 1000L
+
+    @Value("\${hbase.retry.backoff.multiplier:2}")
+    private lateinit var backoffMultiplier: String // = 2
 
     @Value("\${kafka.topic.prefix:db}")
     private lateinit var kafkaTopicPrefix: String
@@ -216,22 +219,31 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     fun putBatch(records: List<HBaseRecord>) {
 
-        val success = false
+        var success = false
         var attempts = 0
-
-        while (!success && attempts < maxAttempts) {
+        var exception: Exception? = null
+        while (!success && attempts < maxAttempts.toInt()) {
             try {
                 hbase.putBatch(records)
+                success = true
             }
             catch (e: Exception) {
-                val delay = if (attempts == 0) initialBackoffMillis
-                else (initialBackoffMillis * attempts * backoffMultiplier).toLong()
+                val delay = if (attempts == 0) initialBackoffMillis.toLong()
+                else (initialBackoffMillis.toLong() * attempts * backoffMultiplier.toFloat()).toLong()
                 Thread.sleep(delay)
+                exception = e
             }
             finally {
                 attempts++
             }
         }
+
+        if (!success) {
+            if (exception != null) {
+                throw exception!!
+            }
+        }
+
     }
 
     fun getBufferedReader(inputStream: InputStream?) = BufferedReader(InputStreamReader(inputStream))
@@ -241,9 +253,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun getDataKey(fileName: String) = keyService.batchDataKey()
 
     companion object {
-        const val maxAttempts = 5
-        const val initialBackoffMillis = 1000L
-        const val backoffMultiplier = 2
         val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
     }
 }

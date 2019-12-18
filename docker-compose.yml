@@ -93,7 +93,7 @@ services:
       --filename.format.metadata.extension=\.encryption\.json$$
       --kafka.topic.prefix=db
       --trace.id=1234
-      --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng
+      --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng,hbaseWriter
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.manifest.bucket=manifestbucket
 
