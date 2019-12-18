@@ -16,6 +16,8 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
 import java.io.*
 import java.util.*
@@ -135,7 +137,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                         if (batch.size >= maxBatchSize) {
                                             try {
-                                                hbase.putBatch(batch)
+                                                putBatch(batch)
                                                 logger.info("Written $lineNo records to HBase topic $topic from '$fileName'.")
                                             }
                                             catch (e: Exception) {
@@ -150,12 +152,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
-                                } catch (e: Exception) {
+                                }
+                                catch (e: Exception) {
                                     logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.", e)
                                 }
                             }
                             succeeded = true
-                        } catch (e: Exception) {
+                        }
+                        catch (e: Exception) {
                             try {
                                 logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
                                 inputStream.close()
@@ -173,7 +177,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 if (runMode != RUN_MODE_MANIFEST) {
                     if (batch.size > 0) {
                         try {
-                            hbase.putBatch(batch)
+                            putBatch(batch)
                             logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
                             batch = mutableListOf()
                         }
@@ -210,6 +214,26 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
+    fun putBatch(records: List<HBaseRecord>) {
+
+        val success = false
+        var attempts = 0
+
+        while (!success && attempts < maxAttempts) {
+            try {
+                hbase.putBatch(records)
+            }
+            catch (e: Exception) {
+                val delay = if (attempts == 0) initialBackoffMillis
+                else (initialBackoffMillis * attempts * backoffMultiplier).toLong()
+                Thread.sleep(delay)
+            }
+            finally {
+                attempts++
+            }
+        }
+    }
+
     fun getBufferedReader(inputStream: InputStream?) = BufferedReader(InputStreamReader(inputStream))
 
     fun encryptDbObject(dataKeyResult: DataKeyResult, line: String, fileName: String, id: String?) = cipherService.encrypt(dataKeyResult.plaintextDataKey, line.toByteArray())
@@ -217,6 +241,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun getDataKey(fileName: String) = keyService.batchDataKey()
 
     companion object {
+        const val maxAttempts = 5
+        const val initialBackoffMillis = 1000L
+        const val backoffMultiplier = 2
         val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
     }
 }
