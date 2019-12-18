@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
@@ -38,7 +39,10 @@ import javax.crypto.Cipher
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
 @TestPropertySource(properties = [
-    "s3.bucket=bucket"
+    "s3.bucket=bucket",
+    "hbase.retry.max.attempts=5",
+    "hbase.retry.initial.backoff=1",
+    "hbase.retry.backoff.multiplier=1"
 ])
 class HbaseWriterTest {
 
