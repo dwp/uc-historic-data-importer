@@ -226,6 +226,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             catch (e: Exception) {
                 val delay = if (attempts == 0) initialBackoffMillis
                 else (initialBackoffMillis * attempts * backoffMultiplier).toLong()
+                logger.warn("Failed to put batch on attempt $attempts, will retry in $delay ms, if $attempts still < $maxAttempts.")
                 Thread.sleep(delay)
             }
             finally {
