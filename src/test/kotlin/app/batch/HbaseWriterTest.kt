@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.lang.Exception
 import java.security.Key
 import javax.crypto.Cipher
@@ -42,7 +43,8 @@ import javax.crypto.Cipher
     "s3.bucket=bucket",
     "hbase.retry.max.attempts=5",
     "hbase.retry.initial.backoff=1",
-    "hbase.retry.backoff.multiplier=1"
+    "hbase.retry.backoff.multiplier=1",
+    "max.batch.size.bytes=100"
 ])
 class HbaseWriterTest {
 
@@ -264,13 +266,43 @@ class HbaseWriterTest {
     @Test
     fun testPutBatchRetries() {
         try {
-            given(hbase.putBatch(any())).willThrow(java.lang.RuntimeException("wwwww"))
+            given(hbase.putBatch(any())).willThrow(java.lang.RuntimeException("Failed to put batch"))
             val record = HBaseRecord("topic".toByteArray(), "key".toByteArray(), "body".toByteArray(), 1.toLong())
             hBaseWriter.putBatch(listOf(record))
         }
         catch (e: Exception) {
             verify(hbase, times(5)).putBatch(any())
         }
+    }
+
+    @Test
+    fun testMaxBatchSize() {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+
+        val json =  """{
+            |   "_id": { "id": "id" },
+            |    "key1": "value1",
+            |    "key2": "value2"
+            |}""".trimMargin().replace("\n", " ")
+
+        for (i in 1..100) {
+            byteArrayOutputStream.write("$json\n".toByteArray())
+        }
+
+        byteArrayOutputStream.close()
+        val byteArray = byteArrayOutputStream.toByteArray()
+        val items = mutableListOf(DecompressedStream(ByteArrayInputStream(byteArray),
+                "database.collection.0001.json.gz.enc", mock<Key>(), "AAAAAAAAAAAAAAAAAAAAAA=="))
+
+        given(messageUtils.parseGson(any())).willReturn(Gson().fromJson(json, com.google.gson.JsonObject::class.java))
+        whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
+        given(cipherService.encrypt(any(), any())).willReturn(EncryptionResult("AAAAAAAAAAAAAAAAAAAAAA==", "qwertyuiop"))
+        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
+        given(messageUtils.getLastModifiedTimestamp(any())).willReturn("1980-01-01T00:00:00.000Z")
+        given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
+        given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
+        hBaseWriter.write(items)
+        verify(hBaseWriter, times(50)).putBatch(any())
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
