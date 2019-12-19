@@ -56,8 +56,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
 
-    @Value("\${hbase.batch.size:10000}")
-    private lateinit var hbaseBatchSize: String
+
+    @Value("\${max.batch.size.bytes:100000000}")
+    private lateinit var maxBatchSizeBytes: String // max size of a batch in bytes
 
     @Value("\${max.stream.attempts:10}")
     private lateinit var maxStreamAttempts: String
@@ -89,7 +90,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 var batch = mutableListOf<HBaseRecord>()
-                val maxBatchSize = hbaseBatchSize.toInt()
+                val maxBatchVolume = maxBatchSizeBytes.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
@@ -106,6 +107,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     while (!succeeded && attempts < maxStreamAttempts.toInt()) {
                         try {
                             ++attempts
+                            var batchSizeBytes = 0
                             getBufferedReader(inputStream).forEachLine { line ->
                                 ++lineNo
                                 try {
@@ -137,17 +139,18 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 formattedKey,
                                                 message.toByteArray(),
                                                 lastModifiedTimestampLong))
-
-                                        if (batch.size >= maxBatchSize) {
+                                        batchSizeBytes += message.length
+                                        if (batchSizeBytes >= maxBatchVolume) {
                                             try {
                                                 putBatch(batch)
-                                                logger.info("Written $lineNo records to HBase topic $topic from '$fileName'.")
+                                                logger.info("Written ${batch.size} records to HBase topic $topic from '$fileName', batchSizeBytes: '$batchSizeBytes'.")
                                             }
                                             catch (e: Exception) {
                                                 logger.error("Error processing batch on record $lineNo from '$fileName': '${e.message}'.")
                                             }
                                             finally {
                                                 batch = mutableListOf()
+                                                batchSizeBytes = 0
                                             }
                                         }
                                     }
@@ -173,6 +176,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                             inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
                             lineNo = 0
+
                         }
                     }
                 }
@@ -181,7 +185,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     if (batch.size > 0) {
                         try {
                             putBatch(batch)
-                            logger.info("Written $lineNo records to HBase topic db.$database.$collection from '$fileName'.")
+                            logger.info("Written ${batch.size} records to HBase topic db.$database.$collection from '$fileName'.")
                             batch = mutableListOf()
                         }
                         catch (e: Exception) {
