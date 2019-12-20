@@ -117,6 +117,6 @@ class JobConfiguration {
     @Value("\${chunk.size:1}")
     lateinit var chunkSize: String
 
-    @Value("\${perform.size.filtering:false}")
+    @Value("\${perform.size.filtering:true}")
     private lateinit var performSizeFiltering: String
 }
