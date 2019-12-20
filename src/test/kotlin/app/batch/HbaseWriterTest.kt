@@ -302,7 +302,7 @@ class HbaseWriterTest {
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
         hBaseWriter.write(items)
-        verify(hBaseWriter, times(50)).putBatch(any())
+        verify(hBaseWriter, times(100)).putBatch(any())
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {

@@ -1,9 +1,12 @@
 package app.configuration
 
+import app.batch.ObjectSizeFilter
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.domain.InputStreamPair
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -24,6 +27,10 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor
 @EnableBatchProcessing
 @Profile("batchRun")
 class JobConfiguration {
+
+    companion object {
+        val logger: Logger = LoggerFactory.getLogger(JobConfiguration::class.toString())
+    }
 
     @Bean
     fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
@@ -50,7 +57,11 @@ class JobConfiguration {
         concurrencyLimit = Integer.parseInt(threadCount)
     }
 
-    fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> =
+    fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> {
+        val enableSizeFiltering = performSizeFiltering.toBoolean()
+        logger.info("performSizeFiltering: '$performSizeFiltering'.")
+        return if (enableSizeFiltering) {
+            logger.info("Enabling size filtering.")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(objectSizeProcessor,
                         encryptionMetadataProcessor,
@@ -58,6 +69,17 @@ class JobConfiguration {
                         decryptionProcessor,
                         decompressionProcessor))
             }
+        }
+        else {
+            logger.info("Disabling size filtering.")
+            CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
+                setDelegates(listOf(encryptionMetadataProcessor,
+                        datakeyProcessor,
+                        decryptionProcessor,
+                        decompressionProcessor))
+            }
+        }
+    }
 
     @Autowired
     lateinit var itemReader: ItemReader<InputStreamPair>
@@ -94,4 +116,7 @@ class JobConfiguration {
 
     @Value("\${chunk.size:1}")
     lateinit var chunkSize: String
+
+    @Value("\${perform.size.filtering:true}")
+    private lateinit var performSizeFiltering: String
 }

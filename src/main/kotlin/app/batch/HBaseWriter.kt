@@ -41,6 +41,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var cipherService: CipherService
 
+    @Value("\${s3.manifest.retry.max.attempts:10}")
+    private lateinit var maxManifestAttempts: String
+
     @Value("\${hbase.retry.max.attempts:5}")
     private lateinit var maxAttempts: String // = 5
 
@@ -55,7 +58,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
-
 
     @Value("\${max.batch.size.bytes:100000000}")
     private lateinit var maxBatchSizeBytes: String // max size of a batch in bytes
@@ -135,24 +137,25 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                     val topic = "$kafkaTopicPrefix.$database.$collection"
                                     if (runMode != RUN_MODE_MANIFEST) {
-                                        batch.add(HBaseRecord(topic.toByteArray(),
-                                                formattedKey,
-                                                message.toByteArray(),
-                                                lastModifiedTimestampLong))
-                                        batchSizeBytes += message.length
-                                        if (batchSizeBytes >= maxBatchVolume) {
+                                        if (batchSizeBytes + message.length >= maxBatchVolume && batch.size > 0) {
                                             try {
+                                                logger.info("Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                                                 putBatch(batch)
-                                                logger.info("Written ${batch.size} records to HBase topic $topic from '$fileName', batchSizeBytes: '$batchSizeBytes'.")
+                                                logger.info("Written batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                                             }
                                             catch (e: Exception) {
-                                                logger.error("Error processing batch on record $lineNo from '$fileName': '${e.message}'.")
+                                                logger.error("Failed to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
                                             }
                                             finally {
                                                 batch = mutableListOf()
                                                 batchSizeBytes = 0
                                             }
                                         }
+                                        batch.add(HBaseRecord(topic.toByteArray(),
+                                                formattedKey,
+                                                message.toByteArray(),
+                                                lastModifiedTimestampLong))
+                                        batchSizeBytes += message.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
                                         val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
@@ -185,21 +188,20 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     if (batch.size > 0) {
                         try {
                             putBatch(batch)
-                            logger.info("Written ${batch.size} records to HBase topic db.$database.$collection from '$fileName'.")
+                            logger.info("Written batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName'.")
                             batch = mutableListOf()
                         }
                         catch (e: Exception) {
-                            val batchSize = batch.size
-                            logger.error("Failed to write batch of size $batchSize to HBase topic db.$database.$collection after processing $lineNo records from '$fileName': '${e.message}'.")
+                            logger.error("Failed to write batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
                         }
                     }
                 }
 
                 if (runMode != RUN_MODE_IMPORT) {
-                    manifestWriter.sendManifest(s3, File(manifestOutputFile), manifestBucket, manifestPrefix)
+                    manifestWriter.sendManifest(s3, File(manifestOutputFile), manifestBucket, manifestPrefix, maxManifestAttempts.toInt())
                 }
 
-                logger.info("Processed $lineNo records from the file $fileName")
+                logger.info("Processed $lineNo records from the file '$fileName'.")
             }
         }
     }
@@ -234,7 +236,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             catch (e: Exception) {
                 val delay = if (attempts == 0) initialBackoffMillis.toLong()
                 else (initialBackoffMillis.toLong() * attempts * backoffMultiplier.toFloat()).toLong()
-                logger.warn("Failed to put batch on attempt $attempts, will retry in $delay ms, if $attempts still < $maxAttempts.")
+                logger.warn("Failed to put batch on attempt ${attempts + 1}/$maxAttempts, will retry in $delay ms, if ${attempts + 1} still < $maxAttempts: ${e.message}" )
                 Thread.sleep(delay)
                 exception = e
             }
@@ -245,7 +247,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
         if (!success) {
             if (exception != null) {
-                throw exception!!
+                throw exception
             }
         }
 
