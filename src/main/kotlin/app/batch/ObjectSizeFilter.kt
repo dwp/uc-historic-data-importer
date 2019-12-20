@@ -17,9 +17,7 @@ class ObjectSizeFilter(private val maxSize: Long): ItemProcessor<InputStreamPair
             item
         }
         else {
-            logger.error("""Rejecting '${item.s3key}':
-                |size - ${item.objectSize}
-                |greater than the maximum allowed: $maxSize.""".trimMargin().replace("\n", " "))
+            logger.error("""Rejecting '${item.s3key}': size - ${item.objectSize} greater than the maximum allowed: $maxSize.""".trimMargin().replace("\n", " "))
             null
         }
     }
