@@ -139,6 +139,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     if (runMode != RUN_MODE_MANIFEST) {
                                         if (batchSizeBytes + message.length >= maxBatchVolume && batch.size > 0) {
                                             try {
+                                                logger.info("Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                                                 putBatch(batch)
                                                 logger.info("Written batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                                             }
