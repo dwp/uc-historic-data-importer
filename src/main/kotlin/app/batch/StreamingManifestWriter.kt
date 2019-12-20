@@ -16,21 +16,29 @@ import java.io.FileInputStream
 
 open class StreamingManifestWriter {
 
-
-    fun sendManifest(s3: AmazonS3, manifestFile: File, manifestBucket: String, manifestPrefix: String) {
-        try {
-            val manifestSize = manifestFile.length()
-            val manifestFileName = manifestFile.name
-            val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
-            val prefix = "$manifestPrefix/$manifestFileName"
-            logger.info("Writing manifest '$manifestFile' to 's3://$manifestBucket/$manifestPrefix/$manifestFileName', size: $manifestSize")
-            BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
-                val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
-                s3.putObject(request)
+    fun sendManifest(s3: AmazonS3, manifestFile: File, manifestBucket: String, manifestPrefix: String, maxManifestAttempts: Int) {
+        var attempts = 0
+        var success = false
+        while (!success && attempts < maxManifestAttempts.toInt()) {
+            try {
+                val manifestSize = manifestFile.length()
+                val manifestFileName = manifestFile.name
+                val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
+                val prefix = "$manifestPrefix/$manifestFileName"
+                BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
+                    val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
+                    s3.putObject(request)
+                    logger.info("Written manifest '$manifestFile' on attempt ${attempts + 1}/$maxManifestAttempts to 's3://$manifestBucket/$manifestPrefix/$manifestFileName', size: $manifestSize")
+                    success = true
+                    return
+                }
+            } catch (e: Exception) {
+                ++attempts
+                logger.warn("Failed to write manifest '${manifestFile}' on attempt $attempts/$maxManifestAttempts: '${e.message}'")
             }
-        } catch (e: Exception) {
-            logger.error("Failed to write manifest: '${manifestFile}': '${e.message}'")
         }
+
+        logger.error("Failed to write manifest '${manifestFile}' after $maxManifestAttempts attempts, giving up.")
     }
 
     fun manifestMetadata(fileName: String, size: Long) =
@@ -48,7 +56,7 @@ open class StreamingManifestWriter {
     private fun escape(value: String) =  StringEscapeUtils.escapeCsv(value)
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
+        val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())
     }
 
 }

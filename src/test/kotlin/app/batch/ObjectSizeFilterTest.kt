@@ -12,6 +12,7 @@ import org.junit.Test
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 
+
 class ObjectSizeFilterTest {
 
     @Test

@@ -62,11 +62,15 @@ class StreamingManifestWriterTest {
         val manifestBucket = "manifestBucket"
         val manifestPrefix = "manifestPrefix"
         val manifestWriter = StreamingManifestWriter()
-        manifestWriter.sendManifest(s3, manifestFile, manifestBucket, manifestPrefix)
+        manifestWriter.sendManifest(s3, manifestFile, manifestBucket, manifestPrefix, 10)
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(2)).doAppend(captor.capture())
+        verify(mockAppender, times(11)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        Assert.assertTrue(formattedMessages.contains("Failed to write manifest: 'manifest.csv': 'null'"))
+
+        for (i in 1..10) {
+            Assert.assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' on attempt $i/10: 'null'"))
+        }
+        Assert.assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' after 10 attempts, giving up."))
     }
 
 
