@@ -86,6 +86,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
         logger.info("AVAILABLE PROCESSORS: $cpus, runMode: '$runMode'.")
+
+        var processedFiles = 0
+        var processedRecords = 0
+
         items.forEach { input ->
             logger.info("Processing '${input.fileName}'.")
             val fileName = input.fileName
@@ -98,7 +102,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val collection = groups[2]!!.value // ditto
                 val fileNumber = groups[3]!!.value
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
-                var recordsProcessed = 0
+                var fileProcessedRecords = 0
                 val gson = Gson()
                 val manifestWriter = StreamingManifestWriter()
                 val manifestOutputFile = "${manifestOutputDirectory}/${manifestWriter.topicName(database, collection)}-%06d.csv".format(fileNumber.toInt())
@@ -113,7 +117,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             val reader = getBufferedReader(inputStream)
                             reader.forEachLine { line ->
 
-                                if (attempts > 1 && reader.lineNumber < recordsProcessed) {
+                                if (attempts > 1 && reader.lineNumber < fileProcessedRecords) {
                                     return@forEachLine
                                 }
 
@@ -148,7 +152,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             finally {
                                                 batch = mutableListOf()
                                                 batchSizeBytes = 0
-                                                recordsProcessed = reader.lineNumber
+                                                fileProcessedRecords = reader.lineNumber
                                             }
                                         }
                                         batch.add(HBaseRecord(topic.toByteArray(),
@@ -166,8 +170,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     logger.error("Error processing record ${reader.lineNumber} from '$fileName': '${e.message}'.", e)
                                 }
                             }
+
                             succeeded = true
-                            recordsProcessed = reader.lineNumber
+
+                            fileProcessedRecords = reader.lineNumber
+                            processedRecords += fileProcessedRecords
+                            processedFiles += 1
                         }
                         catch (e: Exception) {
                             try {
@@ -201,9 +209,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     manifestWriter.sendManifest(s3, File(manifestOutputFile), manifestBucket, manifestPrefix, maxManifestAttempts.toInt())
                 }
 
-                logger.info("Processed $recordsProcessed records from the file '$fileName'.")
+                logger.info("Processed $fileProcessedRecords records from the file '$fileName'.")
             }
         }
+
+        logger.info("Processed $processedRecords records and $processedFiles files")
+
     }
 
     fun idObject(json: JsonObject): JsonObject? {
