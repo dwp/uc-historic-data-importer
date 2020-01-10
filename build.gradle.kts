@@ -32,13 +32,13 @@ configurations.all {
 
 dependencies {
         implementation("com.fasterxml.jackson.core:jackson-databind:2.9.8")
-        implementation("org.springframework.boot:spring-boot-starter-batch")
+        implementation("org.springframework.boot:spring-boot-starter-batch:2.2.0.RELEASE")
         implementation("org.jetbrains.kotlin:kotlin-reflect")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         implementation("org.bouncycastle:bcprov-ext-jdk15on:1.62")
         implementation("org.apache.httpcomponents:httpclient:4.5.9")
         implementation("com.google.code.gson:gson:2.8.5")
-        implementation("org.apache.commons:commons-compress:1.17")
+        implementation("org.apache.commons:commons-compress:1.18")
         implementation("com.amazonaws:aws-java-sdk-s3:1.11.603")
         implementation("com.amazonaws:aws-java-sdk-core:1.11.603")
         implementation("org.apache.hbase:hbase-client:1.4.9")
@@ -50,7 +50,7 @@ dependencies {
         implementation("org.apache.commons:commons-text:1.8")
 
         testImplementation("org.springframework.boot:spring-boot-starter-test")
-        testImplementation("org.springframework.batch:spring-batch-test")
+        testImplementation("org.springframework.batch:spring-batch-test:4.2.0.RELEASE")
         testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
         testImplementation("com.github.everit-org.json-schema:org.everit.json.schema:1.12.0")
         testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.3")
