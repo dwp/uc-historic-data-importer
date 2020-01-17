@@ -55,10 +55,6 @@ ignore:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
         expires: 2020-01-20T00:00:00.000Z
-  SNYK-JAVA-ORGAPACHECOMMONS-460507:
-    - '*':
-        reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-01-20T00:00:00.000Z
   SNYK-JAVA-ORGAPACHEHADOOP-174573:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
