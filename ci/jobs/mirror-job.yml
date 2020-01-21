@@ -21,9 +21,9 @@ jobs:
           image_resource:
             type: docker-image
             source:
-            repository: ((docker-awscli-ubuntu.repository))
-            version: ((docker-awscli-ubuntu.version))
-            tag: ((docker-awscli-ubuntu.version))
+              repository: ((docker-awscli-ubuntu.repository))
+              version: ((docker-awscli-ubuntu.version))
+              tag: ((docker-awscli-ubuntu.version))
           inputs:
             - name: bucket_name
             - name: .aws
