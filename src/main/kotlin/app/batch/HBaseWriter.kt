@@ -6,6 +6,7 @@ import app.domain.HBaseRecord
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject

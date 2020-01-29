@@ -2,6 +2,7 @@ package app.batch
 
 import app.domain.InputStreamPair
 import app.domain.S3ObjectSummaryPair
+import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsV2Request
 import com.amazonaws.services.s3.model.ListObjectsV2Result

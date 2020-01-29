@@ -1,10 +1,10 @@
 package app.configuration
 
-import app.batch.ObjectSizeFilter
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.domain.InputStreamPair
+import app.utils.logging.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.Step

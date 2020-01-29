@@ -2,7 +2,7 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
-import com.google.gson.Gson
+import app.utils.logging.*
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils

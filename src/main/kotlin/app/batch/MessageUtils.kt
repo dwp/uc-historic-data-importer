@@ -4,7 +4,7 @@ import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
 import com.google.gson.Gson
-import org.apache.commons.lang3.StringUtils
+import app.utils.logging.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

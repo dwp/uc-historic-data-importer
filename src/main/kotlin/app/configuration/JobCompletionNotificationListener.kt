@@ -1,7 +1,7 @@
 package app.configuration
 
 import app.batch.HbaseClient
-import app.batch.ManifestWriter
+import app.utils.logging.*
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport

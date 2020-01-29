@@ -1,5 +1,6 @@
 import app.batch.HbaseClient
 import app.configuration.S3DummyConfiguration
+import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -7,12 +8,10 @@ import io.kotlintest.fail
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import io.kotlintest.spring.SpringListener
-import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

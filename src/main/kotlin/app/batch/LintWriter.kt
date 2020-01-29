@@ -1,15 +1,12 @@
 package app.batch
 
-import app.configuration.CipherInstanceProvider
 import app.domain.DecompressedStream
 import app.services.CipherService
+import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.lang.StringEscapeUtils
-import org.apache.commons.lang.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
@@ -18,10 +15,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
-import java.util.*
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.spec.IvParameterSpec
 
 @Component
 @Profile("lintWriter")

@@ -4,6 +4,7 @@ import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import app.domain.InputStreamPair
 import app.exceptions.MetadataException
+import app.utils.logging.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger

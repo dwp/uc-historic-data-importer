@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+import app.utils.logging.*
 
 /**
  * Adds the decrypted key to the encryption metadata enabling decryption of the main data file.
