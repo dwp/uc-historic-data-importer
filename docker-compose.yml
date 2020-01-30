@@ -104,7 +104,7 @@ services:
       --s3.manifest.bucket=manifestbucket
     environment:
       - ENVIRONMENT=local-docker
-      - APPLICATION=historic_data_impoter
+      - APPLICATION=historic_data_importer
       - APP_VERSION=latest-dev
       - COMPONENT=jar_file
       - CORRELATION_ID=hdi1
