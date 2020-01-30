@@ -4,10 +4,6 @@ package app.utils.logging
 Please see notes in the file under test (LoggerUtils) and it's class LoggerLayoutAppender.
  */
 
-import app.configuration.HttpClientProvider
-import app.services.KeyService
-import app.services.impl.HttpKeyService
-import app.utils.UUIDGenerator
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
@@ -19,24 +15,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.retry.annotation.EnableRetry
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
 
 class LoggerUtilsTest {
-
-    @Autowired
-    private lateinit var keyService: KeyService
-
-    @MockBean
-    private lateinit var httpClientProvider: HttpClientProvider
-
-    @MockBean
-    private lateinit var uuidGenerator: UUIDGenerator
 
     @Before
     fun setup() {
@@ -189,15 +169,15 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
 
         val trace = "java.lang.RuntimeException: boom1 - /:'!@£\$%^&*()\n" +
-            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89)\n" +
-            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65)\n" +
-            "\t... 58 common frames omitted\n"
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42)\n" +
+            "\t... 50 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
         assertEquals(trace, throwableStr)
 
         val result = inlineStackTrace(throwableStr)
-        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65) |  ... 58 common frames omitted | ", result)
+        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42) |  ... 50 common frames omitted | ", result)
     }
 
     @Test
@@ -213,7 +193,7 @@ class LoggerUtilsTest {
     @Test
     fun testMakeLoggerStaticDataTuples_WillCreatePartialJson_WhenCalled() {
         overrideLoggerStaticFieldsForTests("a-host", "b-env", "c-app", "d-version", "e-component", "9876543000", "test2")
-        assertEquals("\"topic_name\":\"the.topic\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"a-host\", \"environment\":\"b-env\", \"application\":\"c-app\", \"app_version\":\"d-version\", \"component\":\"e-component\", \"correlation_id\":\"test2\"", makeLoggerStaticDataTuples())
+        assertEquals("\"hostname\":\"a-host\", \"environment\":\"b-env\", \"application\":\"c-app\", \"app_version\":\"d-version\", \"component\":\"e-component\", \"correlation_id\":\"test2\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\"", makeLoggerStaticDataTuples())
     }
 
     @Test
@@ -231,7 +211,7 @@ class LoggerUtilsTest {
 
         val result = throwableProxyEventToString(mockEvent)
 
-        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65) |  ... 58 common frames omitted | \", ", result)
+        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42) |  ... 50 common frames omitted | \", ", result)
     }
 
     @Test
@@ -244,7 +224,7 @@ class LoggerUtilsTest {
     fun testLoggerLayoutAppender_WillReturnSkinnyJson_WhenCalledWithEmptyEvent() {
         val result = LoggerLayoutAppender().doLayout(mock<ILoggingEvent>())
         assertEquals(
-            "{ \"timestamp\":\"1970-01-01T00:00:00.000\", \"log_level\":\"null\", \"message\":\"null\", \"thread\":\"null\", \"logger\":\"null\", \"duration_in_milliseconds\":\"-9876543000\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\" }\n",
+            "{ \"timestamp\":\"1970-01-01T00:00:00.000\", \"log_level\":\"null\", \"message\":\"null\", \"thread\":\"null\", \"logger\":\"null\", \"duration_in_milliseconds\":\"-9876543000\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n",
             result)
     }
 
@@ -260,7 +240,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n",
             result)
     }
 
@@ -276,7 +256,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some | message | about | stuff with tabs\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some | message | about | stuff with tabs\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n",
             result)
     }
 
@@ -293,7 +273,7 @@ class LoggerUtilsTest {
 
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"key1\":\"value1\", \"key2\":\"value2\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"key1\":\"value1\", \"key2\":\"value2\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n",
             result)
     }
 
@@ -310,7 +290,7 @@ class LoggerUtilsTest {
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
             "The standard logger should not escape json characters that Spring or AWS-utils might send it, sorry",
-            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"message-/:'!@\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\" }\n",
+            "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"message-/:'!@\", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n",
             result)
     }
 
@@ -327,8 +307,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:89) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:65) |  ... 58 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"topic_name\":\"topic.name\", \"scan_start_row\":\"1\", \"scan_stop_row\":\"2\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\" }\n"
-
+        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42) |  ... 50 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n"
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
             "The standard logger should add exception messages",
