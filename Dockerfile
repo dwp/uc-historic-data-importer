@@ -15,4 +15,4 @@ RUN useradd ${USER} && \
         chmod +x ./${APP_NAME}.jar && ls -l && pwd
 
 USER ${USER}
-ENTRYPOINT ["sh", "-c", "./uc-historic-data-importer.jar \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "java -Dcorrelation_id=${CORRELATION_ID} -Dtopic_name=${TOPIC_NAME} -Denvironment=${ENVIRONMENT} -Dapplication=${APPLICATION} -Dapp_version=${APP_VERSION} -Dcomponent=${COMPONENT} -jar -Dcorrelation_id=${CORRELATION_ID} -Dtopic_name=${TOPIC_NAME} -Denvironment=${ENVIRONMENT} -Dapplication=${APPLICATION} -Dapp_version=${APP_VERSION} -Dcomponent=${COMPONENT}./uc-historic-data-importer.jar \"$@\"", "--"]

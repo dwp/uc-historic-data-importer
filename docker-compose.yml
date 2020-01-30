@@ -102,6 +102,11 @@ services:
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng,hbaseWriter
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.manifest.bucket=manifestbucket
+    environment:
+      - ENVIRONMENT=local-docker
+      - APPLICATION=historic_data_impoter
+      - COMPONENT=jar_file
+      - CORRELATION_ID=hdi1
 
   integration-test:
     image: integration-test:latest
