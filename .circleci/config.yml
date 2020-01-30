@@ -83,7 +83,7 @@ jobs:
             cd docker/gradle && docker build --tag dwp-gradle:latest . && cd -
 
             docker-compose build
-            docker-compose up -d hbase s3 dks dks-insecure
+            docker-compose up -d hbase s3 dks-standalone-http dks-standalone-https
 
             S3_READY_REGEX=^Ready\.$
             while ! docker logs s3 2> /dev/null | grep -q $S3_READY_REGEX; do

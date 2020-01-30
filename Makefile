@@ -14,7 +14,7 @@ help:
 		'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'; \
 	}
 
-%.jks:
+jks: ## Make the truststores for all the local apps to use
 	./truststores.sh
 
 .PHONY: bootstrap
@@ -100,14 +100,14 @@ up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
 	docker-compose up s3-init
 
 .PHONY: up
-up: build-image up-ancillary ## Run the ecosystem of containers.
+up: build-image up-ancillary ## Run the supporting/ancilliary ecosystem of containers.
 	docker-compose up uc-historic-data-importer
 
 .PHONY: up-all
-up-all: build-image up
+up-all: build-image up ## Run the whole ecosystem of containers.
 
 .PHONY: integration
-integration: up-all integration-test-image
+integration: up-all integration-test-image ## Run everything and execute the integraion tests
 	docker-compose run --rm integration-test
 
 .PHONY: destroy

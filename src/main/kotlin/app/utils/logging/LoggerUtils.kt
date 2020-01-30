@@ -14,7 +14,7 @@ resources/logback.xml file so that all vagaries are in code and unit-testable; o
 See http://logback.qos.ch/manual/layouts.html for examples.
  */
 
-import app.batch.getEnv
+import app.batch.*
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.ThrowableProxyUtil
 import ch.qos.logback.core.CoreConstants
@@ -36,12 +36,6 @@ private var component = System.getProperty("component", UNSET_TEXT)
 private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
-val data_table = getEnv("K2HB_HBASE_DATA_TABLE") ?: "k2hb:ingest"
-val data_family = getEnv("K2HB_HBASE_DATA_FAMILY") ?: "topic"
-val topic_table = getEnv("K2HB_HBASE_TOPIC_TABLE") ?: "k2hb:ingest-topic"
-val topic_family = getEnv("K2HB_HBASE_TOPIC_FAMILY") ?: "c"
-val topic_qualifier = getEnv("K2HB_HBASE_TOPIC_QUALIFIER") ?: "msg"
-
 class LogConfiguration {
     companion object {
         var start_time_milliseconds = System.currentTimeMillis()
@@ -62,11 +56,11 @@ fun makeLoggerStaticDataTuples(): String {
         "\"app_version\":\"$app_version\", " +
         "\"component\":\"$component\", " +
         "\"correlation_id\":\"$correlation_id\", " +
-        "\"data_table\":\"$data_table\", " +
-        "\"data_family\":\"$data_family\", " +
-        "\"topic_table\":\"$topic_table\", " +
-        "\"topic_family\":\"$topic_family\", " +
-        "\"topic_qualifier\":\"$topic_qualifier\""
+        "\"data_table\":\"$hBaseDataTable\", " +
+        "\"data_family\":\"$hBaseDataFamily\", " +
+        "\"topic_table\":\"$hBaseTopicTable\", " +
+        "\"topic_family\":\"$hBaseTopicFamily\", " +
+        "\"topic_qualifier\":\"$hBaseTopicQualifier\""
 }
 
 fun resetLoggerStaticFieldsForTests() {

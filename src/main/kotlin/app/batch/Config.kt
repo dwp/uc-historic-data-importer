@@ -1,6 +1,5 @@
 package app.batch
 
-import app.utils.logging.*
 import org.apache.hadoop.conf.Configuration
 
 fun getEnv(envVar: String): String? {
@@ -8,6 +7,11 @@ fun getEnv(envVar: String): String? {
     return if (value.isNullOrEmpty()) null else value
 }
 
+val hBaseDataTable = getEnv("K2HB_HBASE_DATA_TABLE") ?: "k2hb:ingest"
+val hBaseDataFamily = getEnv("K2HB_HBASE_DATA_FAMILY") ?: "topic"
+val hBaseTopicTable = getEnv("K2HB_HBASE_TOPIC_TABLE") ?: "k2hb:ingest-topic"
+val hBaseTopicFamily = getEnv("K2HB_HBASE_TOPIC_FAMILY") ?: "c"
+val hBaseTopicQualifier = getEnv("K2HB_HBASE_TOPIC_QUALIFIER") ?: "msg"
 
 object Config {
 
@@ -20,11 +24,11 @@ object Config {
             setInt("hbase.client.keyvalue.maxsize", getEnv("K2HB_HBASE_KEYVALUE_MAXSIZE")?.toIntOrNull() ?: 0)
         }
 
-        val dataTable = data_table
-        val dataFamily = data_family
-        val topicTable = topic_table
-        val topicFamily = topic_family
-        val topicQualifier = topic_qualifier
+        val dataTable = hBaseDataTable
+        val dataFamily = hBaseDataFamily
+        val topicTable = hBaseTopicTable
+        val topicFamily = hBaseTopicFamily
+        val topicQualifier = hBaseTopicQualifier
     }
 
 }
