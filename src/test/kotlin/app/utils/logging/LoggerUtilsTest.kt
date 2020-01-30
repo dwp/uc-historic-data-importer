@@ -4,9 +4,9 @@ package app.utils.logging
 Please see notes in the file under test (LoggerUtils) and it's class LoggerLayoutAppender.
  */
 
-import app.batch.HBaseWriter
 import app.configuration.HttpClientProvider
 import app.services.KeyService
+import app.services.impl.HttpKeyService
 import app.utils.UUIDGenerator
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -23,19 +23,10 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
-@RunWith(SpringRunner::class)
-@TestPropertySource(properties = [
-    "s3.bucket=bucket",
-    "hbase.retry.max.attempts=5",
-    "hbase.retry.initial.backoff=1",
-    "hbase.retry.backoff.multiplier=1",
-    "max.batch.size.bytes=100",
-    "data.key.service.url=http://dummydks",
-    "phoney.key=phoney-value"
-])
 class LoggerUtilsTest {
 
     @Autowired
