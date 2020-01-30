@@ -173,15 +173,15 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
 
         val trace = "java.lang.RuntimeException: boom1 - /:'!@£\$%^&*()\n" +
-            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66)\n" +
-            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:69)\n" +
+            "\tat app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:43)\n" +
             "\t... 50 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
         assertEquals(trace, throwableStr)
 
         val result = inlineStackTrace(throwableStr)
-        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42) |  ... 50 common frames omitted | ", result)
+        assertEquals("java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:69) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:43) |  ... 50 common frames omitted | ", result)
     }
 
     @Test
@@ -215,7 +215,7 @@ class LoggerUtilsTest {
 
         val result = throwableProxyEventToString(mockEvent)
 
-        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42) |  ... 50 common frames omitted | \", ", result)
+        assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:69) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:43) |  ... 50 common frames omitted | \", ", result)
     }
 
     @Test
@@ -311,7 +311,7 @@ class LoggerUtilsTest {
         ThrowableProxyUtil.build(stubThrowable, catchMe2(), ThrowableProxy(catchMe3()))
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
-        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:66) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:42) |  ... 50 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n"
+        val expected = "{ \"timestamp\":\"1970-04-25T07:29:03.210\", \"log_level\":\"WARN\", \"message\":\"some message about stuff\", \"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:69) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:43) |  ... 50 common frames omitted | \", \"thread\":\"my.thread.is.betty\", \"logger\":\"logger.name.is.mavis\", \"duration_in_milliseconds\":\"210\", \"hostname\":\"test-host\", \"environment\":\"test-env\", \"application\":\"my-app\", \"app_version\":\"v1\", \"component\":\"tests\", \"correlation_id\":\"test1\", \"data_table\":\"k2hb:ingest\", \"data_family\":\"topic\", \"topic_table\":\"k2hb:ingest-topic\", \"topic_family\":\"c\", \"topic_qualifier\":\"msg\" }\n"
         val result = LoggerLayoutAppender().doLayout(mockEvent)
         assertEquals(
             "The standard logger should add exception messages",
