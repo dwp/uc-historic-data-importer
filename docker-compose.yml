@@ -105,6 +105,7 @@ services:
     environment:
       - ENVIRONMENT=local-docker
       - APPLICATION=historic_data_impoter
+      - APP_VERSION=latest-dev
       - COMPONENT=jar_file
       - CORRELATION_ID=hdi1
 
