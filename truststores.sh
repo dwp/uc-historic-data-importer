@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 main() {
-    make_keystore dks-keystore.jks dks
-    extract_public_certificate dks-keystore.jks dks.crt
-    make_truststore dks-truststore.jks dks.crt
+    make_keystore dks-keystore.jks dks-standalone-https
+    extract_public_certificate dks-keystore.jks dks-standalone-https.crt
+    make_truststore dks-truststore.jks dks-standalone-https.crt
 
     make_keystore uc-historic-data-importer-keystore.jks uc-historic-data-importer
     extract_public_certificate uc-historic-data-importer-keystore.jks \
@@ -16,7 +16,7 @@ main() {
                            uc-historic-data-importer
 
     import_into_truststore uc-historic-data-importer-truststore.jks \
-                           dks.crt \
+                           dks-standalone-https.crt \
                            dks
     mv -v dks-truststore.jks dks-keystore.jks docker/dks
 }

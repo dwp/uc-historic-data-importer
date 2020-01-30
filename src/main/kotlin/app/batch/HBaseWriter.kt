@@ -132,7 +132,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                     val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
                                     val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
-                                            database, collection)
+                                        database, collection)
                                     val messageJsonObject = messageUtils.parseJson(message)
                                     val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
                                     val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
@@ -156,9 +156,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             }
                                         }
                                         batch.add(HBaseRecord(topic.toByteArray(),
-                                                formattedKey,
-                                                message.toByteArray(),
-                                                lastModifiedTimestampLong))
+                                            formattedKey,
+                                            message.toByteArray(),
+                                            lastModifiedTimestampLong))
                                         batchSizeBytes += message.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
@@ -247,7 +247,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             catch (e: Exception) {
                 val delay = if (attempts == 0) initialBackoffMillis.toLong()
                 else (initialBackoffMillis.toLong() * attempts * backoffMultiplier.toFloat()).toLong()
-                logger.warn("Failed to put batch on attempt ${attempts + 1}/$maxAttempts, will retry in $delay ms, if ${attempts + 1} still < $maxAttempts: ${e.message}" )
+                logger.warn("Failed to put batch on attempt ${attempts + 1}/$maxAttempts, will retry in $delay ms, if ${attempts + 1} still < $maxAttempts: ${e.message}")
                 Thread.sleep(delay)
                 exception = e
             }

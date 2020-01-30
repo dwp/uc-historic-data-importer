@@ -1,13 +1,16 @@
 package app.batch
 
-import app.domain.*
-import ch.qos.logback.classic.spi.*
-import ch.qos.logback.core.*
-import com.nhaarman.mockitokotlin2.*
-import org.junit.*
+import app.domain.KeyPair
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.Appender
+import com.nhaarman.mockitokotlin2.argumentCaptor
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.times
+import com.nhaarman.mockitokotlin2.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.slf4j.*
+import org.junit.Test
+import org.slf4j.LoggerFactory
 
 class KeyPairGeneratorTest {
 

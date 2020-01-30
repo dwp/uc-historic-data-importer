@@ -14,7 +14,7 @@ help:
 		'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'; \
 	}
 
-%.jks:
+jks: ## Make the truststores for all the local apps to use
 	./truststores.sh
 
 .PHONY: bootstrap
@@ -34,7 +34,6 @@ git-hooks: ## Set up hooks in .git/hooks
 		done \
 	}
 
-
 .PHONY: gradle-image
 gradle-image: ## Build gradle image.
 	cp settings.gradle.kts gradle.properties docker/gradle
@@ -48,14 +47,13 @@ java-image: ## Build java image.
 python-image: ## Build python image.
 	cd docker/python && docker build --tag dwp-python:latest .
 
-.PHONY: dks-image
-dks-image: ## Build the dks image.
-	docker-compose build dks
+.PHONY: dks-standalone-https-image
+dks-standalone-https-image: ## Build the dks-standalone-https image.
+	docker-compose build dks-standalone-https
 
-.PHONY: dks-insecure-image
-dks-insecure-image: ## Build the dks image.
-	docker-compose build dks-insecure
-
+.PHONY: dks-standalone-http-image
+dks-standalone-http-image: ## Build the dks-standalone-http image.
+	docker-compose build dks-standalone-http
 
 .PHONY: s3-init-image
 s3-init-image: ## Build the image that creates the s3 bucket.
@@ -70,7 +68,7 @@ add-containers-to-hosts:
 	./add-containers-to-hosts.sh
 
 .PHONY: ancillary-images
-ancillary-images: gradle-image java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
+ancillary-images: gradle-image java-image python-image dks-standalone-http-image dks-standalone-https-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build
@@ -92,7 +90,7 @@ build-image: ancillary-images build-jar ## Build all ecosystem of images
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d zookeeper hbase s3 dks dks-insecure
+	docker-compose up -d zookeeper hbase s3 dks-standalone-https dks-standalone-http
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \
@@ -102,14 +100,14 @@ up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
 	docker-compose up s3-init
 
 .PHONY: up
-up: build-image up-ancillary ## Run the ecosystem of containers.
+up: build-image up-ancillary ## Run the supporting/ancilliary ecosystem of containers.
 	docker-compose up uc-historic-data-importer
 
 .PHONY: up-all
-up-all: build-image up
+up-all: build-image up ## Run the whole ecosystem of containers.
 
 .PHONY: integration
-integration: up-all integration-test-image
+integration: up-all integration-test-image ## Run everything and execute the integraion tests
 	docker-compose run --rm integration-test
 
 .PHONY: destroy
@@ -117,3 +115,11 @@ destroy: ## Bring everything down and clean up.
 	docker-compose down
 	docker network prune -f
 	docker volume prune -f
+
+.PHONY: dks-logs-https
+dks-logs-https: ## Cat the logs of dks-standalone-https
+	docker exec dks-standalone-https cat /opt/data-key-service/logs/dks.out
+
+.PHONY: dks-logs-http
+dks-logs-http: ## Cat the logs of dks-standalone-http
+	docker exec dks-standalone-http cat /opt/data-key-service/logs/dks.out

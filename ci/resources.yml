@@ -14,5 +14,3 @@ resources:
     repository: uc-historic-data-importer
     access_token: ((github_com.token))
   check_every: 3m
-
-

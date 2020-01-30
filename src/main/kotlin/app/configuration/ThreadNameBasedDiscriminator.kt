@@ -4,7 +4,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.sift.Discriminator
 
 
-class ThreadNameBasedDiscriminator: Discriminator<ILoggingEvent> {
+class ThreadNameBasedDiscriminator : Discriminator<ILoggingEvent> {
     private val KEY = "threadName"
 
     private var started = false

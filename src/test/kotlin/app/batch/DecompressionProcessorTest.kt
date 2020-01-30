@@ -81,7 +81,7 @@ class DecompressionProcessorTest {
         val byteArray = data.toByteArray(StandardCharsets.UTF_8)
         val testOutputStream = ByteArrayOutputStream()
         val zippedStream = CompressorStreamFactory().createCompressorOutputStream(format,
-                testOutputStream)
+            testOutputStream)
         zippedStream.write(byteArray)
         zippedStream.close()
 

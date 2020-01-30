@@ -23,8 +23,6 @@ import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
-import java.lang.RuntimeException
-import java.lang.UnsupportedOperationException
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -94,8 +92,8 @@ class S3ReaderTest {
         }
 
         given(s3Client.listObjectsV2(any(ListObjectsV2Request::class.java)))
-                .willReturn(resultsPage1)
-                .willReturn(resultsPage2)
+            .willReturn(resultsPage1)
+            .willReturn(resultsPage2)
 
         val page1Object1 = mockS3Object()
         val page1Object2 = mockS3Object()
@@ -139,7 +137,7 @@ class S3ReaderTest {
             on { isTruncated } doReturn false
         }
         given(s3Client.listObjectsV2(any(ListObjectsV2Request::class.java)))
-                .willReturn(resultsPage1)
+            .willReturn(resultsPage1)
         val page1Object1 = mockS3Object()
         val page1Object2 = mockS3Object()
 
@@ -210,9 +208,9 @@ class S3ReaderTest {
         s3Object_2b.objectContent = S3ObjectInputStream(ByteArrayInputStream(OBJECT_CONTENT_2_2.toByteArray()), HttpGet())
 
         given(s3Client.listObjectsV2(any(ListObjectsV2Request::class.java)))
-                .willReturn(
-                        listObjectsV2Result_1,
-                        listObjectsV2Result_2)
+            .willReturn(
+                listObjectsV2Result_1,
+                listObjectsV2Result_2)
         given(s3Client.getObject(BUCKET_NAME, VALID_DATA_KEY_1)).willReturn(s3Object_1a)
         given(s3Client.getObject(BUCKET_NAME, VALID_METADATA_KEY_1)).willReturn(s3Object_1b)
         given(s3Client.getObject(BUCKET_NAME, VALID_DATA_KEY_2)).willReturn(s3Object_2a)
@@ -309,7 +307,8 @@ class S3ReaderTest {
         try {
             s3Reader.read()
             fail("Expected an exception")
-        } catch (expected: S3Exception) {
+        }
+        catch (expected: S3Exception) {
             assertEquals("app.exceptions.S3Exception: Error retrieving object summary from S3", expected.toString())
 
             verify(s3Client, times(1)).listObjectsV2(any(ListObjectsV2Request::class.java))
@@ -324,7 +323,8 @@ class S3ReaderTest {
         try {
             s3Reader.read()
             fail("Expected an exception")
-        } catch (expected: UnsupportedOperationException) {
+        }
+        catch (expected: UnsupportedOperationException) {
             assertEquals("java.lang.UnsupportedOperationException: Parameter s3SuffixesCsv must be set but was ''", expected.toString())
 
             verifyNoMoreInteractions(s3Client)
@@ -346,12 +346,12 @@ class S3ReaderTest {
     }
 
     private fun mockS3Object() =
-            mock<S3Object> {
-                on { objectContent } doReturn mock<S3ObjectInputStream>()
-            }
+        mock<S3Object> {
+            on { objectContent } doReturn mock<S3ObjectInputStream>()
+        }
 
     private fun mockS3ObjectSummary(objectKey: String) =
-            mock<S3ObjectSummary> {
-                on { key } doReturn objectKey
-            }
+        mock<S3ObjectSummary> {
+            on { key } doReturn objectKey
+        }
 }

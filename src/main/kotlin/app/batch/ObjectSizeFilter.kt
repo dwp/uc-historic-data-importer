@@ -4,11 +4,10 @@ import app.domain.InputStreamPair
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class ObjectSizeFilter(private val maxSize: Long): ItemProcessor<InputStreamPair, InputStreamPair> {
+class ObjectSizeFilter(private val maxSize: Long) : ItemProcessor<InputStreamPair, InputStreamPair> {
 
 
     override fun process(item: InputStreamPair): InputStreamPair? {

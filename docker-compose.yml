@@ -9,24 +9,28 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
-  dks:
-    image: dks
+  dks-standalone-https:
+    image: dks-standalone:latest
     ports:
       - 8443:8443
     build:
       context: docker/dks
+    container_name: dks-standalone-https
+    command: >-
+      --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-secure.properties
-    container_name: dks
 
-  dks-insecure:
-    image: dks
+  dks-standalone-http:
+    image: dks-standalone:latest
     ports:
       - 8080:8080
     build:
       context: docker/dks
-    container_name: dks-insecure
+    container_name: dks-standalone-http
+    command: >-
+      --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
@@ -79,11 +83,13 @@ services:
       - s3-init
     container_name: uc-historic-data-importer
     command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
       --hbase.zookeeper.quorum=hbase
       --aws.region=eu-west-2
       --aws.access.key=aws-access-key
       --aws.secret.key=aws-secret-key
-      --data.key.service.url=https://dks:8443/
+      --data.key.service.url=https://dks-standalone-https:8443/
       --s3.bucket=uc-historic-data
       --s3.prefix.folder=test
       --s3.suffixes.csv=prefix,prefix2
@@ -96,6 +102,12 @@ services:
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng,hbaseWriter
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.manifest.bucket=manifestbucket
+    environment:
+      - ENVIRONMENT=local-docker
+      - APPLICATION=historic_data_importer
+      - APP_VERSION=latest-dev
+      - COMPONENT=jar_file
+      - CORRELATION_ID=hdi1
 
   integration-test:
     image: integration-test:latest

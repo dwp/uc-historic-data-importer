@@ -20,7 +20,7 @@ class ObjectSizeFilterTest {
         val objectSizeFilter = ObjectSizeFilter(100)
         val dataStream = ByteArrayInputStream("DATA".toByteArray())
         val metadataStream = ByteArrayInputStream("METADATA".toByteArray())
-        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 99)
+        val inputStreamPair = InputStreamPair(dataStream, metadataStream, "S3_KEY", 99)
         val processed = objectSizeFilter.process(inputStreamPair)
         assertNotNull(processed)
         assertEquals(processed, inputStreamPair)
@@ -31,7 +31,7 @@ class ObjectSizeFilterTest {
         val objectSizeFilter = ObjectSizeFilter(100)
         val dataStream = ByteArrayInputStream("DATA".toByteArray())
         val metadataStream = ByteArrayInputStream("METADATA".toByteArray())
-        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 101)
+        val inputStreamPair = InputStreamPair(dataStream, metadataStream, "S3_KEY", 101)
         val processed = objectSizeFilter.process(inputStreamPair)
         assertNull(processed)
     }
@@ -41,7 +41,7 @@ class ObjectSizeFilterTest {
         val objectSizeFilter = ObjectSizeFilter(100)
         val dataStream = ByteArrayInputStream("DATA".toByteArray())
         val metadataStream = ByteArrayInputStream("METADATA".toByteArray())
-        val inputStreamPair = InputStreamPair(dataStream, metadataStream,"S3_KEY", 100)
+        val inputStreamPair = InputStreamPair(dataStream, metadataStream, "S3_KEY", 100)
         val processed = objectSizeFilter.process(inputStreamPair)
         assertNotNull(processed)
         assertEquals(processed, inputStreamPair)
@@ -58,7 +58,7 @@ class ObjectSizeFilterTest {
         val metadataStream = ByteArrayInputStream("METADATA".toByteArray())
         val objectSize = 150L
         val s3Key = "S3_KEY"
-        val inputStreamPair = InputStreamPair(dataStream, metadataStream,s3Key, objectSize)
+        val inputStreamPair = InputStreamPair(dataStream, metadataStream, s3Key, objectSize)
         objectSizeFilter.process(inputStreamPair)
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(1)).doAppend(captor.capture())

@@ -1,6 +1,5 @@
 package app.configuration
 
-import app.batch.ObjectSizeFilter
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
@@ -34,23 +33,23 @@ class JobConfiguration {
 
     @Bean
     fun importUserJob(listener: JobCompletionNotificationListener, step: Step) =
-            jobBuilderFactory.get("ucHistoricDataImporterJob")
-                    .incrementer(RunIdIncrementer())
-                    .listener(listener)
-                    .flow(step)
-                    .end()
-                    .build()
+        jobBuilderFactory.get("ucHistoricDataImporterJob")
+            .incrementer(RunIdIncrementer())
+            .listener(listener)
+            .flow(step)
+            .end()
+            .build()
 
     @Bean
     fun step() =
-            stepBuilderFactory.get("step")
-                    .chunk<InputStreamPair, DecompressedStream>(chunkSize.toInt())
-                    .reader(itemReader)
-                    .processor(itemProcessor())
-                    .writer(itemWriter)
-                    .taskExecutor(taskExecutor())
-                    .throttleLimit(throttleLimit.toInt())
-                    .build()
+        stepBuilderFactory.get("step")
+            .chunk<InputStreamPair, DecompressedStream>(chunkSize.toInt())
+            .reader(itemReader)
+            .processor(itemProcessor())
+            .writer(itemWriter)
+            .taskExecutor(taskExecutor())
+            .throttleLimit(throttleLimit.toInt())
+            .build()
 
     @Bean
     fun taskExecutor() = SimpleAsyncTaskExecutor("uc-historic-data-importer").apply {
@@ -64,19 +63,19 @@ class JobConfiguration {
             logger.info("Enabling size filtering.")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(objectSizeProcessor,
-                        encryptionMetadataProcessor,
-                        datakeyProcessor,
-                        decryptionProcessor,
-                        decompressionProcessor))
+                    encryptionMetadataProcessor,
+                    datakeyProcessor,
+                    decryptionProcessor,
+                    decompressionProcessor))
             }
         }
         else {
             logger.info("Disabling size filtering.")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(encryptionMetadataProcessor,
-                        datakeyProcessor,
-                        decryptionProcessor,
-                        decompressionProcessor))
+                    datakeyProcessor,
+                    decryptionProcessor,
+                    decompressionProcessor))
             }
         }
     }

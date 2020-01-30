@@ -2,16 +2,14 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.services.CipherService
-import ch.qos.logback.classic.spi.ILoggingEvent
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
 import com.nhaarman.mockitokotlin2.verify
+import org.junit.Assert.assertEquals
 import org.junit.Test
-
-import org.junit.Assert.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -43,7 +41,7 @@ class LintWriterTest {
     @Test
     fun write() {
         val bytes = ByteArrayOutputStream()
-        BufferedWriter(OutputStreamWriter(bytes)).use {writer ->
+        BufferedWriter(OutputStreamWriter(bytes)).use { writer ->
             for (i in 0..20) {
                 writer.write("[1, 2, 3]\n")
                 writer.write("}\n")

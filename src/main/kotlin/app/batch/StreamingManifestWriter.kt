@@ -7,9 +7,6 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -32,7 +29,8 @@ open class StreamingManifestWriter {
                     success = true
                     return
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 ++attempts
                 logger.warn("Failed to write manifest '${manifestFile}' on attempt $attempts/$maxManifestAttempts: '${e.message}'")
             }
@@ -42,18 +40,18 @@ open class StreamingManifestWriter {
     }
 
     fun manifestMetadata(fileName: String, size: Long) =
-            ObjectMetadata().apply {
-                contentType = "text/plain"
-                addUserMetadata("x-amz-meta-title", fileName)
-                contentLength = size
-            }
+        ObjectMetadata().apply {
+            contentType = "text/plain"
+            addUserMetadata("x-amz-meta-title", fileName)
+            contentLength = size
+        }
 
     fun csv(manifestRecord: ManifestRecord) =
-            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
+        "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
 
     fun topicName(db: String, collection: String) = "db.$db.$collection"
 
-    private fun escape(value: String) =  StringEscapeUtils.escapeCsv(value)
+    private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())

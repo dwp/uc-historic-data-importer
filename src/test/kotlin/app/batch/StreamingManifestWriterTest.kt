@@ -4,26 +4,12 @@ import app.domain.ManifestRecord
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.PutObjectRequest
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert
 import org.junit.Assert.assertEquals
-import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
 import java.io.File
 
 class StreamingManifestWriterTest {

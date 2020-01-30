@@ -4,7 +4,6 @@ import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
 import com.google.gson.Gson
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -20,13 +19,13 @@ class MessageUtils {
     val typeDefault = "HDI"
 
     fun parseGson(line: String): com.google.gson.JsonObject =
-            Gson().fromJson(line, com.google.gson.JsonObject::class.java)
+        Gson().fromJson(line, com.google.gson.JsonObject::class.java)
 
     fun getTimestampAsLong(timeStampAsStr: String?): Long {
         val validTimestamps = listOf(
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
-            )
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+        )
 
         validTimestamps.forEach {
             try {
@@ -71,7 +70,8 @@ class MessageUtils {
         try {
             val message: JsonObject? = json.obj("message")
             return if (message == null) null else message.obj("_id")
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             logger.warn("Message does not contain valid json object with  _id field")
             return null
         }
@@ -80,7 +80,8 @@ class MessageUtils {
     fun getIdFromDbObject(json: JsonObject): JsonObject? {
         try {
             return json.obj("_id")
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             logger.warn("DB Object does not contain valid json object with  _id field")
             return null
         }
@@ -111,6 +112,6 @@ class MessageUtils {
 
         checksum.update(bytes, 0, bytes.size)
 
-        return ByteBuffer.allocate(4).putInt(checksum.getValue().toInt()).array()
+        return ByteBuffer.allocate(4).putInt(checksum.value.toInt()).array()
     }
 }

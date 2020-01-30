@@ -7,12 +7,10 @@ import io.kotlintest.fail
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import io.kotlintest.spring.SpringListener
-import org.apache.commons.lang.StringUtils
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -102,11 +100,14 @@ class UCHistoricDataImporterSpec : FunSpec() {
                                 try {
                                     val decryptedKey = decryptedDatakey(encryptedEncryptionKey)
                                     val decryptedDbObject = decrypt(decryptedKey, initializationVector, encryptedDbObject)
-                                    val jsonObject = Gson().fromJson(decryptedDbObject, JsonObject::class.java)
-                                } catch (e: Exception) {
+                                    //verify it is valid json:
+                                    Gson().fromJson(decryptedDbObject, JsonObject::class.java)
+                                }
+                                catch (e: Exception) {
                                     fail("Decrypted db object should be parseable as json.")
                                 }
-                            } else {
+                            }
+                            else {
                                 fail("No encrypted db object.")
                             }
                         }
@@ -169,7 +170,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.trim().split("\n").size
-                assertEquals(11,noOfRecordsPerFile)
+                assertEquals(11, noOfRecordsPerFile)
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
