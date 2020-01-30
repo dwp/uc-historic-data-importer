@@ -10,7 +10,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   dks-standalone-https:
-    image: dks
+    image: dks-standalone:latest
     ports:
       - 8443:8443
     build:
@@ -23,7 +23,7 @@ services:
       - SPRING_CONFIG_LOCATION=application-secure.properties
 
   dks-standalone-http:
-    image: dks
+    image: dks-standalone:latest
     ports:
       - 8080:8080
     build:
