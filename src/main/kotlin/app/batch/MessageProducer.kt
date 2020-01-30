@@ -2,7 +2,6 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
-import app.utils.logging.*
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
@@ -25,9 +24,9 @@ class MessageProducer {
                        database: String,
                        collection: String): String {
         var lastModified = jsonObject.getAsJsonObject("_lastModifiedDateTime")
-                ?.getAsJsonPrimitive("\$date")
-                ?.asString
-                ?: "1980-01-01T00:00:00.000Z"
+            ?.getAsJsonPrimitive("\$date")
+            ?.asString
+            ?: "1980-01-01T00:00:00.000Z"
 
         lastModified = if (StringUtils.isNotBlank(lastModified)) lastModified else "1980-01-01T00:00:00.000Z"
 
@@ -66,7 +65,11 @@ class MessageProducer {
     private lateinit var traceId: String
 
     private val hdiVersion: String by lazy {
-        val valueFromManifest = try { Manifests.read("Hdi-Version") } catch (e: Exception) { null }
+        val valueFromManifest = try {
+            Manifests.read("Hdi-Version")
+        } catch (e: Exception) {
+            null
+        }
         val valueFromArguments = environment.get("hdi.version")
         logger.info("valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
         valueFromManifest ?: valueFromArguments ?: "No hdi version available."

@@ -91,7 +91,7 @@ class MessageProducerTest {
 
     @Test
     fun testTwoObjectsGetSameGuid() =
-            assertEquals(unitOfWorkId(validJsonOne()), unitOfWorkId(validJsonTwo()))
+        assertEquals(unitOfWorkId(validJsonOne()), unitOfWorkId(validJsonTwo()))
 
     @Test
     fun testTimestampRepresentsTimeOfMessageCreation() {
@@ -320,16 +320,16 @@ class MessageProducerTest {
     private fun validate(json: String) = schemaLoader().load().build().validate(JSONObject(json))
 
     private fun schemaLoader() =
-            SchemaLoader.builder()
-                    .schemaJson(schemaObject())
-                    .draftV7Support()
-                    .build()
+        SchemaLoader.builder()
+            .schemaJson(schemaObject())
+            .draftV7Support()
+            .build()
 
     private fun schemaObject() =
-            javaClass.getResourceAsStream("/message.schema.json")
-                    .use { inputStream ->
-                        JSONObject(JSONTokener(inputStream))
-                    }
+        javaClass.getResourceAsStream("/message.schema.json")
+            .use { inputStream ->
+                JSONObject(JSONTokener(inputStream))
+            }
 
     private fun validJsonTwo(): String {
         return """{

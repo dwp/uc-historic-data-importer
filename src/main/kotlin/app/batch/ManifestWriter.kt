@@ -1,7 +1,6 @@
 package app.batch
 
 import app.domain.ManifestRecord
-import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest

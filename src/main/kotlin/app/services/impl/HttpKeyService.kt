@@ -6,7 +6,6 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.UUIDGenerator
-import app.utils.logging.*
 import com.google.gson.Gson
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -31,8 +30,8 @@ class HttpKeyService(
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttempts = maxAttempts,
+        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
@@ -62,10 +61,10 @@ class HttpKeyService(
                             }
                             400 ->
                                 throw DataKeyDecryptionException(
-                                        "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status code '$statusCode'")
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status code '$statusCode'")
                             else ->
                                 throw DataKeyServiceUnavailableException(
-                                        "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status code '$statusCode'")
+                                    "Decrypting encryptedKey: '$encryptedKey' with keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId' data key service returned status code '$statusCode'")
                         }
                     }
                 }
@@ -82,8 +81,8 @@ class HttpKeyService(
 
     @Override
     @Retryable(value = [DataKeyServiceUnavailableException::class],
-            maxAttempts = maxAttempts,
-            backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
+        maxAttempts = maxAttempts,
+        backoff = Backoff(delay = initialBackoffMillis, multiplier = backoffMultiplier))
     @Throws(DataKeyServiceUnavailableException::class)
     override fun batchDataKey(): DataKeyResult {
         val dksCorrelationId = uuidGenerator.randomUUID()
@@ -98,9 +97,9 @@ class HttpKeyService(
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
-                                .use(BufferedReader::readText).let {
-                                    Gson().fromJson(it, DataKeyResult::class.java)
-                                }
+                            .use(BufferedReader::readText).let {
+                                Gson().fromJson(it, DataKeyResult::class.java)
+                            }
                         EntityUtils.consume(entity)
                         result
                     } else {

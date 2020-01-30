@@ -1,7 +1,6 @@
 package app.batch
 
 import app.domain.ManifestRecord
-import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -40,18 +39,18 @@ open class StreamingManifestWriter {
     }
 
     fun manifestMetadata(fileName: String, size: Long) =
-            ObjectMetadata().apply {
-                contentType = "text/plain"
-                addUserMetadata("x-amz-meta-title", fileName)
-                contentLength = size
-            }
+        ObjectMetadata().apply {
+            contentType = "text/plain"
+            addUserMetadata("x-amz-meta-title", fileName)
+            contentLength = size
+        }
 
     fun csv(manifestRecord: ManifestRecord) =
-            "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
+        "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
 
     fun topicName(db: String, collection: String) = "db.$db.$collection"
 
-    private fun escape(value: String) =  StringEscapeUtils.escapeCsv(value)
+    private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())

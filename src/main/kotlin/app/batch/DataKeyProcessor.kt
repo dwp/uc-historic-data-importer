@@ -7,7 +7,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import app.utils.logging.*
 
 /**
  * Adds the decrypted key to the encryption metadata enabling decryption of the main data file.
@@ -19,7 +18,7 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
         try {
             val encryptionMetadata = item.encryptionMetadata
             val plaintextKey = keyService.decryptKey(encryptionMetadata.keyEncryptionKeyId,
-                    encryptionMetadata.encryptedEncryptionKey)
+                encryptionMetadata.encryptedEncryptionKey)
             encryptionMetadata.plaintextDatakey = plaintextKey
             return item
         } catch (e: DataKeyDecryptionException) {

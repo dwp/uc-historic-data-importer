@@ -1,7 +1,7 @@
 package app.batch
 
-import org.apache.hadoop.conf.Configuration
 import app.utils.logging.*
+import org.apache.hadoop.conf.Configuration
 
 fun getEnv(envVar: String): String? {
     val value = System.getenv(envVar)

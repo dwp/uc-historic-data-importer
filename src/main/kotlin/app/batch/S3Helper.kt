@@ -8,7 +8,6 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
@@ -23,10 +22,10 @@ class S3Helper {
     fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
         try {
             return s3Client.getObject(bucketName, os.key).objectContent
-        } catch (ex: Exception){
+        } catch (ex: Exception) {
             throw S3Exception("Error retrieving object from S3")
         }
-}
+    }
 
     @Retryable(value = [S3Exception::class],
         maxAttempts = maxAttempts,
@@ -34,10 +33,10 @@ class S3Helper {
     @Throws(S3Exception::class)
     fun listObjectsV2Result(awsS3Client: AmazonS3, request: ListObjectsV2Request, objectSummaries: MutableList<S3ObjectSummary>): ListObjectsV2Result? {
         try {
-           var results1 = awsS3Client.listObjectsV2(request)
+            var results1 = awsS3Client.listObjectsV2(request)
             objectSummaries.addAll(results1.objectSummaries)
             return results1
-        } catch (ex:Exception){
+        } catch (ex: Exception) {
             throw S3Exception("Error retrieving object summary from S3")
         }
     }

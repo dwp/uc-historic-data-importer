@@ -4,7 +4,6 @@ import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.io.InputStream
 import java.security.Key
-import javax.crypto.Cipher
 
 data class KeyPair(val dataKey: String?, val metadataKey: String?)
 data class InputStreamPair(val dataInputStream: InputStream, val metadataInputStream: InputStream,

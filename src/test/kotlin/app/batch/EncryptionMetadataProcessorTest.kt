@@ -29,8 +29,8 @@ class EncryptionMetadataProcessorTest {
         val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(validJson), "S3_KEY", 100L)
         val result = EncryptionMetadataProcessor().process(pair)
         val expected = EncryptionMetadata(encryptionKeyId, plaintextDatakey, encryptedEncryptionKey, iv,
-                encryptionCipher = "encryptionCipher",
-                keyEncryptionCipher = "keyEncryptionCipher")
+            encryptionCipher = "encryptionCipher",
+            keyEncryptionCipher = "keyEncryptionCipher")
         assertEquals(expected, result.encryptionMetadata)
     }
 

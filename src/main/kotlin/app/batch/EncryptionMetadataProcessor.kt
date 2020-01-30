@@ -4,7 +4,6 @@ import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import app.domain.InputStreamPair
 import app.exceptions.MetadataException
-import app.utils.logging.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
@@ -33,7 +32,7 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
 
     private fun encryptionMetadata(item: InputStreamPair): EncryptionMetadata {
         val metadata = ObjectMapper().readValue(item.metadataInputStream,
-                EncryptionMetadata::class.java)
+            EncryptionMetadata::class.java)
         assertNotBlank(item.s3key, "encryptedEncryptionKey", metadata.encryptedEncryptionKey)
         assertNotBlank(item.s3key, "initialisationVector", metadata.initialisationVector)
         assertNotBlank(item.s3key, "keyEncryptionKeyId", metadata.keyEncryptionKeyId)

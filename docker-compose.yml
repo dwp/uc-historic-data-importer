@@ -15,6 +15,9 @@ services:
       - 8443:8443
     build:
       context: docker/dks
+    command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-secure.properties
@@ -27,6 +30,9 @@ services:
     build:
       context: docker/dks
     container_name: dks-insecure
+    command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
 
@@ -79,6 +85,8 @@ services:
       - s3-init
     container_name: uc-historic-data-importer
     command: >-
+      --logging.level.root=DEBUG
+      --spring.main.banner-mode=off
       --hbase.zookeeper.quorum=hbase
       --aws.region=eu-west-2
       --aws.access.key=aws-access-key

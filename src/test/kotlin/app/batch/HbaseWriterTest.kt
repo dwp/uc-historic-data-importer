@@ -1,6 +1,5 @@
 package app.batch
 
-import app.configuration.CipherInstanceProvider
 import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
@@ -19,23 +18,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.retry.annotation.EnableRetry
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.io.InputStream
-import java.lang.Exception
 import java.security.Key
-import javax.crypto.Cipher
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
@@ -142,7 +133,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""",
-                encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+            encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
@@ -269,8 +260,7 @@ class HbaseWriterTest {
             given(hbase.putBatch(any())).willThrow(java.lang.RuntimeException("Failed to put batch"))
             val record = HBaseRecord("topic".toByteArray(), "key".toByteArray(), "body".toByteArray(), 1.toLong())
             hBaseWriter.putBatch(listOf(record))
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             verify(hbase, times(5)).putBatch(any())
         }
     }
@@ -279,7 +269,7 @@ class HbaseWriterTest {
     fun testMaxBatchSize() {
         val byteArrayOutputStream = ByteArrayOutputStream()
 
-        val json =  """{
+        val json = """{
             |   "_id": { "id": "id" },
             |    "key1": "value1",
             |    "key2": "value2"
@@ -292,7 +282,7 @@ class HbaseWriterTest {
         byteArrayOutputStream.close()
         val byteArray = byteArrayOutputStream.toByteArray()
         val items = mutableListOf(DecompressedStream(ByteArrayInputStream(byteArray),
-                "database.collection.0001.json.gz.enc", mock<Key>(), "AAAAAAAAAAAAAAAAAAAAAA=="))
+            "database.collection.0001.json.gz.enc", mock<Key>(), "AAAAAAAAAAAAAAAAAAAAAA=="))
 
         given(messageUtils.parseGson(any())).willReturn(Gson().fromJson(json, com.google.gson.JsonObject::class.java))
         whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))

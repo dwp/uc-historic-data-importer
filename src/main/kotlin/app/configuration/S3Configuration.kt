@@ -1,7 +1,6 @@
 package app.configuration
 
 import com.amazonaws.ClientConfiguration
-import com.amazonaws.ClientConfigurationFactory
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3
@@ -27,10 +26,10 @@ class S3Configuration {
         }
 
         return AmazonS3ClientBuilder.standard()
-                .withCredentials(DefaultAWSCredentialsProviderChain())
-                .withRegion(clientRegion)
-                .withClientConfiguration(clientConfiguration.withSocketTimeout(socketTimeOut.toInt()))
-                .build()
+            .withCredentials(DefaultAWSCredentialsProviderChain())
+            .withRegion(clientRegion)
+            .withClientConfiguration(clientConfiguration.withSocketTimeout(socketTimeOut.toInt()))
+            .build()
     }
 
     @Value("\${aws.region}")
@@ -38,7 +37,7 @@ class S3Configuration {
 
     @Value("\${aws.s3.max.connections:50}")
     private lateinit var maximumS3Connections: String
-  
+
     @Value("\${s3.socket.timeout:1800000}")
     private lateinit var socketTimeOut: String
 }

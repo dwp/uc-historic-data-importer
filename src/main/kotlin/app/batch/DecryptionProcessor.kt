@@ -4,7 +4,6 @@ import app.configuration.CipherInstanceProvider
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DecryptionException
-import app.utils.logging.*
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

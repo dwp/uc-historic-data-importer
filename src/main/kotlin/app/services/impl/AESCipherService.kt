@@ -28,17 +28,17 @@ class AESCipherService(private val secureRandom: SecureRandom, private val ciphe
     }
 
     override fun decompressingDecryptingStream(inputStream: InputStream, key: Key, iv: String) =
-            CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
-                    decryptingInputStream(inputStream, key, iv)) as GzipCompressorInputStream
+        CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
+            decryptingInputStream(inputStream, key, iv)) as GzipCompressorInputStream
 
     private fun decryptingInputStream(inputStream: InputStream, key: Key, iv: String) =
-            CipherInputStream(inputStream, decryptingCipher(key, iv))
+        CipherInputStream(inputStream, decryptingCipher(key, iv))
 
 
     private fun decryptingCipher(key: Key, iv: String) =
-            cipherInstanceProvider.cipherInstance().apply {
-                init(Cipher.DECRYPT_MODE, key, IvParameterSpec(Base64.getDecoder().decode(iv)))
-            }
+        cipherInstanceProvider.cipherInstance().apply {
+            init(Cipher.DECRYPT_MODE, key, IvParameterSpec(Base64.getDecoder().decode(iv)))
+        }
 
     override fun encrypt(key: String, unencrypted: ByteArray): EncryptionResult {
         val initialisationVector = ByteArray(16).apply {
@@ -52,7 +52,7 @@ class AESCipherService(private val secureRandom: SecureRandom, private val ciphe
 
         val encrypted = cipher.doFinal(unencrypted)
         return EncryptionResult(String(Base64.getEncoder().encode(initialisationVector)),
-                String(Base64.getEncoder().encode(encrypted)))
+            String(Base64.getEncoder().encode(encrypted)))
     }
 
     @Value("\${target.cipher.algorithm:AES/CTR/NoPadding}")

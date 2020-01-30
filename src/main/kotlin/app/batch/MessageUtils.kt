@@ -4,7 +4,6 @@ import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
 import com.google.gson.Gson
-import app.utils.logging.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -20,20 +19,19 @@ class MessageUtils {
     val typeDefault = "HDI"
 
     fun parseGson(line: String): com.google.gson.JsonObject =
-            Gson().fromJson(line, com.google.gson.JsonObject::class.java)
+        Gson().fromJson(line, com.google.gson.JsonObject::class.java)
 
     fun getTimestampAsLong(timeStampAsStr: String?): Long {
         val validTimestamps = listOf(
-                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-                "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
-            )
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+        )
 
         validTimestamps.forEach {
             try {
                 val df = SimpleDateFormat(it)
                 return df.parse(timeStampAsStr).time
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 logger.debug("'$timeStampAsStr' did not match date format '$it'")
             }
         }

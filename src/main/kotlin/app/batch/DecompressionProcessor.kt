@@ -8,7 +8,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
-import app.utils.logging.*
 
 @Component
 class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream> {
@@ -20,7 +19,7 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
             logger.info("Starting decompression of the file $fileName")
             logger.info("inputStream: '$inputStream'")
             val compressorInputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
-                    inputStream) as GzipCompressorInputStream
+                inputStream) as GzipCompressorInputStream
             logger.info("Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
             return DecompressedStream(compressorInputStream, fileName, item.key, item.iv)
         } catch (e: Exception) {
