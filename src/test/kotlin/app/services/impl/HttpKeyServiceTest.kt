@@ -144,7 +144,7 @@ class HttpKeyServiceTest {
             assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!', dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(argumentCaptor.capture())
-            assertEquals("http://dummydks/datakey/actions/decrypt?keyId=123&correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
+            assertEquals("http://dummydks/datakey?correlationId=$dksCallId", argumentCaptor.firstValue.uri.toString())
         }
     }
 

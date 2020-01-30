@@ -4,6 +4,10 @@ package app.utils.logging
 Please see notes in the file under test (LoggerUtils) and it's class LoggerLayoutAppender.
  */
 
+import app.batch.HBaseWriter
+import app.configuration.HttpClientProvider
+import app.services.KeyService
+import app.utils.UUIDGenerator
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
@@ -16,28 +20,32 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 
-
 @RunWith(SpringRunner::class)
-@ActiveProfiles("aesCipherService", "httpDataKeyService", "unitTest", "outputToConsole")
-@SpringBootTest
 @TestPropertySource(properties = [
-    "identity.keystore=resources/identity.jks",
-    "trust.keystore=resources/truststore.jks",
-    "identity.store.password=changeit",
-    "identity.key.password=changeit",
-    "trust.store.password=changeit",
-    "identity.store.alias=cid",
-    "hbase.zookeeper.quorum=hbase",
-    "aws.region=eu-west-2",
-    "data.key.service.url=http://dks",
+    "s3.bucket=bucket",
+    "hbase.retry.max.attempts=5",
+    "hbase.retry.initial.backoff=1",
+    "hbase.retry.backoff.multiplier=1",
+    "max.batch.size.bytes=100",
+    "data.key.service.url=http://dummydks",
     "phoney.key=phoney-value"
 ])
 class LoggerUtilsTest {
+
+    @Autowired
+    private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var httpClientProvider: HttpClientProvider
+
+    @MockBean
+    private lateinit var uuidGenerator: UUIDGenerator
 
     @Before
     fun setup() {
