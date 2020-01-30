@@ -21,7 +21,8 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
                 encryptionMetadata.encryptedEncryptionKey)
             encryptionMetadata.plaintextDatakey = plaintextKey
             return item
-        } catch (e: DataKeyDecryptionException) {
+        }
+        catch (e: DataKeyDecryptionException) {
             val message = "Failed to decrypt '${item.s3key}': '${e.message}'."
             logger.error(message)
             throw e

@@ -21,9 +21,11 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
     override fun process(item: InputStreamPair): EncryptedStream {
         try {
             return EncryptedStream(item.dataInputStream, encryptionMetadata(item), item.s3key)
-        } catch (e: MetadataException) {
+        }
+        catch (e: MetadataException) {
             throw e
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             val message = "Failed to parse encryption metadata for '${item.s3key}'."
             logger.error(message)
             throw MetadataException(message, e)

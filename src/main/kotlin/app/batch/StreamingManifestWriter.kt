@@ -29,7 +29,8 @@ open class StreamingManifestWriter {
                     success = true
                     return
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 ++attempts
                 logger.warn("Failed to write manifest '${manifestFile}' on attempt $attempts/$maxManifestAttempts: '${e.message}'")
             }

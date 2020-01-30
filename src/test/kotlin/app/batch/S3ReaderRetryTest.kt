@@ -98,7 +98,8 @@ class S3ReaderRetryTest {
 
         try {
             s3Reader.read()
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             verify(s3Client, times(5)).getObject(BUCKET_NAME, page1Object1Key)
         }
     }

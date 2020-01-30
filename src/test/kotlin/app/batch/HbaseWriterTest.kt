@@ -170,7 +170,7 @@ class HbaseWriterTest {
         val inputStream = ByteArrayInputStream("""{ "_id": {"key": "value"}}""".toByteArray())
         val s3InputStream = mock<S3ObjectInputStream>()
 
-        val s3Object = mock<S3Object>() {
+        val s3Object = mock<S3Object> {
             on { objectContent } doReturn s3InputStream
         }
 
@@ -260,7 +260,8 @@ class HbaseWriterTest {
             given(hbase.putBatch(any())).willThrow(java.lang.RuntimeException("Failed to put batch"))
             val record = HBaseRecord("topic".toByteArray(), "key".toByteArray(), "body".toByteArray(), 1.toLong())
             hBaseWriter.putBatch(listOf(record))
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             verify(hbase, times(5)).putBatch(any())
         }
     }

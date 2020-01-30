@@ -49,7 +49,8 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
                 val metadataInputStream = it.metadata?.let { it1 -> s3Helper.getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key, it.data.size)
             }
-        } else {
+        }
+        else {
             null
         }
     }
@@ -91,7 +92,8 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
             logger.info("Getting paginated results for s3://$bucketName/$fullPrefix")
             results = s3Helper.listObjectsV2Result(awsS3Client, request, objectSummaries)
             request.continuationToken = results?.nextContinuationToken
-        } while (results != null && results.isTruncated)
+        }
+        while (results != null && results.isTruncated)
 
         logger.info("Found ${objectSummaries.size} objects in s3://$bucketName/$fullPrefix")
         val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()

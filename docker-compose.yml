@@ -9,29 +9,27 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
-  dks:
+  dks-standalone-https:
     image: dks
     ports:
       - 8443:8443
     build:
       context: docker/dks
+    container_name: dks-standalone-https
     command: >-
-      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,SECURE
       - SPRING_CONFIG_LOCATION=application-secure.properties
-    container_name: dks
 
-  dks-insecure:
+  dks-standalone-http:
     image: dks
     ports:
       - 8080:8080
     build:
       context: docker/dks
-    container_name: dks-insecure
+    container_name: dks-standalone-http
     command: >-
-      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
     environment:
       - SPRING_PROFILES_ACTIVE=STANDALONE,INSECURE
@@ -91,7 +89,7 @@ services:
       --aws.region=eu-west-2
       --aws.access.key=aws-access-key
       --aws.secret.key=aws-secret-key
-      --data.key.service.url=https://dks:8443/
+      --data.key.service.url=https://dks-standalone-https:8443/
       --s3.bucket=uc-historic-data
       --s3.prefix.folder=test
       --s3.suffixes.csv=prefix,prefix2

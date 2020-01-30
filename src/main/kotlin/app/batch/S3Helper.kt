@@ -22,7 +22,8 @@ class S3Helper {
     fun getS3ObjectInputStream(os: S3ObjectSummary, s3Client: AmazonS3, bucketName: String): S3ObjectInputStream {
         try {
             return s3Client.getObject(bucketName, os.key).objectContent
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             throw S3Exception("Error retrieving object from S3")
         }
     }
@@ -36,7 +37,8 @@ class S3Helper {
             var results1 = awsS3Client.listObjectsV2(request)
             objectSummaries.addAll(results1.objectSummaries)
             return results1
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             throw S3Exception("Error retrieving object summary from S3")
         }
     }

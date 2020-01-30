@@ -31,7 +31,8 @@ class MessageUtils {
             try {
                 val df = SimpleDateFormat(it)
                 return df.parse(timeStampAsStr).time
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 logger.debug("'$timeStampAsStr' did not match date format '$it'")
             }
         }
@@ -69,7 +70,8 @@ class MessageUtils {
         try {
             val message: JsonObject? = json.obj("message")
             return if (message == null) null else message.obj("_id")
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             logger.warn("Message does not contain valid json object with  _id field")
             return null
         }
@@ -78,7 +80,8 @@ class MessageUtils {
     fun getIdFromDbObject(json: JsonObject): JsonObject? {
         try {
             return json.obj("_id")
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             logger.warn("DB Object does not contain valid json object with  _id field")
             return null
         }
@@ -109,6 +112,6 @@ class MessageUtils {
 
         checksum.update(bytes, 0, bytes.size)
 
-        return ByteBuffer.allocate(4).putInt(checksum.getValue().toInt()).array()
+        return ByteBuffer.allocate(4).putInt(checksum.value.toInt()).array()
     }
 }

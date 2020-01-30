@@ -44,7 +44,8 @@ class KeyPairGenerator {
                 val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
                 logger.error(metadataFileNotFoundError)
                 throw RuntimeException(metadataFileNotFoundError)
-            } else if (it.metadataKey != null && it.dataKey == null) {
+            }
+            else if (it.metadataKey != null && it.dataKey == null) {
                 logger.error("Data file not found for the metadata file ${it.metadataKey}")
             }
         }

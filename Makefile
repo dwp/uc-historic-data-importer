@@ -48,13 +48,13 @@ java-image: ## Build java image.
 python-image: ## Build python image.
 	cd docker/python && docker build --tag dwp-python:latest .
 
-.PHONY: dks-image
-dks-image: ## Build the dks image.
-	docker-compose build dks
+.PHONY: dks-standalone-https-image
+dks-standalone-https-image: ## Build the dks-standalone-https image.
+	docker-compose build dks-standalone-https
 
-.PHONY: dks-insecure-image
-dks-insecure-image: ## Build the dks image.
-	docker-compose build dks-insecure
+.PHONY: dks-standalone-http-image
+dks-standalone-http-image: ## Build the dks-standalone-http image.
+	docker-compose build dks-standalone-http
 
 
 .PHONY: s3-init-image
@@ -92,7 +92,7 @@ build-image: ancillary-images build-jar ## Build all ecosystem of images
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d zookeeper hbase s3 dks dks-insecure
+	docker-compose up -d zookeeper hbase s3 dks-standalone-https dks-standalone-http
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \
@@ -117,3 +117,11 @@ destroy: ## Bring everything down and clean up.
 	docker-compose down
 	docker network prune -f
 	docker volume prune -f
+
+.PHONY: dks-logs-https
+dks-logs-https: ## Cat the logs of dks-standalone-https
+	docker exec dks-standalone-https cat /opt/data-key-service/logs/dks.out
+
+.PHONY: dks-logs-http
+dks-logs-http: ## Cat the logs of dks-standalone-http
+	docker exec dks-standalone-http cat /opt/data-key-service/logs/dks.out

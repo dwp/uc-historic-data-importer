@@ -27,7 +27,8 @@ class ManifestWriter {
             val manifestFileName = generateManifestFileFormat(topicName, fileNumber.toInt())
             val manifestRecordString = generateEscapedCSV(manifestRecords)
             writeManifest(manifestRecordString, manifestFileName)
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             logger.error("Exception while writing ids of db: '${manifestRecords[0].db}', collection: '${manifestRecords[0].collection}' to manifest files in S3", e)
         }
     }

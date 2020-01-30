@@ -68,7 +68,8 @@ class JobConfiguration {
                     decryptionProcessor,
                     decompressionProcessor))
             }
-        } else {
+        }
+        else {
             logger.info("Disabling size filtering.")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(encryptionMetadataProcessor,

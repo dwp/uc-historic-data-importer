@@ -54,7 +54,8 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                         ++lineNo
                         try {
                             messageUtils.parseGson(line)
-                        } catch (e: Exception) {
+                        }
+                        catch (e: Exception) {
                             val key = e.message ?: ""
                             logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                             val count = counts.getOrDefault(key, 0)
@@ -82,11 +83,13 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                     val request = PutObjectRequest(bucket, "$prefix/$fileName", ByteArrayInputStream(byteArray), metadata)
                     s3.putObject(request)
                     succeeded = true
-                } catch (e: Exception) {
+                }
+                catch (e: Exception) {
                     try {
                         logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
                         inputStream.close()
-                    } catch (e: Exception) {
+                    }
+                    catch (e: Exception) {
                         logger.warn("Failed to close stream: '${e.message}'.")
                     }
 

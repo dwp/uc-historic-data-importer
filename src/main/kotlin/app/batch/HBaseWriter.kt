@@ -145,9 +145,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 logger.info("Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                                                 putBatch(batch)
                                                 logger.info("Written batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
-                                            } catch (e: Exception) {
+                                            }
+                                            catch (e: Exception) {
                                                 logger.error("Failed to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
-                                            } finally {
+                                            }
+                                            finally {
                                                 batch = mutableListOf()
                                                 batchSizeBytes = 0
                                                 fileProcessedRecords = reader.lineNumber
@@ -163,7 +165,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val manifestRecord = ManifestRecord(id!!, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
-                                } catch (e: Exception) {
+                                }
+                                catch (e: Exception) {
                                     logger.error("Error processing record ${reader.lineNumber} from '$fileName': '${e.message}'.", e)
                                 }
                             }
@@ -173,11 +176,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             fileProcessedRecords = reader.lineNumber
                             processedRecords += fileProcessedRecords
                             processedFiles += 1
-                        } catch (e: Exception) {
+                        }
+                        catch (e: Exception) {
                             try {
                                 logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
                                 inputStream.close()
-                            } catch (e: Exception) {
+                            }
+                            catch (e: Exception) {
                                 logger.warn("Failed to close stream: '${e.message}'.")
                             }
 
@@ -193,7 +198,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             putBatch(batch)
                             logger.info("Written batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName'.")
                             batch = mutableListOf()
-                        } catch (e: Exception) {
+                        }
+                        catch (e: Exception) {
                             logger.error("Failed to write batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
                         }
                     }
@@ -216,12 +222,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
         if (id.isJsonObject) {
             return id.asJsonObject
-        } else if (id.isJsonPrimitive) {
+        }
+        else if (id.isJsonPrimitive) {
             val value = id.asJsonPrimitive
             val asObject = JsonObject()
             asObject.addProperty("id", value.asString)
             return asObject
-        } else {
+        }
+        else {
             return null
         }
     }
@@ -235,13 +243,15 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             try {
                 hbase.putBatch(records)
                 success = true
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 val delay = if (attempts == 0) initialBackoffMillis.toLong()
                 else (initialBackoffMillis.toLong() * attempts * backoffMultiplier.toFloat()).toLong()
                 logger.warn("Failed to put batch on attempt ${attempts + 1}/$maxAttempts, will retry in $delay ms, if ${attempts + 1} still < $maxAttempts: ${e.message}")
                 Thread.sleep(delay)
                 exception = e
-            } finally {
+            }
+            finally {
                 attempts++
             }
         }

@@ -31,7 +31,8 @@ class LoggerUtilsTest {
     fun catchMe1(): Throwable {
         try {
             MakeStacktrace1().callMe1()
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             return ex
         }
         return RuntimeException("boom")
@@ -40,7 +41,8 @@ class LoggerUtilsTest {
     fun catchMe2(): Throwable {
         try {
             MakeStacktrace2().callMe2()
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             return ex
         }
         return RuntimeException("boom")
@@ -49,7 +51,8 @@ class LoggerUtilsTest {
     fun catchMe3(): Throwable {
         try {
             MakeStacktrace3().callMe3()
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             return ex
         }
         return RuntimeException("boom")
@@ -107,7 +110,8 @@ class LoggerUtilsTest {
         try {
             semiFormattedTuples("my-message", "key1")
             fail("Expected an IllegalArgumentException")
-        } catch (expected: IllegalArgumentException) {
+        }
+        catch (expected: IllegalArgumentException) {
             assertEquals(
                 "Must have matched key-value pairs but had 1 argument(s)",
                 expected.message)

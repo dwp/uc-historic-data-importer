@@ -35,12 +35,13 @@ class HttpKeyService(
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
-        logger.info("Calling decryptKey: '$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId'")
+        logger.info("Calling decryptKey: key:'$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId'")
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
                 decryptedKeyCache[cacheKey]!!
-            } else {
+            }
+            else {
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
@@ -69,7 +70,8 @@ class HttpKeyService(
                     }
                 }
             }
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             when (ex) {
                 is DataKeyDecryptionException, is DataKeyServiceUnavailableException -> {
                     throw ex
@@ -102,12 +104,14 @@ class HttpKeyService(
                             }
                         EntityUtils.consume(entity)
                         result
-                    } else {
+                    }
+                    else {
                         throw DataKeyServiceUnavailableException("Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code '$statusCode'")
                     }
                 }
             }
-        } catch (ex: Exception) {
+        }
+        catch (ex: Exception) {
             when (ex) {
                 is DataKeyServiceUnavailableException -> {
                     throw ex

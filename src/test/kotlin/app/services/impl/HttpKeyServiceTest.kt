@@ -115,7 +115,8 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Calling batchDataKey: dks_url: 'http://dummydks/datakey', dks_correlation_id: '$dksCallId' returned status_code '503'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(argumentCaptor.capture())
@@ -140,7 +141,8 @@ class HttpKeyServiceTest {
         try {
             keyService.batchDataKey()
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!', dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpGet::class.java)
             verify(httpClient, times(HttpKeyService.maxAttempts)).execute(argumentCaptor.capture())
@@ -293,7 +295,8 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyDecryptionException")
-        } catch (ex: DataKeyDecryptionException) {
+        }
+        catch (ex: DataKeyDecryptionException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123', dks_correlation_id: '$dksCallId' data key service returned status code '400'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(1)).execute(argumentCaptor.capture())
@@ -316,7 +319,8 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Decrypting encryptedKey: 'ENCRYPTED_KEY_ID' with keyEncryptionKeyId: '123', dks_correlation_id: '$dksCallId' data key service returned status code '503'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())
@@ -339,7 +343,8 @@ class HttpKeyServiceTest {
         try {
             keyService.decryptKey("123", "ENCRYPTED_KEY_ID")
             fail("Should throw a DataKeyServiceUnavailableException")
-        } catch (ex: DataKeyServiceUnavailableException) {
+        }
+        catch (ex: DataKeyServiceUnavailableException) {
             assertEquals("Error contacting data key service: 'java.lang.RuntimeException: Boom!', dks_correlation_id: '$dksCallId'", ex.message)
             val argumentCaptor = ArgumentCaptor.forClass(HttpPost::class.java)
             verify(httpClient, times(5)).execute(argumentCaptor.capture())

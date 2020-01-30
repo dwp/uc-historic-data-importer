@@ -151,7 +151,8 @@ fun formattedTimestamp(epochTime: Long): String {
             val netDate = Date(epochTime)
             return defaultFormat.format(netDate)
         }
-    } catch (e: Exception) {
+    }
+    catch (e: Exception) {
         throw e
     }
 }
@@ -162,7 +163,8 @@ fun flattenMultipleLines(text: String?): String {
     }
     return try {
         text.replace("\n", " | ").replace("\t", " ")
-    } catch (ex: java.lang.Exception) {
+    }
+    catch (ex: java.lang.Exception) {
         text
     }
 }
@@ -170,7 +172,8 @@ fun flattenMultipleLines(text: String?): String {
 fun inlineStackTrace(text: String): String {
     return try {
         StringEscapeUtils.escapeJson(flattenMultipleLines(text))
-    } catch (ex: java.lang.Exception) {
+    }
+    catch (ex: java.lang.Exception) {
         text
     }
 }
@@ -181,7 +184,8 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
         val stackTrace = ThrowableProxyUtil.asString(throwableProxy)
         val oneLineTrace = inlineStackTrace(stackTrace)
         "\"exception\":\"$oneLineTrace\", "
-    } else {
+    }
+    else {
         ""
     }
 }

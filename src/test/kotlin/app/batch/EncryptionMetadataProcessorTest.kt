@@ -51,7 +51,8 @@ class EncryptionMetadataProcessorTest {
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(malformedJson), "S3_KEY", 100L)
             EncryptionMetadataProcessor().process(pair)
-        } catch (e: MetadataException) {
+        }
+        catch (e: MetadataException) {
             val message = "Failed to parse encryption metadata for '$s3key'."
             assertEquals(message, e.message)
             throw e
@@ -96,7 +97,8 @@ class EncryptionMetadataProcessorTest {
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
-        } catch (e: MetadataException) {
+        }
+        catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'keyEncryptionKeyId' encryption metadata field must not be blank."
             assertEquals(expected, e.message)
             throw e
@@ -119,7 +121,8 @@ class EncryptionMetadataProcessorTest {
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
-        } catch (e: MetadataException) {
+        }
+        catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'initialisationVector' encryption metadata field must not be blank."
             assertEquals(expected, e.message)
             throw e
@@ -143,7 +146,8 @@ class EncryptionMetadataProcessorTest {
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(invalidJson), s3Key, 100L)
             EncryptionMetadataProcessor().process(pair)
-        } catch (e: MetadataException) {
+        }
+        catch (e: MetadataException) {
             val expected = "Failed to process encryption metadata for '$s3Key': 'encryptedEncryptionKey' encryption metadata field must not be blank."
             assertEquals(expected, e.message)
             throw e

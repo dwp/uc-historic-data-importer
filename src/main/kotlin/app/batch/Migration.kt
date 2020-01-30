@@ -36,7 +36,8 @@ fun HbaseClient.migrate() {
             admin.createTable(HTableDescriptor(dataTableName).apply {
                 addFamily(dataFamilyDescriptor)
             })
-        } else if (!admin.getTableDescriptor(dataTableName).hasFamily(dataFamily)) {
+        }
+        else if (!admin.getTableDescriptor(dataTableName).hasFamily(dataFamily)) {
             logger.info("Adding column family '$dataFamily' to table '$dataTable'")
             admin.addColumn(dataTableName, dataFamilyDescriptor)
         }
@@ -49,7 +50,8 @@ fun HbaseClient.migrate() {
             admin.createTable(HTableDescriptor(topicTableName).apply {
                 addFamily(topicFamilyDescriptor)
             })
-        } else if (!admin.getTableDescriptor(topicTableName).hasFamily(topicFamily)) {
+        }
+        else if (!admin.getTableDescriptor(topicTableName).hasFamily(topicFamily)) {
             logger.info("Adding column family '$topicFamily' to table '$topicTable'")
             admin.addColumn(topicTableName, topicFamilyDescriptor)
         }

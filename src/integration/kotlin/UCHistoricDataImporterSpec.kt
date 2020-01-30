@@ -1,6 +1,5 @@
 import app.batch.HbaseClient
 import app.configuration.S3DummyConfiguration
-import app.utils.logging.*
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -103,10 +102,12 @@ class UCHistoricDataImporterSpec : FunSpec() {
                                     val decryptedDbObject = decrypt(decryptedKey, initializationVector, encryptedDbObject)
                                     //verify it is valid json:
                                     Gson().fromJson(decryptedDbObject, JsonObject::class.java)
-                                } catch (e: Exception) {
+                                }
+                                catch (e: Exception) {
                                     fail("Decrypted db object should be parseable as json.")
                                 }
-                            } else {
+                            }
+                            else {
                                 fail("No encrypted db object.")
                             }
                         }
@@ -169,7 +170,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.trim().split("\n").size
-                assertEquals(11,noOfRecordsPerFile)
+                assertEquals(11, noOfRecordsPerFile)
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")

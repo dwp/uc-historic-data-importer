@@ -67,7 +67,8 @@ class MessageProducer {
     private val hdiVersion: String by lazy {
         val valueFromManifest = try {
             Manifests.read("Hdi-Version")
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             null
         }
         val valueFromArguments = environment.get("hdi.version")
