@@ -34,7 +34,6 @@ git-hooks: ## Set up hooks in .git/hooks
 		done \
 	}
 
-
 .PHONY: gradle-image
 gradle-image: ## Build gradle image.
 	cp settings.gradle.kts gradle.properties docker/gradle
@@ -56,7 +55,6 @@ dks-standalone-https-image: ## Build the dks-standalone-https image.
 dks-standalone-http-image: ## Build the dks-standalone-http image.
 	docker-compose build dks-standalone-http
 
-
 .PHONY: s3-init-image
 s3-init-image: ## Build the image that creates the s3 bucket.
 	docker-compose build s3-init
@@ -70,7 +68,7 @@ add-containers-to-hosts:
 	./add-containers-to-hosts.sh
 
 .PHONY: ancillary-images
-ancillary-images: gradle-image java-image python-image dks-image dks-insecure-image s3-init-image  ## Build base images
+ancillary-images: gradle-image java-image python-image dks-standalone-http-image dks-standalone-https-image s3-init-image  ## Build base images
 
 build-jar: ## Build the jar.
 	./gradlew clean build
