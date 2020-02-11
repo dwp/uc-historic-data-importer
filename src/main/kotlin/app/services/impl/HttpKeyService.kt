@@ -35,7 +35,7 @@ class HttpKeyService(
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
-        logger.info("Calling decryptKey: key:'$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId'")
+        logger.info("Calling decryptKey: encryptedKey:'$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId'")
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
@@ -45,12 +45,12 @@ class HttpKeyService(
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
-                    logger.info("Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId', dks_correlation_id: '$dksCorrelationId'")
+                    logger.info("Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId'")
                     val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logger.info("Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code '$statusCode'.")
+                        logger.info("Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code: '$statusCode'.")
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity

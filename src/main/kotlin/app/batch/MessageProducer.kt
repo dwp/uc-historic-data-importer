@@ -2,13 +2,13 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
+import app.utils.logging.correlation_id
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
 import org.springframework.stereotype.Component
@@ -17,6 +17,7 @@ import java.util.*
 
 @Component
 class MessageProducer {
+
     fun produceMessage(jsonObject: JsonObject,
                        id: String,
                        encryptionResult: EncryptionResult,
@@ -30,15 +31,16 @@ class MessageProducer {
 
         lastModified = if (StringUtils.isNotBlank(lastModified)) lastModified else "1980-01-01T00:00:00.000Z"
 
-        //println("lastModified: '$lastModified'.")
         val type = jsonObject.getAsJsonPrimitive("@type")?.asString ?: "MONGO_UPDATE"
-        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(Date())
 
+        // SimpleDateFormat is not thread-safe so we need a new one every time
+        val standardDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+        val timestamp = standardDateFormat.format(Date())
 
         return """{
    "unitOfWorkId": "$unitOfWorkId",
    "timestamp": "$timestamp",
-   "traceId": "$traceId",
+   "traceId": "$correlation_id",
    "@type": "HDI",
    "version": "$hdiVersion",
    "message": {
@@ -60,9 +62,6 @@ class MessageProducer {
     companion object {
         val logger: Logger = LoggerFactory.getLogger(MessageProducer::class.toString())
     }
-
-    @Value("\${trace.id}")
-    private lateinit var traceId: String
 
     private val hdiVersion: String by lazy {
         val valueFromManifest = try {
