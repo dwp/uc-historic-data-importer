@@ -2,6 +2,8 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
+import app.utils.logging.overrideLoggerStaticFieldsForTests
+import app.utils.logging.resetLoggerStaticFieldsForTests
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.google.gson.Gson
@@ -10,7 +12,9 @@ import com.nhaarman.mockitokotlin2.mock
 import org.everit.json.schema.loader.SchemaLoader
 import org.json.JSONObject
 import org.json.JSONTokener
+import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
@@ -44,6 +48,16 @@ class MessageProducerTest {
     private val collection = "collection"
     private val type = "type"
 
+    @Before
+    fun setup() {
+        overrideLoggerStaticFieldsForTests("test-host", "test-env", "my-app", "v1", "tests", "9876543000", "correlation1")
+    }
+
+    @After
+    fun tearDown() {
+        resetLoggerStaticFieldsForTests()
+    }
+
     @Test
     fun testValidObjectGivesSchemaValidMessage() {
 
@@ -64,7 +78,7 @@ class MessageProducerTest {
         actual.remove("timestamp")
         validate(message)
         val expected = """{
-              "traceId": "1",
+              "traceId": "correlation1",
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
@@ -133,7 +147,7 @@ class MessageProducerTest {
         actual.remove("timestamp")
         validate(message)
         val expected = """{
-              "traceId": "1",
+              "traceId": "correlation1",
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
@@ -190,7 +204,7 @@ class MessageProducerTest {
         validate(message)
 
         val expected = """{
-              "traceId": "1",
+              "traceId": "correlation1",
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
@@ -241,7 +255,7 @@ class MessageProducerTest {
         val actual = Gson().fromJson(message, JsonObject::class.java)
 
         val expectedMessage = """{
-           "traceId": "1",
+           "traceId": "correlation1",
            "@type": "HDI",
            "version": "1.0.0",
            "message": {
@@ -295,7 +309,7 @@ class MessageProducerTest {
         actual.remove("timestamp")
 
         val expectedMessage = """{
-           "traceId": "1",
+           "traceId": "correlation1",
            "@type": "HDI",
            "version": "1.0.0",
            "message": {
