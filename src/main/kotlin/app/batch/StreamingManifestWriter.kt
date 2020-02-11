@@ -1,6 +1,7 @@
 package app.batch
 
 import app.domain.ManifestRecord
+import app.utils.logging.logError
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -36,7 +37,7 @@ open class StreamingManifestWriter {
             }
         }
 
-        logger.error("Failed to write manifest '${manifestFile}' after $maxManifestAttempts attempts, giving up.")
+        logError(logger, "Failed to write manifest '${manifestFile}' after $maxManifestAttempts attempts, giving up.")
     }
 
     fun manifestMetadata(fileName: String, size: Long) =

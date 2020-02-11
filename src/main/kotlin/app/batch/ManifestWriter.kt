@@ -1,6 +1,7 @@
 package app.batch
 
 import app.domain.ManifestRecord
+import app.utils.logging.logError
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -29,7 +30,7 @@ class ManifestWriter {
             writeManifest(manifestRecordString, manifestFileName)
         }
         catch (e: Exception) {
-            logger.error("Exception while writing ids of db: '${manifestRecords[0].db}', collection: '${manifestRecords[0].collection}' to manifest files in S3", e)
+            logError(logger, "Exception while writing ids of db: '${manifestRecords[0].db}', collection: '${manifestRecords[0].collection}' to manifest files in S3", e)
         }
     }
 

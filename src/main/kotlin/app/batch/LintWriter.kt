@@ -2,6 +2,7 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.services.CipherService
+import app.utils.logging.logError
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -57,7 +58,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                         }
                         catch (e: Exception) {
                             val key = e.message ?: ""
-                            logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
+                            logError(logger, "Error processing record $lineNo from '$fileName': '${e.message}'.")
                             val count = counts.getOrDefault(key, 0)
                             if (count < maxErrorsToLog.toInt()) {
                                 errors.add(ErrorRecord(line, key, lineNo))

@@ -31,7 +31,7 @@ import javax.crypto.spec.SecretKeySpec
 class UCHistoricDataImporterSpec : FunSpec() {
 
     override fun listeners() = listOf(SpringListener)
-    private val log = Logger.getLogger(UCHistoricDataImporterSpec::class.toString())
+    private val logger = Logger.getLogger(UCHistoricDataImporterSpec::class.toString())
 
     @Autowired
     private lateinit var s3Client: AmazonS3
@@ -56,7 +56,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 size
             }
 
-            log.info("Messages count : $count")
+            logger.info("Messages count : $count")
             count shouldBe 4
         }
 
@@ -70,7 +70,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 size
             }
 
-            log.info("Topic count : $count")
+            logger.info("Topic count : $count")
             count shouldBe 3
         }
 
@@ -174,7 +174,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
-            log.info("all content $joinedContent")
+            logger.info("all content $joinedContent")
             assertEquals(4, fileCount)
             assertEquals(expected, joinedContent)
         }

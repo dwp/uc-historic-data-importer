@@ -6,6 +6,7 @@ import app.domain.HBaseRecord
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.logError
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -147,7 +148,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 logger.info("Written batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                                             }
                                             catch (e: Exception) {
-                                                logger.error("Failed to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
+                                                logError(logger, "Failed to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
                                             }
                                             finally {
                                                 batch = mutableListOf()
@@ -167,7 +168,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                 }
                                 catch (e: Exception) {
-                                    logger.error("Error processing record ${reader.lineNumber} from '$fileName': '${e.message}'.", e)
+                                    logError(logger, "Error processing record ${reader.lineNumber} from '$fileName': '${e.message}'.", e)
                                 }
                             }
 
@@ -200,7 +201,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             batch = mutableListOf()
                         }
                         catch (e: Exception) {
-                            logger.error("Failed to write batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
+                            logError(logger, "Failed to write batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
                         }
                     }
                 }

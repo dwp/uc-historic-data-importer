@@ -2,6 +2,7 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
+import app.utils.logging.logError
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.slf4j.Logger
@@ -26,7 +27,7 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
         catch (e: Exception) {
 
             val decompressionExceptionMsg = "Exception occurred when decompressing the gzip decrypted input stream from the file $fileName : ${e.message}"
-            logger.error(decompressionExceptionMsg, e)
+            logError(logger, decompressionExceptionMsg, e)
             throw RuntimeException("$decompressionExceptionMsg : $e")
         }
     }

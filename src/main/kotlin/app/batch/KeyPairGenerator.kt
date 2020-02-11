@@ -1,6 +1,7 @@
 package app.batch
 
 import app.domain.KeyPair
+import app.utils.logging.logError
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -42,11 +43,11 @@ class KeyPairGenerator {
         keyPairs.forEach {
             if (it.dataKey != null && it.metadataKey == null) {
                 val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
-                logger.error(metadataFileNotFoundError)
+                logError(logger, metadataFileNotFoundError)
                 throw RuntimeException(metadataFileNotFoundError)
             }
             else if (it.metadataKey != null && it.dataKey == null) {
-                logger.error("Data file not found for the metadata file ${it.metadataKey}")
+                logError(logger, "Data file not found for the metadata file ${it.metadataKey}")
             }
         }
     }

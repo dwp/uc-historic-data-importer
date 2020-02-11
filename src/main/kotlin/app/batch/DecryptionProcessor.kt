@@ -4,6 +4,7 @@ import app.configuration.CipherInstanceProvider
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DecryptionException
+import app.utils.logging.logError
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -39,7 +40,7 @@ class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : 
         }
         catch (e: Exception) {
             val message = "Failed to decrypt data in '${item.s3key}': ${e.message}."
-            logger.error(message)
+            logError(logger, message)
             throw DecryptionException(message, e)
         }
     }
