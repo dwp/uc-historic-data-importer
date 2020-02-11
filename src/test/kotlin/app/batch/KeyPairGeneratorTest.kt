@@ -20,7 +20,7 @@ class KeyPairGeneratorTest {
     private val keyPairGenerator: KeyPairGenerator = KeyPairGenerator()
 
     @Test
-    fun Should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {
+    fun should_Return_Keypairs_When_Given_List_Of_Keys_Match_Format() {
         val expectedKeyPairs = listOf(KeyPair("adb.collection.0000.json.gz.enc", "adb.collection.0000.json.gz.encryption.json"),
             KeyPair("cdb.Collection_1.0000.json.gz.enc", "cdb.Collection_1.0000.json.gz.encryption.json"),
             KeyPair("sdb.collection.0000.json.gz.enc", "sdb.collection.0000.json.gz.encryption.json"))
@@ -35,8 +35,7 @@ class KeyPairGeneratorTest {
     }
 
     @Test
-    fun Should_Log_When_Given_Keys_Dont_Match_Format() {
-
+    fun should_Log_When_Given_Keys_Dont_Match_Format() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
@@ -53,15 +52,13 @@ class KeyPairGeneratorTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(5)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("2 key(s) that don't match the given file fileFormat $fileFormatRegex found"))
-        assertTrue(formattedMessages.contains("Unmatched keys : abc.json, edf.json"))
+        assertEquals("Expecting one filtering message with 2 keys counted", 1, formattedMessages.filter { it.contains("2 key(s) that don't match the given file fileFormat ^") }.size)
+        assertEquals("Expecting one unmatched keys list with 2 entries", 1, formattedMessages.filter { it.contains("Unmatched keys : abc.json, edf.json") }.size)
         assertEquals(expectedKeyPairs, actualKeyPairs)
-
     }
 
     @Test
-    fun Should_Log_When_Given_Keys_Dont_Match_File_Extensions() {
-
+    fun should_Log_When_Given_Keys_Dont_Match_File_Extensions() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
@@ -83,8 +80,7 @@ class KeyPairGeneratorTest {
     }
 
     @Test
-    fun Should_Log_When_Data_File_Doesnt_But_Metadata_File_Does_Exist() {
-
+    fun should_Log_When_Data_File_Doesnt_But_Metadata_File_Does_Exist() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
@@ -105,8 +101,7 @@ class KeyPairGeneratorTest {
     }
 
     @Test(expected = RuntimeException::class)
-    fun Should_Throw_Exception_When_Metadata_File_Doesnt_Exist() {
-
+    fun should_Throw_Exception_When_Metadata_File_Doesnt_Exist() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)

@@ -7,13 +7,12 @@ import com.amazonaws.services.s3.AmazonS3
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 
 class StreamingManifestWriterTest {
-
 
     @Test
     fun testEscapedCSV() {
@@ -32,7 +31,6 @@ class StreamingManifestWriterTest {
         assertEquals("text/plain", actual.contentType)
         assertEquals(manifestFileName, actual.userMetadata.get("x-amz-meta-title"))
         assertEquals(1024, actual.contentLength)
-
     }
 
     @Test
@@ -54,14 +52,9 @@ class StreamingManifestWriterTest {
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         for (i in 1..10) {
-            Assert.assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' on attempt $i/10: 'null'"))
+            assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' on attempt $i\\/10: 'null'"))
         }
-        Assert.assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' after 10 attempts, giving up."))
-    }
-
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriterTest::class.toString())
+        assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' after 10 attempts, giving up."))
     }
 
 }
