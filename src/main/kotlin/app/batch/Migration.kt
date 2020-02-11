@@ -1,13 +1,14 @@
 package app.batch
 
+import app.utils.logging.logInfo
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.hbase.TableName
-import org.apache.log4j.Logger
+import org.slf4j.LoggerFactory
 
 fun HbaseClient.migrate() {
-    val logger = Logger.getLogger(HbaseClient::class.java)
+    val logger = LoggerFactory.getLogger(HbaseClient::class.toString())
 
     connection.admin.use { admin ->
         val namespaces = admin.listNamespaceDescriptors().map { it.name }
@@ -21,7 +22,7 @@ fun HbaseClient.migrate() {
 
         // Create all namespaces not already in the list of namespaces
         for (namespace in missingNamespaces) {
-            logger.info("Creating namespace '$namespace'")
+            logInfo(logger, "Creating namespace '$namespace'")
             admin.createNamespace(NamespaceDescriptor.create(namespace).build())
         }
 
@@ -32,13 +33,13 @@ fun HbaseClient.migrate() {
         }
 
         if (!admin.tableExists(dataTableName)) {
-            logger.info("Creating table '$dataTable'")
+            logInfo(logger, "Creating table '$dataTable'")
             admin.createTable(HTableDescriptor(dataTableName).apply {
                 addFamily(dataFamilyDescriptor)
             })
         }
         else if (!admin.getTableDescriptor(dataTableName).hasFamily(dataFamily)) {
-            logger.info("Adding column family '$dataFamily' to table '$dataTable'")
+            logInfo(logger, "Adding column family '$dataFamily' to table '$dataTable'")
             admin.addColumn(dataTableName, dataFamilyDescriptor)
         }
 
@@ -46,13 +47,13 @@ fun HbaseClient.migrate() {
         val topicFamilyDescriptor = HColumnDescriptor(topicFamily)
 
         if (!admin.tableExists(topicTableName)) {
-            logger.info("Creating table '$topicTable'")
+            logInfo(logger, "Creating table '$topicTable'")
             admin.createTable(HTableDescriptor(topicTableName).apply {
                 addFamily(topicFamilyDescriptor)
             })
         }
         else if (!admin.getTableDescriptor(topicTableName).hasFamily(topicFamily)) {
-            logger.info("Adding column family '$topicFamily' to table '$topicTable'")
+            logInfo(logger, "Adding column family '$topicFamily' to table '$topicTable'")
             admin.addColumn(topicTableName, topicFamilyDescriptor)
         }
     }

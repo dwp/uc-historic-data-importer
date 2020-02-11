@@ -3,6 +3,7 @@ package app.batch
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.utils.logging.logError
+import app.utils.logging.logInfo
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.slf4j.Logger
@@ -17,11 +18,11 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
         val inputStream = item.inputStream
         val fileName = item.fileName
         try {
-            logger.info("Starting decompression of the file $fileName")
-            logger.info("inputStream: '$inputStream'")
+            logInfo(logger, "Starting decompression of the file $fileName")
+            logInfo(logger, "inputStream: '$inputStream'")
             val compressorInputStream = CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP,
                 inputStream) as GzipCompressorInputStream
-            logger.info("Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
+            logInfo(logger, "Compressed size of the file $fileName : ${compressorInputStream.compressedCount}")
             return DecompressedStream(compressorInputStream, fileName, item.key, item.iv)
         }
         catch (e: Exception) {

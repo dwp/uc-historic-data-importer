@@ -2,6 +2,8 @@ package app.batch
 
 import app.domain.KeyPair
 import app.utils.logging.logError
+import app.utils.logging.logInfo
+import app.utils.logging.logWarn
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -17,20 +19,20 @@ class KeyPairGenerator {
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
 
-        logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
+        logWarn(logger, "${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
         if (unMatchedFlattened.isNotEmpty()) {
-            logger.warn("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+            logWarn(logger, "Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
         }
 
         val keyPairs = matched.map { pair ->
-            logger.info("Matched key : ${pair.key} Value : ${pair.value} \n")
+            logInfo(logger, "Matched key : ${pair.key} Value : ${pair.value} \n")
             val neitherDataNorMetadataKey =
                 pair.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
             val dataKey = pair.value.find { ti -> ti.contains(dataFileExtension) }
             val metadatakey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
 
             if (neitherDataNorMetadataKey.isNotEmpty()) {
-                logger.warn("${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
+                logWarn(logger, "${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
             }
 
             KeyPair(dataKey, metadatakey)

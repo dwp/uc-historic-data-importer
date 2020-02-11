@@ -3,6 +3,8 @@ package app.batch
 import app.domain.DecompressedStream
 import app.services.CipherService
 import app.utils.logging.logError
+import app.utils.logging.logInfo
+import app.utils.logging.logWarn
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -40,7 +42,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach { input ->
-            logger.info("Processing '${input.fileName}'.")
+            logInfo(logger, "Processing '${input.fileName}'.")
             val fileName = input.fileName
             var lineNo = 0
             var succeeded = false
@@ -87,11 +89,11 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                 }
                 catch (e: Exception) {
                     try {
-                        logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
+                        logWarn(logger, "Error on attempt $attempts streaming '$fileName': '${e.message}'.")
                         inputStream.close()
                     }
                     catch (e: Exception) {
-                        logger.warn("Failed to close stream: '${e.message}'.")
+                        logWarn(logger, "Failed to close stream: '${e.message}'.")
                     }
 
                     inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
@@ -99,7 +101,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                 }
             }
 
-            logger.info("Processed $lineNo records from the file $fileName")
+            logInfo(logger, "Processed $lineNo records from the file $fileName")
         }
     }
 

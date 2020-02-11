@@ -2,6 +2,7 @@ package app.batch
 
 import app.domain.InputStreamPair
 import app.domain.S3ObjectSummaryPair
+import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsV2Request
 import com.amazonaws.services.s3.model.ListObjectsV2Result
@@ -44,7 +45,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         val iterator = getS3ObjectSummariesIterator(s3client, s3BucketName)
         return if (iterator.hasNext()) {
             iterator.next().let {
-                logger.info("s3objectSummaryPair: '$it'.")
+                logInfo(logger, "s3objectSummaryPair: '$it'.")
                 val dataInputStream = it.data?.let { it1 -> s3Helper.getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 val metadataInputStream = it.metadata?.let { it1 -> s3Helper.getS3ObjectInputStream(it1, s3client, s3BucketName) }
                 return InputStreamPair(dataInputStream!!, metadataInputStream!!, it.data.key, it.data.size)
@@ -79,7 +80,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Synchronized
     private fun getS3ObjectSummariesList(awsS3Client: AmazonS3, bucketName: String, fullPrefix: String): List<S3ObjectSummaryPair> {
 
-        logger.info("Looking for s3 objects in s3://$bucketName/$fullPrefix")
+        logInfo(logger, "Looking for s3 objects in s3://$bucketName/$fullPrefix")
         val request = ListObjectsV2Request().apply {
             withBucketName(bucketName)
             withPrefix(fullPrefix)
@@ -89,13 +90,13 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         val objectSummaries: MutableList<S3ObjectSummary> = mutableListOf()
 
         do {
-            logger.info("Getting paginated results for s3://$bucketName/$fullPrefix")
+            logInfo(logger, "Getting paginated results for s3://$bucketName/$fullPrefix")
             results = s3Helper.listObjectsV2Result(awsS3Client, request, objectSummaries)
             request.continuationToken = results?.nextContinuationToken
         }
         while (results != null && results.isTruncated)
 
-        logger.info("Found ${objectSummaries.size} objects in s3://$bucketName/$fullPrefix")
+        logInfo(logger, "Found ${objectSummaries.size} objects in s3://$bucketName/$fullPrefix")
         val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
         val keyPairs =
             keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },
@@ -108,7 +109,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
             val meta = objectSummaryKeyMap[it.metadataKey]
             S3ObjectSummaryPair(obj, meta)
         }
-        logger.info("Found ${pairs.size} valid object key pairs in s3://$bucketName/$fullPrefix")
+        logInfo(logger, "Found ${pairs.size} valid object key pairs in s3://$bucketName/$fullPrefix")
         return pairs
     }
 

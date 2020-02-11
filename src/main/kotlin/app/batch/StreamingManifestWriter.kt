@@ -2,6 +2,8 @@ package app.batch
 
 import app.domain.ManifestRecord
 import app.utils.logging.logError
+import app.utils.logging.logInfo
+import app.utils.logging.logWarn
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -26,14 +28,14 @@ open class StreamingManifestWriter {
                 BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
                     val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
                     s3.putObject(request)
-                    logger.info("Written manifest '$manifestFile' on attempt ${attempts + 1}/$maxManifestAttempts to 's3://$manifestBucket/$manifestPrefix/$manifestFileName', size: $manifestSize")
+                    logInfo(logger, "Written manifest '$manifestFile' on attempt ${attempts + 1}/$maxManifestAttempts to 's3://$manifestBucket/$manifestPrefix/$manifestFileName', size: $manifestSize")
                     success = true
                     return
                 }
             }
             catch (e: Exception) {
                 ++attempts
-                logger.warn("Failed to write manifest '${manifestFile}' on attempt $attempts/$maxManifestAttempts: '${e.message}'")
+                logWarn(logger, "Failed to write manifest '${manifestFile}' on attempt $attempts/$maxManifestAttempts: '${e.message}'")
             }
         }
 

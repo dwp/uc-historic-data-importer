@@ -1,6 +1,7 @@
 package app.configuration
 
 import app.batch.HbaseClient
+import app.utils.logging.logInfo
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.listener.JobExecutionListenerSupport
@@ -11,7 +12,7 @@ class JobCompletionNotificationListener(private val hbaseClient: HbaseClient) : 
 
     override fun afterJob(jobExecution: JobExecution) {
         hbaseClient.close()
-        logger.info("Finished, status: '${jobExecution.status}'.")
+        logInfo(logger, "Finished, status: '${jobExecution.status}'.")
     }
 
     companion object {

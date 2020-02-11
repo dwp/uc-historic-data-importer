@@ -3,6 +3,7 @@ package app.batch
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
 import app.utils.logging.correlation_id
+import app.utils.logging.logInfo
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
@@ -71,7 +72,7 @@ class MessageProducer {
             null
         }
         val valueFromArguments = environment.get("hdi.version")
-        logger.info("valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
+        logInfo(logger, "valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
         valueFromManifest ?: valueFromArguments ?: "No hdi version available."
     }
 

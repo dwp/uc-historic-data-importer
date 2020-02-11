@@ -166,9 +166,9 @@ class UCHistoricDataImporterSpec : FunSpec() {
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
             val fileCount = summaries.size
-            val list = summaries.map {
-                val objectContent = s3Client.getObject(it.bucketName, it.key).objectContent
-                val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader?).use { it.readText() }
+            val list = summaries.map { summary ->
+                val objectContent = s3Client.getObject(summary.bucketName, summary.key).objectContent
+                val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.trim().split("\n").size
                 assertEquals(11, noOfRecordsPerFile)
                 fileContent.trim()

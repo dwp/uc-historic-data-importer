@@ -1,5 +1,7 @@
 package app.batch
 
+import app.utils.logging.logDebug
+import app.utils.logging.logWarn
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
@@ -33,7 +35,7 @@ class MessageUtils {
                 return df.parse(timeStampAsStr).time
             }
             catch (e: Exception) {
-                logger.debug("'$timeStampAsStr' did not match date format '$it'")
+                logDebug(logger, "'$timeStampAsStr' did not match date format '$it'")
             }
         }
         throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
@@ -46,7 +48,7 @@ class MessageUtils {
             return lastModified
         }
 
-        logger.warn("No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
+        logWarn(logger, "No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
         return EPOCH
     }
 
@@ -57,7 +59,7 @@ class MessageUtils {
             return type
         }
 
-        logger.warn("No @type in message defaulting to '$typeDefault'.")
+        logWarn(logger, "No @type in message defaulting to '$typeDefault'.")
         return typeDefault
     }
 
@@ -72,7 +74,7 @@ class MessageUtils {
             return if (message == null) null else message.obj("_id")
         }
         catch (e: Exception) {
-            logger.warn("Message does not contain valid json object with  _id field")
+            logWarn(logger, "Message does not contain valid json object with  _id field")
             return null
         }
     }
@@ -82,7 +84,7 @@ class MessageUtils {
             return json.obj("_id")
         }
         catch (e: Exception) {
-            logger.warn("DB Object does not contain valid json object with  _id field")
+            logWarn(logger, "DB Object does not contain valid json object with  _id field")
             return null
         }
     }

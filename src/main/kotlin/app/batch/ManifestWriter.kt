@@ -2,6 +2,7 @@ package app.batch
 
 import app.domain.ManifestRecord
 import app.utils.logging.logError
+import app.utils.logging.logInfo
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
@@ -43,7 +44,7 @@ class ManifestWriter {
 
         val manifestFileBytes = byteArrayOutputStream.toByteArray()
         val bytesSize = manifestFileBytes.size.toLong()
-        logger.info("Writing file 's3://$s3ManifestBucketName/$fileName' of '$bytesSize' bytes.")
+        logInfo(logger, "Writing file 's3://$s3ManifestBucketName/$fileName' of '$bytesSize' bytes.")
 
         val inputStream = ByteArrayInputStream(manifestFileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)
