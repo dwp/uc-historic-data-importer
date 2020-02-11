@@ -1,73 +1,82 @@
 package app.batch
 
 import app.domain.HBaseRecord
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.Connection
-import org.apache.hadoop.hbase.client.ConnectionFactory
-import org.apache.hadoop.hbase.client.Increment
-import org.apache.hadoop.hbase.client.Put
+import org.apache.hadoop.hbase.*
+import org.apache.hadoop.hbase.client.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-open class HbaseClient(
+open class HbaseClient (
     val connection: Connection,
-    val dataTable: String,
     val dataFamily: ByteArray,
-    val topicTable: String,
-    val topicFamily: ByteArray,
-    val topicQualifier: ByteArray
+    val dataQualifier: ByteArray
 ) {
     companion object {
         fun connect() = HbaseClient(
             ConnectionFactory.createConnection(HBaseConfiguration.create(Config.Hbase.config)),
-            Config.Hbase.dataTable,
-            Config.Hbase.dataFamily.toByteArray(),
-            Config.Hbase.topicTable,
-            Config.Hbase.topicFamily.toByteArray(),
-            Config.Hbase.topicQualifier.toByteArray()
+                Config.Hbase.dataFamily.toByteArray(),
+                Config.Hbase.dataQualifier.toByteArray()
         )
+
+        val logger: Logger = LoggerFactory.getLogger(HbaseClient::class.java)
     }
 
-    open fun putBatch(inserts: List<HBaseRecord>) {
-        if (inserts.size > 0) {
-            connection.getTable(TableName.valueOf(dataTable)).use { table ->
-
-                table.put(inserts.map {
-                    Put(it.key).apply {
-                        this.addColumn(dataFamily, it.topic, it.version, it.body)
+    open fun putBatch(tableName: String, inserts: List<HBaseRecord>) {
+        if (inserts.isNotEmpty()) {
+            table(tableName).use {
+                it.put(inserts.map { record ->
+                    Put(record.key).apply {
+                        this.addColumn(dataFamily, dataQualifier, record.version, record.body)
                     }
                 })
             }
-            connection.getTable(TableName.valueOf(topicTable)).use { table ->
-                table.increment(Increment(inserts[0].topic).apply {
-                    addColumn(topicFamily, topicQualifier, inserts.size.toLong())
-                })
-            }
         }
     }
 
-    open fun putVersion(topic: ByteArray, key: ByteArray, body: ByteArray, version: Long) {
-        connection.getTable(TableName.valueOf(dataTable)).use { table ->
-            table.put(Put(key).apply {
-                this.addColumn(
-                    dataFamily,
-                    topic,
-                    version,
-                    body
-                )
+    private fun table(tableName: String): Table {
+        val dataTableName = TableName.valueOf(tableName)
+        val namespace = dataTableName.namespaceAsString
+
+        if (!namespaces.contains(namespace)) {
+            logger.info("Creating namespace '$namespace'.")
+            connection.admin.createNamespace(NamespaceDescriptor.create(namespace).build())
+            namespaces[namespace] = true
+        }
+
+        if (!tables.contains(tableName)) {
+            logger.info("Creating table '$dataTableName'.")
+            connection.admin.createTable(HTableDescriptor(dataTableName).apply {
+                addFamily(HColumnDescriptor(dataFamily)
+                            .apply {
+                                maxVersions = Int.MAX_VALUE
+                                minVersions = 1
+                            })
             })
         }
 
-        connection.getTable(TableName.valueOf(topicTable)).use { table ->
-            table.increment(Increment(topic).apply {
-                addColumn(
-                    topicFamily,
-                    topicQualifier,
-                    1
-                )
-            })
+        return connection.getTable(TableName.valueOf(tableName))
+    }
+
+    private val namespaces by lazy {
+        val extantNamespaces = mutableMapOf<String, Boolean>()
+
+        connection.admin.listNamespaceDescriptors()
+                .forEach {
+                    extantNamespaces[it.name] = true
+                }
+
+        extantNamespaces
+    }
+
+    private val tables by lazy {
+        val names = mutableMapOf<String, Boolean>()
+
+        connection.admin.listTableNames().forEach {
+            names[it.nameAsString] = true
         }
+
+        names
     }
 
     fun close() = connection.close()
-
 }
