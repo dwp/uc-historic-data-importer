@@ -33,7 +33,7 @@ private var environment = System.getProperty("environment", UNSET_TEXT)
 private var application = System.getProperty("application", UNSET_TEXT)
 private var app_version = System.getProperty("app_version", UNSET_TEXT)
 private var component = System.getProperty("component", UNSET_TEXT)
-private var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
 class LogConfiguration {
