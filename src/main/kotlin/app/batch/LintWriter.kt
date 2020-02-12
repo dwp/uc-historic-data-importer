@@ -38,7 +38,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach { input ->
-            logger.info("Processing '${input.fileName}'.")
+            logger.info("Processing file", "file_name", input.fileName)
             val fileName = input.fileName
             var lineNo = 0
             var succeeded = false
@@ -56,7 +56,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                         }
                         catch (e: Exception) {
                             val key = e.message ?: ""
-                            logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
+                            logger.error("Error processing record", "line_number", "$lineNo", "file_name", fileName, "error_message", "${e.message}")
                             val count = counts.getOrDefault(key, 0)
                             if (count < maxErrorsToLog.toInt()) {
                                 errors.add(ErrorRecord(line, key, lineNo))
@@ -85,11 +85,11 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                 }
                 catch (e: Exception) {
                     try {
-                        logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
+                        logger.warn("Error streaming file", "attempt_number", "$attempts", "file_name", fileName, "${e.message}")
                         inputStream.close()
                     }
                     catch (e: Exception) {
-                        logger.warn("Failed to close stream: '${e.message}'.")
+                        logger.warn("Failed to close stream", "error_message", "${e.message}")
                     }
 
                     inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
@@ -97,7 +97,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                 }
             }
 
-            logger.info("Processed $lineNo records from the file $fileName")
+            logger.info("Processed records from file", "record_count", "$lineNo", "file_name", fileName)
         }
     }
 

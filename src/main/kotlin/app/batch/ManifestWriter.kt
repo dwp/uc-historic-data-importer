@@ -28,12 +28,11 @@ class ManifestWriter {
             writeManifest(manifestRecordString, manifestFileName)
         }
         catch (e: Exception) {
-            logger.error("Exception while writing ids of db: '${manifestRecords[0].db}', collection: '${manifestRecords[0].collection}' to manifest files in S3", e)
+            logger.error("Exception while writing manifest ids", e, "database_name", manifestRecords[0].db, "collection_name", manifestRecords[0].collection, "file_number", fileNumber)
         }
     }
 
     fun writeManifest(manifestContent: String, fileName: String) {
-
         val byteArrayOutputStream = ByteArrayOutputStream()
         BufferedOutputStream(byteArrayOutputStream).use {
             it.write(manifestContent.toByteArray(StandardCharsets.UTF_8))
@@ -41,7 +40,7 @@ class ManifestWriter {
 
         val manifestFileBytes = byteArrayOutputStream.toByteArray()
         val bytesSize = manifestFileBytes.size.toLong()
-        logger.info("Writing file 's3://$s3ManifestBucketName/$fileName' of '$bytesSize' bytes.")
+        logger.info("Writing file", "s3_location", "s3://$s3ManifestBucketName/$fileName", "byte_size", "$bytesSize")
 
         val inputStream = ByteArrayInputStream(manifestFileBytes)
         val bufferedInputStream = BufferedInputStream(inputStream)

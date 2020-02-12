@@ -90,11 +90,11 @@ class HttpKeyService(
         val dksUrl = "$dataKeyServiceUrl/datakey"
         val dksUrlWithCorrelationId = "$dksUrl?correlationId=$dksCorrelationId"
         try {
-            logger.info("Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId'")
+            logger.info("Calling batchDataKey", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId)
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet(dksUrlWithCorrelationId)).use { response ->
                     val statusCode = response.statusLine.statusCode
-                    logger.info("Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code '$statusCode'")
+                    logger.info("Called batchDataKey", "dks_url", dksUrl, "dks_correlation_id", dksCorrelationId, "status_code", "$statusCode")
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))

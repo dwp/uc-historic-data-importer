@@ -21,7 +21,7 @@ fun HbaseClient.migrate() {
 
         // Create all namespaces not already in the list of namespaces
         for (namespace in missingNamespaces) {
-            logger.info("Creating namespace '$namespace'")
+            logger.info("Creating hbase namespace", "hbase_namespace", namespace)
             admin.createNamespace(NamespaceDescriptor.create(namespace).build())
         }
 
@@ -32,13 +32,13 @@ fun HbaseClient.migrate() {
         }
 
         if (!admin.tableExists(dataTableName)) {
-            logger.info("Creating table '$dataTable'")
+            logger.info("Creating hbase table", "hbase_table", dataTable)
             admin.createTable(HTableDescriptor(dataTableName).apply {
                 addFamily(dataFamilyDescriptor)
             })
         }
         else if (!admin.getTableDescriptor(dataTableName).hasFamily(dataFamily)) {
-            logger.info("Adding column family '$dataFamily' to table '$dataTable'")
+            logger.info("Adding column family to hbase table", "hbase_column_family", "$dataFamily", "hbase_table", dataTable)
             admin.addColumn(dataTableName, dataFamilyDescriptor)
         }
 
@@ -46,13 +46,13 @@ fun HbaseClient.migrate() {
         val topicFamilyDescriptor = HColumnDescriptor(topicFamily)
 
         if (!admin.tableExists(topicTableName)) {
-            logger.info("Creating table '$topicTable'")
+            logger.info("Creating hbase table ", "hbase_table", topicTable)
             admin.createTable(HTableDescriptor(topicTableName).apply {
                 addFamily(topicFamilyDescriptor)
             })
         }
         else if (!admin.getTableDescriptor(topicTableName).hasFamily(topicFamily)) {
-            logger.info("Adding column family '$topicFamily' to table '$topicTable'")
+            logger.info("Adding column family to hbase table", "hbase_column_family", "$dataFamily", "hbase_table", dataTable)
             admin.addColumn(topicTableName, topicFamilyDescriptor)
         }
     }

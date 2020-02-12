@@ -15,23 +15,23 @@ class KeyPairGenerator {
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
 
-        logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
+        logger.warn("Found keys not matching regex", "file_format", "$fileFormat", "non_matching_count", "${unMatchedFlattened.count()}")
         if (unMatchedFlattened.isNotEmpty()) {
-            logger.warn("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+            logger.warn("Found unmatched keys", "unmatched_keys", unMatchedFlattened.joinToString(", "))
         }
 
         val keyPairs = matched.map { pair ->
-            logger.info("Matched key : ${pair.key} Value : ${pair.value} \n")
+            logger.info("Found matched key pair", "pair_key", "${pair.key}", "pair_value", "${pair.value}")
             val neitherDataNorMetadataKey =
                 pair.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
             val dataKey = pair.value.find { ti -> ti.contains(dataFileExtension) }
-            val metadatakey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
+            val metadataKey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
 
             if (neitherDataNorMetadataKey.isNotEmpty()) {
-                logger.warn("${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
+                logger.warn("Found file(s) that matched format but neither data or metadata file extensions", "bad_files", "${neitherDataNorMetadataKey.joinToString(", ")} ")
             }
 
-            KeyPair(dataKey, metadatakey)
+            KeyPair(dataKey, metadataKey)
         }
         validateKeyPairs(keyPairs)
         return keyPairs.filter { it.dataKey !== null && it.metadataKey != null }
@@ -40,12 +40,13 @@ class KeyPairGenerator {
     fun validateKeyPairs(keyPairs: List<KeyPair>) {
         keyPairs.forEach {
             if (it.dataKey != null && it.metadataKey == null) {
-                val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
-                logger.error(metadataFileNotFoundError)
-                throw RuntimeException(metadataFileNotFoundError)
+                val metadataFileNotFoundError = "Metadata file not found for data file"
+                logger.error(metadataFileNotFoundError, "data_file", "${it.dataKey}")
+                throw RuntimeException("metadataFileNotFoundError: data_file: ${it.dataKey}")
             }
             else if (it.metadataKey != null && it.dataKey == null) {
-                logger.error("Data file not found for the metadata file ${it.metadataKey}")
+                val metadataFileNotFoundError = "Data file not found for metadata file"
+                logger.error("Data file not found for metadata file", "metadata_file", "${it.metadataKey}")
             }
         }
     }

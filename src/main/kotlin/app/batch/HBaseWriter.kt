@@ -84,13 +84,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
-        logger.info("AVAILABLE PROCESSORS: $cpus, runMode: '$runMode'.")
+        logger.info("System stats", "available_processors", "$cpus", "run_mode", runMode)
 
         var processedFiles = 0
         var processedRecords = 0
 
         items.forEach { input ->
-            logger.info("Processing '${input.fileName}'.")
+            logger.info("Processing file", "s3_location", input.fileName)
             val fileName = input.fileName
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
@@ -126,7 +126,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val id = gson.toJson(idObject(json))
 
                                     if (StringUtils.isBlank(id) || id == "null") {
-                                        logger.warn("Skipping record ${reader.lineNumber} in the file $fileName due to absence of id")
+                                        logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
                                         return@forEachLine
                                     }
 
@@ -142,12 +142,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     if (runMode != RUN_MODE_MANIFEST) {
                                         if (batchSizeBytes + message.length >= maxBatchVolume && batch.size > 0) {
                                             try {
-                                                logger.info("Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
+                                                logger.info("Attempting to write batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                                                 putBatch(batch)
-                                                logger.info("Written batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
+                                                logger.info("Written batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                                             }
                                             catch (e: Exception) {
-                                                logger.error("Failed to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
+                                                logger.error("Failed to write batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                                             }
                                             finally {
                                                 batch = mutableListOf()
@@ -167,7 +167,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                 }
                                 catch (e: Exception) {
-                                    logger.error("Error processing record ${reader.lineNumber} from '$fileName': '${e.message}'.", e)
+                                    logger.error("Error processing record", e, "line_number", "${reader.lineNumber}", "file_name", fileName, "error_message", "${e.message}")
                                 }
                             }
 
@@ -179,11 +179,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         }
                         catch (e: Exception) {
                             try {
-                                logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
+                                logger.warn("Error streaming file", "attempt_number", "$attempts", "file_name", fileName, "error_message", "${e.message}")
                                 inputStream.close()
                             }
                             catch (e: Exception) {
-                                logger.warn("Failed to close stream: '${e.message}'.")
+                                logger.error("Failed to stream file", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                             }
 
                             inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
@@ -197,9 +197,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     // Put any left-over records into a final undersize batch
                     if (batch.size > 0) {
                         try {
-                            logger.info("Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
+                            logger.info("Attempting to write batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                             putBatch(batch)
-                            logger.info("Written batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName'.")
+                            logger.info("Written batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                             batch = mutableListOf()
                             batchSizeBytes = 0
                         }
@@ -213,11 +213,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     manifestWriter.sendManifest(s3, File(manifestOutputFile), manifestBucket, manifestPrefix, maxManifestAttempts.toInt())
                 }
 
-                logger.info("Processed $fileProcessedRecords records from the file '$fileName'.")
+                logger.info("Processed records in file", "records_processed", "$fileProcessedRecords", "file_name", fileName)
             }
         }
 
-        logger.info("Processed $processedRecords records and $processedFiles files")
+        logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
 
     }
 
@@ -251,7 +251,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             catch (e: Exception) {
                 val delay = if (attempts == 0) initialBackoffMillis.toLong()
                 else (initialBackoffMillis.toLong() * attempts * backoffMultiplier.toFloat()).toLong()
-                logger.warn("Failed to put batch on attempt ${attempts + 1}/$maxAttempts, will retry in $delay ms, if ${attempts + 1} still < $maxAttempts: ${e.message}")
+                logger.warn("Failed to put batch", "attempt_number", "${attempts + 1}", "max_attempts", maxAttempts, "retry_delay", "$delay", "error_message", "${e.message}")
                 Thread.sleep(delay)
                 exception = e
             }

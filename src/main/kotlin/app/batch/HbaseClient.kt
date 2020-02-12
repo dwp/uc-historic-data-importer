@@ -28,7 +28,7 @@ open class HbaseClient(
     }
 
     open fun putBatch(inserts: List<HBaseRecord>) {
-        if (inserts.size > 0) {
+        if (inserts.isNotEmpty()) {
             connection.getTable(TableName.valueOf(dataTable)).use { table ->
 
                 table.put(inserts.map {

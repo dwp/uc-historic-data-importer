@@ -37,9 +37,9 @@ class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : 
             return DecryptedStream(CipherInputStream(inputStream, cipher), item.s3key, keySpec, iv)
         }
         catch (e: Exception) {
-            val message = "Failed to decrypt data in '${item.s3key}': ${e.message}."
-            logger.error(message)
-            throw DecryptionException(message, e)
+            val message = "Failed to decrypt data in s3 file"
+            logger.error(message, "s3_location", item.s3key, "error_message", "${e.message}")
+            throw DecryptionException("$message: s3_location: ${item.s3key}, error_message: ${e.message}", e)
         }
     }
 

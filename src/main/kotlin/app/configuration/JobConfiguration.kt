@@ -57,9 +57,9 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> {
         val enableSizeFiltering = performSizeFiltering.toBoolean()
-        logger.info("performSizeFiltering: '$performSizeFiltering'.")
+        logger.info("Size Filtering Setting", "size_filtering", performSizeFiltering)
         return if (enableSizeFiltering) {
-            logger.info("Enabling size filtering.")
+            logger.info("Enabling size filtering")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(objectSizeProcessor,
                     encryptionMetadataProcessor,
@@ -69,7 +69,7 @@ class JobConfiguration {
             }
         }
         else {
-            logger.info("Disabling size filtering.")
+            logger.info("Disabling size filtering")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(encryptionMetadataProcessor,
                     datakeyProcessor,
