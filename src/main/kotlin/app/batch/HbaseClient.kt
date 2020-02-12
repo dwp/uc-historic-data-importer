@@ -23,7 +23,7 @@ open class HbaseClient (
 
     open fun putBatch(tableName: String, inserts: List<HBaseRecord>) {
         if (inserts.isNotEmpty()) {
-            table(tableName).use {
+            connection.getTable(TableName.valueOf(tableName)).use {
                 it.put(inserts.map { record ->
                     Put(record.key).apply {
                         this.addColumn(dataFamily, dataQualifier, record.version, record.body)
@@ -33,7 +33,8 @@ open class HbaseClient (
         }
     }
 
-    private fun table(tableName: String): Table {
+    @Synchronized
+    fun ensureTable(tableName: String) {
         val dataTableName = TableName.valueOf(tableName)
         val namespace = dataTableName.namespaceAsString
 
@@ -52,9 +53,8 @@ open class HbaseClient (
                                 minVersions = 1
                             })
             })
+            tables[tableName] = true
         }
-
-        return connection.getTable(TableName.valueOf(tableName))
     }
 
     private val namespaces by lazy {

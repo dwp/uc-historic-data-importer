@@ -101,7 +101,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val fileNumber = groups[3]!!.value
-                val tableName = "$database:$collection"
+                val tableName = "$database:$collection".replace("-", "_")
+                hbase.ensureTable(tableName)
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var fileProcessedRecords = 0
                 val gson = Gson()

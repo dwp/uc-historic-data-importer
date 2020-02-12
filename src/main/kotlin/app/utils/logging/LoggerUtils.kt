@@ -56,11 +56,7 @@ fun makeLoggerStaticDataTuples(): String {
         "\"app_version\":\"$app_version\", " +
         "\"component\":\"$component\", " +
         "\"correlation_id\":\"$correlation_id\", " +
-        "\"data_table\":\"$hBaseDataTable\", " +
-        "\"data_family\":\"$hBaseDataFamily\", " +
-        "\"topic_table\":\"$hBaseTopicTable\", " +
-        "\"topic_family\":\"$hBaseTopicFamily\", " +
-        "\"topic_qualifier\":\"$hBaseTopicQualifier\""
+        "\"data_family\":\"$hBaseDataFamily\""
 }
 
 fun resetLoggerStaticFieldsForTests() {
