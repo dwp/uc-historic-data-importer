@@ -155,7 +155,7 @@ fun getDurationInMilliseconds(epochTime: Long): String {
     return elapsedMilliseconds.toString()
 }
 
-class JsonLoggerWrapper(private val wrappedLogger: Logger) {
+class JsonLoggerWrapper(private val delegateLogger: Logger) {
 
     companion object {
 
@@ -166,37 +166,37 @@ class JsonLoggerWrapper(private val wrappedLogger: Logger) {
     }
 
     fun debug(message: String, vararg tuples: String) {
-        if (wrappedLogger.isDebugEnabled) {
+        if (delegateLogger.isDebugEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.debug(semiFormatted)
+            delegateLogger.debug(semiFormatted)
         }
     }
 
     fun info(message: String, vararg tuples: String) {
-        if (wrappedLogger.isInfoEnabled) {
+        if (delegateLogger.isInfoEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.info(semiFormatted)
+            delegateLogger.info(semiFormatted)
         }
     }
 
     fun warn(message: String, vararg tuples: String) {
-        if (wrappedLogger.isWarnEnabled) {
+        if (delegateLogger.isWarnEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.warn(semiFormatted)
+            delegateLogger.warn(semiFormatted)
         }
     }
 
     fun error(message: String, vararg tuples: String) {
-        if (wrappedLogger.isErrorEnabled) {
+        if (delegateLogger.isErrorEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.error(semiFormatted)
+            delegateLogger.error(semiFormatted)
         }
     }
 
     fun error(message: String, error: Throwable, vararg tuples: String) {
-        if (wrappedLogger.isErrorEnabled) {
+        if (delegateLogger.isErrorEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.error(semiFormatted, error)
+            delegateLogger.error(semiFormatted, error)
         }
     }
 }
