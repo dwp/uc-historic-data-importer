@@ -99,11 +99,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 var batch = mutableListOf<HBaseRecord>()
+                var batchSizeBytes = 0
                 val maxBatchVolume = maxBatchSizeBytes.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
-                val fileNumber = groups[3]!!.value
+                val fileNumber = groups[3]!!.value // ditto
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var fileProcessedRecords = 0
                 val gson = Gson()
@@ -116,7 +117,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     while (!succeeded && attempts < maxStreamAttempts.toInt()) {
                         try {
                             ++attempts
-                            var batchSizeBytes = 0
+                            batchSizeBytes = 0
                             val reader = getBufferedReader(inputStream)
                             reader.forEachLine { line ->
 
@@ -191,16 +192,20 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                             inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
                             batch = mutableListOf()
+                            batchSizeBytes = 0
                         }
                     }
                 }
 
                 if (runMode != RUN_MODE_MANIFEST) {
+                    // Put any left-over records into a final undersize batch
                     if (batch.size > 0) {
                         try {
+                            logInfo(logger, "Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                             putBatch(batch)
                             logInfo(logger, "Written batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName'.")
                             batch = mutableListOf()
+                            batchSizeBytes = 0
                         }
                         catch (e: Exception) {
                             logError(logger, "Failed to write batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
