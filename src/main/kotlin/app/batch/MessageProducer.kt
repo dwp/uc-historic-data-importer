@@ -2,13 +2,11 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
+import app.utils.logging.JsonLoggerWrapper
 import app.utils.logging.correlation_id
-import app.utils.logging.logInfo
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
@@ -61,7 +59,7 @@ class MessageProducer {
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(MessageProducer::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageProducer::class.toString())
     }
 
     private val hdiVersion: String by lazy {
@@ -72,7 +70,7 @@ class MessageProducer {
             null
         }
         val valueFromArguments = environment.get("hdi.version")
-        logInfo(logger, "valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
+        logger.info("valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
         valueFromManifest ?: valueFromArguments ?: "No hdi version available."
     }
 

@@ -1,13 +1,10 @@
 package app.batch
 
-import app.utils.logging.logDebug
-import app.utils.logging.logWarn
+import app.utils.logging.JsonLoggerWrapper
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
 import com.google.gson.Gson
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.nio.ByteBuffer
 import java.text.ParseException
@@ -16,7 +13,7 @@ import java.util.zip.CRC32
 
 @Component
 class MessageUtils {
-    val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
+    val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageUtils::class.toString())
     val EPOCH = "1980-01-01T00:00:00.000Z"
     val typeDefault = "HDI"
 
@@ -35,7 +32,7 @@ class MessageUtils {
                 return df.parse(timeStampAsStr).time
             }
             catch (e: Exception) {
-                logDebug(logger, "'$timeStampAsStr' did not match date format '$it'")
+                logger.debug("'$timeStampAsStr' did not match date format '$it'")
             }
         }
         throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
@@ -48,7 +45,7 @@ class MessageUtils {
             return lastModified
         }
 
-        logWarn(logger, "No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
+        logger.warn("No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
         return EPOCH
     }
 
@@ -59,7 +56,7 @@ class MessageUtils {
             return type
         }
 
-        logWarn(logger, "No @type in message defaulting to '$typeDefault'.")
+        logger.warn("No @type in message defaulting to '$typeDefault'.")
         return typeDefault
     }
 
@@ -74,7 +71,7 @@ class MessageUtils {
             return if (message == null) null else message.obj("_id")
         }
         catch (e: Exception) {
-            logWarn(logger, "Message does not contain valid json object with  _id field")
+            logger.warn("Message does not contain valid json object with  _id field")
             return null
         }
     }
@@ -84,7 +81,7 @@ class MessageUtils {
             return json.obj("_id")
         }
         catch (e: Exception) {
-            logWarn(logger, "DB Object does not contain valid json object with  _id field")
+            logger.warn("DB Object does not contain valid json object with  _id field")
             return null
         }
     }

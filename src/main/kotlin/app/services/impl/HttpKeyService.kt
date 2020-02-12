@@ -6,15 +6,13 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.UUIDGenerator
-import app.utils.logging.logInfo
+import app.utils.logging.JsonLoggerWrapper
 import com.google.gson.Gson
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -36,7 +34,7 @@ class HttpKeyService(
     @Throws(DataKeyServiceUnavailableException::class, DataKeyDecryptionException::class)
     override fun decryptKey(encryptionKeyId: String, encryptedKey: String): String {
         val dksCorrelationId = uuidGenerator.randomUUID()
-        logInfo(logger, "Calling decryptKey: encryptedKey:'$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId'")
+        logger.info("Calling decryptKey: encryptedKey:'$encryptedKey', keyEncryptionKeyId: '$encryptionKeyId', dks_correlation_id: '$dksCorrelationId'")
         try {
             val cacheKey = "$encryptedKey/$encryptionKeyId"
             return if (decryptedKeyCache.containsKey(cacheKey)) {
@@ -46,12 +44,12 @@ class HttpKeyService(
                 httpClientProvider.client().use { client ->
                     val dksUrl = "$dataKeyServiceUrl/datakey/actions/decrypt?keyId=${URLEncoder.encode(encryptionKeyId, "US-ASCII")}"
                     val dksUrlWithCorrelationId = "$dksUrl&correlationId=$dksCorrelationId"
-                    logInfo(logger, "Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId'")
+                    logger.info("Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId'")
                     val httpPost = HttpPost(dksUrlWithCorrelationId)
                     httpPost.entity = StringEntity(encryptedKey, ContentType.TEXT_PLAIN)
                     client.execute(httpPost).use { response ->
                         val statusCode = response.statusLine.statusCode
-                        logInfo(logger, "Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code: '$statusCode'.")
+                        logger.info("Calling decryptKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code: '$statusCode'.")
                         return when (statusCode) {
                             200 -> {
                                 val entity = response.entity
@@ -92,11 +90,11 @@ class HttpKeyService(
         val dksUrl = "$dataKeyServiceUrl/datakey"
         val dksUrlWithCorrelationId = "$dksUrl?correlationId=$dksCorrelationId"
         try {
-            logInfo(logger, "Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId'")
+            logger.info("Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId'")
             httpClientProvider.client().use { client ->
                 client.execute(HttpGet(dksUrlWithCorrelationId)).use { response ->
                     val statusCode = response.statusLine.statusCode
-                    logInfo(logger, "Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code '$statusCode'")
+                    logger.info("Calling batchDataKey: dks_url: '$dksUrl', dks_correlation_id: '$dksCorrelationId' returned status_code '$statusCode'")
                     return if (statusCode == 201) {
                         val entity = response.entity
                         val result = BufferedReader(InputStreamReader(entity.content))
@@ -132,7 +130,7 @@ class HttpKeyService(
     private lateinit var dataKeyServiceUrl: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HttpKeyService::class.toString())
         // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
         const val maxAttempts = 5
         const val initialBackoffMillis = 1000L

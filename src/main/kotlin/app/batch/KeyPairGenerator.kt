@@ -1,11 +1,7 @@
 package app.batch
 
 import app.domain.KeyPair
-import app.utils.logging.logError
-import app.utils.logging.logInfo
-import app.utils.logging.logWarn
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import app.utils.logging.JsonLoggerWrapper
 import org.springframework.stereotype.Component
 
 @Component
@@ -19,20 +15,20 @@ class KeyPairGenerator {
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
 
-        logWarn(logger, "${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
+        logger.warn("${unMatchedFlattened.count()} key(s) that don't match the given file fileFormat $fileFormat found")
         if (unMatchedFlattened.isNotEmpty()) {
-            logWarn(logger, "Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
+            logger.warn("Unmatched keys : ${unMatchedFlattened.joinToString(", ")}")
         }
 
         val keyPairs = matched.map { pair ->
-            logInfo(logger, "Matched key : ${pair.key} Value : ${pair.value} \n")
+            logger.info("Matched key : ${pair.key} Value : ${pair.value} \n")
             val neitherDataNorMetadataKey =
                 pair.value.filterNot { ti -> (ti.contains(dataFileExtension) || ti.contains(metadataFileExtension)) }
             val dataKey = pair.value.find { ti -> ti.contains(dataFileExtension) }
             val metadatakey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
 
             if (neitherDataNorMetadataKey.isNotEmpty()) {
-                logWarn(logger, "${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
+                logger.warn("${neitherDataNorMetadataKey.joinToString(", ")} matched file format but not data or metadata file extensions")
             }
 
             KeyPair(dataKey, metadatakey)
@@ -45,17 +41,17 @@ class KeyPairGenerator {
         keyPairs.forEach {
             if (it.dataKey != null && it.metadataKey == null) {
                 val metadataFileNotFoundError = "Metadata file not found for the data file ${it.dataKey}"
-                logError(logger, metadataFileNotFoundError)
+                logger.error(metadataFileNotFoundError)
                 throw RuntimeException(metadataFileNotFoundError)
             }
             else if (it.metadataKey != null && it.dataKey == null) {
-                logError(logger, "Data file not found for the metadata file ${it.metadataKey}")
+                logger.error("Data file not found for the metadata file ${it.metadataKey}")
             }
         }
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(KeyPairGenerator::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(KeyPairGenerator::class.toString())
     }
 }
 

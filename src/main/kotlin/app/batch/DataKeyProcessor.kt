@@ -3,9 +3,7 @@ package app.batch
 import app.domain.EncryptedStream
 import app.exceptions.DataKeyDecryptionException
 import app.services.KeyService
-import app.utils.logging.logError
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import app.utils.logging.JsonLoggerWrapper
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
@@ -25,13 +23,13 @@ class DataKeyProcessor(val keyService: KeyService) : ItemProcessor<EncryptedStre
         }
         catch (e: DataKeyDecryptionException) {
             val message = "Failed to decrypt '${item.s3key}': '${e.message}'."
-            logError(logger, message)
+            logger.error(message)
             throw e
         }
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DataKeyProcessor::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(DataKeyProcessor::class.toString())
     }
 
 }

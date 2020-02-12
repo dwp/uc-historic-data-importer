@@ -2,15 +2,11 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.services.CipherService
-import app.utils.logging.logError
-import app.utils.logging.logInfo
-import app.utils.logging.logWarn
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.lang.StringEscapeUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -42,7 +38,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
 
     override fun write(items: MutableList<out DecompressedStream>) {
         items.forEach { input ->
-            logInfo(logger, "Processing '${input.fileName}'.")
+            logger.info("Processing '${input.fileName}'.")
             val fileName = input.fileName
             var lineNo = 0
             var succeeded = false
@@ -60,7 +56,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                         }
                         catch (e: Exception) {
                             val key = e.message ?: ""
-                            logError(logger, "Error processing record $lineNo from '$fileName': '${e.message}'.")
+                            logger.error("Error processing record $lineNo from '$fileName': '${e.message}'.")
                             val count = counts.getOrDefault(key, 0)
                             if (count < maxErrorsToLog.toInt()) {
                                 errors.add(ErrorRecord(line, key, lineNo))
@@ -89,11 +85,11 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                 }
                 catch (e: Exception) {
                     try {
-                        logWarn(logger, "Error on attempt $attempts streaming '$fileName': '${e.message}'.")
+                        logger.warn("Error on attempt $attempts streaming '$fileName': '${e.message}'.")
                         inputStream.close()
                     }
                     catch (e: Exception) {
-                        logWarn(logger, "Failed to close stream: '${e.message}'.")
+                        logger.warn("Failed to close stream: '${e.message}'.")
                     }
 
                     inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
@@ -101,7 +97,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                 }
             }
 
-            logInfo(logger, "Processed $lineNo records from the file $fileName")
+            logger.info("Processed $lineNo records from the file $fileName")
         }
     }
 
@@ -110,7 +106,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(LintWriter::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(LintWriter::class.toString())
     }
 }
 

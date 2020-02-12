@@ -4,9 +4,7 @@ import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.domain.InputStreamPair
-import app.utils.logging.logInfo
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import app.utils.logging.JsonLoggerWrapper
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -29,7 +27,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor
 class JobConfiguration {
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(JobConfiguration::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(JobConfiguration::class.toString())
     }
 
     @Bean
@@ -59,9 +57,9 @@ class JobConfiguration {
 
     fun itemProcessor(): ItemProcessor<InputStreamPair, DecompressedStream> {
         val enableSizeFiltering = performSizeFiltering.toBoolean()
-        logInfo(logger, "performSizeFiltering: '$performSizeFiltering'.")
+        logger.info("performSizeFiltering: '$performSizeFiltering'.")
         return if (enableSizeFiltering) {
-            logInfo(logger, "Enabling size filtering.")
+            logger.info("Enabling size filtering.")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(objectSizeProcessor,
                     encryptionMetadataProcessor,
@@ -71,7 +69,7 @@ class JobConfiguration {
             }
         }
         else {
-            logInfo(logger, "Disabling size filtering.")
+            logger.info("Disabling size filtering.")
             CompositeItemProcessor<InputStreamPair, DecompressedStream>().apply {
                 setDelegates(listOf(encryptionMetadataProcessor,
                     datakeyProcessor,
