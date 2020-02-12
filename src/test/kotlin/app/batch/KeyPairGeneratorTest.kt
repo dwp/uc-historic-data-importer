@@ -96,7 +96,7 @@ class KeyPairGeneratorTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(5)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertTrue(formattedMessages.contains("Data file not found for the metadata file adb.collection.0000.json.gz.encryption.json"))
+        assertEquals(1, formattedMessages.filter { it.contains("Data file not found for the metadata file adb.collection.0000.json.gz.encryption.json") }.size)
         assertEquals(expectedKeyPairs, actualKeyPairs)
     }
 
