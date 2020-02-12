@@ -102,7 +102,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val collection = groups[2]!!.value // ditto
                 val fileNumber = groups[3]!!.value
                 val tableName = "$database:$collection".replace("-", "_")
-                hbase.ensureTable(tableName)
+                ensureTable(tableName)
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var fileProcessedRecords = 0
                 val gson = Gson()
@@ -255,6 +255,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             }
         }
 
+    }
+
+    fun ensureTable(tableName: String) {
+        hbase.ensureTable(tableName)
     }
 
     fun getBufferedReader(inputStream: InputStream?) = LineNumberReader(InputStreamReader(inputStream))
