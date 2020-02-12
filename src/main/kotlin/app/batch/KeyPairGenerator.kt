@@ -1,8 +1,7 @@
 package app.batch
 
 import app.domain.KeyPair
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import app.utils.logging.JsonLoggerWrapper
 import org.springframework.stereotype.Component
 
 @Component
@@ -52,7 +51,7 @@ class KeyPairGenerator {
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(KeyPairGenerator::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(KeyPairGenerator::class.toString())
     }
 }
 

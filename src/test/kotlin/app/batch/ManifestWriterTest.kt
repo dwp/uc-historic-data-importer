@@ -15,7 +15,6 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -102,9 +101,5 @@ class ManifestWriterTest {
 
     @MockBean
     private lateinit var s3Client: AmazonS3
-
-    companion object {
-        val logger: Logger = LoggerFactory.getLogger(ManifestWriterTest::class.toString())
-    }
 
 }

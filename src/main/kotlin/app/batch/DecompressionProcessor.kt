@@ -2,10 +2,9 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.domain.DecryptedStream
+import app.utils.logging.JsonLoggerWrapper
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
@@ -32,6 +31,6 @@ class DecompressionProcessor : ItemProcessor<DecryptedStream, DecompressedStream
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DecompressionProcessor::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(DecompressionProcessor::class.toString())
     }
 }

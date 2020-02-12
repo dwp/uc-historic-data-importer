@@ -26,7 +26,7 @@ class DecompressionProcessorTest {
     private val fileName = "test.json.gz"
 
     @Test
-    fun Should_Decompress_Correctly_When_Given_Gzipped_Stream() {
+    fun should_Decompress_Correctly_When_Given_Gzipped_Stream() {
 
         val (data, decompressed) = decompress(CompressorStreamFactory.GZIP)
 
@@ -36,7 +36,7 @@ class DecompressionProcessorTest {
     }
 
     @Test(expected = RuntimeException::class)
-    fun Should_Throw_Exception_When_Given_Non_Gzipped_Stream() {
+    fun should_Throw_Exception_When_Given_Non_Gzipped_Stream() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
@@ -50,7 +50,7 @@ class DecompressionProcessorTest {
     }
 
     @Test
-    fun Should_Log_Compressed_Count_When_Given_Gzipped_Stream() {
+    fun should_Log_Compressed_Count_When_Given_Gzipped_Stream() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
@@ -63,7 +63,7 @@ class DecompressionProcessorTest {
     }
 
     @Test(expected = RuntimeException::class)
-    fun Should_Log_Exception_Msg_When_Given_Non_Gzipped_Stream() {
+    fun should_Log_Exception_Msg_When_Given_Non_Gzipped_Stream() {
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)

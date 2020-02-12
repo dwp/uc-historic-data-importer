@@ -1,8 +1,7 @@
 package app.batch
 
 import app.domain.InputStreamPair
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import app.utils.logging.JsonLoggerWrapper
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
@@ -22,6 +21,6 @@ class ObjectSizeFilter(private val maxSize: Long) : ItemProcessor<InputStreamPai
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(ObjectSizeFilter::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(ObjectSizeFilter::class.toString())
     }
 }

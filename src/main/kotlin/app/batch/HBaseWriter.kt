@@ -6,12 +6,11 @@ import app.domain.HBaseRecord
 import app.domain.ManifestRecord
 import app.services.CipherService
 import app.services.KeyService
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -96,6 +95,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             val matchResult = filenameRegex.find(fileName)
             if (matchResult != null) {
                 var batch = mutableListOf<HBaseRecord>()
+                var batchSizeBytes = 0
                 val maxBatchVolume = maxBatchSizeBytes.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
@@ -115,7 +115,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     while (!succeeded && attempts < maxStreamAttempts.toInt()) {
                         try {
                             ++attempts
-                            var batchSizeBytes = 0
+                            batchSizeBytes = 0
                             val reader = getBufferedReader(inputStream)
                             reader.forEachLine { line ->
                                 if (attempts > 1 && reader.lineNumber < fileProcessedRecords) {
@@ -181,16 +181,20 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                             inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
                             batch = mutableListOf()
+                            batchSizeBytes = 0
                         }
                     }
                 }
 
                 if (runMode != RUN_MODE_MANIFEST) {
+                    // Put any left-over records into a final undersize batch
                     if (batch.size > 0) {
                         try {
+                            logger.info("Attempting to write batch of ${batch.size} records, size $batchSizeBytes bytes to hbase with topic 'db.$database.$collection' from '$fileName'.")
                             putBatch(tableName, batch)
                             logger.info("Written batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName'.")
                             batch = mutableListOf()
+                            batchSizeBytes = 0
                         }
                         catch (e: Exception) {
                             logger.error("Failed to write batch of ${batch.size} records to hbase with topic 'db.$database.$collection' from '$fileName': '${e.message}'.")
@@ -268,6 +272,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun getDataKey(fileName: String) = keyService.batchDataKey()
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HBaseWriter::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HBaseWriter::class.toString())
     }
 }

@@ -1,12 +1,11 @@
 package app.batch
 
 import app.domain.ManifestRecord
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -82,7 +81,7 @@ class ManifestWriter {
 
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(ManifestWriter::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(ManifestWriter::class.toString())
     }
 
     @Autowired

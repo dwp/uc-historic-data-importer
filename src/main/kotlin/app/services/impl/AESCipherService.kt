@@ -3,11 +3,10 @@ package app.services.impl
 import app.configuration.CipherInstanceProvider
 import app.domain.EncryptionResult
 import app.services.CipherService
+import app.utils.logging.JsonLoggerWrapper
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.InputStream
@@ -59,6 +58,6 @@ class AESCipherService(private val secureRandom: SecureRandom, private val ciphe
     private lateinit var targetCipherAlgorithm: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(AESCipherService::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(AESCipherService::class.toString())
     }
 }

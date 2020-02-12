@@ -6,14 +6,13 @@ import app.exceptions.DataKeyDecryptionException
 import app.exceptions.DataKeyServiceUnavailableException
 import app.services.KeyService
 import app.utils.UUIDGenerator
+import app.utils.logging.JsonLoggerWrapper
 import com.google.gson.Gson
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
@@ -131,7 +130,7 @@ class HttpKeyService(
     private lateinit var dataKeyServiceUrl: String
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(HttpKeyService::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HttpKeyService::class.toString())
         // Will retry at 1s, 2s, 4s, 8s, 16s then give up (after a total of 31 secs)
         const val maxAttempts = 5
         const val initialBackoffMillis = 1000L

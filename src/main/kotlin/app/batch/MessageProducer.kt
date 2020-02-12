@@ -2,12 +2,11 @@ package app.batch
 
 import app.domain.DataKeyResult
 import app.domain.EncryptionResult
+import app.utils.logging.JsonLoggerWrapper
 import app.utils.logging.correlation_id
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
@@ -60,7 +59,7 @@ class MessageProducer {
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(MessageProducer::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageProducer::class.toString())
     }
 
     private val hdiVersion: String by lazy {
