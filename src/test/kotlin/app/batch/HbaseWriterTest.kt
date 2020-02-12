@@ -259,7 +259,7 @@ class HbaseWriterTest {
         }
     }
 
-//    @Test
+    @Test
     fun testMaxBatchSize() {
         val byteArrayOutputStream = ByteArrayOutputStream()
 
@@ -285,8 +285,9 @@ class HbaseWriterTest {
         given(messageUtils.getLastModifiedTimestamp(any())).willReturn("1980-01-01T00:00:00.000Z")
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
+        doNothing().whenever(hBaseWriter).ensureTable(any())
         hBaseWriter.write(items)
-        //verify(hBaseWriter, times(100)).putBatch(any())
+        verify(hBaseWriter, times(100)).putBatch(any(), any())
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
