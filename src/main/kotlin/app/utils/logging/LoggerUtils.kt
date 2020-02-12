@@ -21,6 +21,7 @@ import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.LayoutBase
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
@@ -82,41 +83,6 @@ fun overrideLoggerStaticFieldsForTests(host: String, env: String, app: String, v
     LogConfiguration.start_time_milliseconds = start_milliseconds.toLong()
     correlation_id = id
     staticData = makeLoggerStaticDataTuples()
-}
-
-fun logDebug(logger: Logger, message: String, vararg tuples: String) {
-    if (logger.isDebugEnabled) {
-        val semiFormatted = semiFormattedTuples(message, *tuples)
-        logger.debug(semiFormatted)
-    }
-}
-
-fun logInfo(logger: Logger, message: String, vararg tuples: String) {
-    if (logger.isInfoEnabled) {
-        val semiFormatted = semiFormattedTuples(message, *tuples)
-        logger.info(semiFormatted)
-    }
-}
-
-fun logWarn(logger: Logger, message: String, vararg tuples: String) {
-    if (logger.isWarnEnabled) {
-        val semiFormatted = semiFormattedTuples(message, *tuples)
-        logger.warn(semiFormatted)
-    }
-}
-
-fun logError(logger: Logger, message: String, vararg tuples: String) {
-    if (logger.isErrorEnabled) {
-        val semiFormatted = semiFormattedTuples(message, *tuples)
-        logger.error(semiFormatted)
-    }
-}
-
-fun logError(logger: Logger, message: String, error: Throwable, vararg tuples: String) {
-    if (logger.isErrorEnabled) {
-        val semiFormatted = semiFormattedTuples(message, *tuples)
-        logger.error(semiFormatted, error)
-    }
 }
 
 fun semiFormattedTuples(message: String, vararg tuples: String): String {
@@ -187,6 +153,52 @@ fun throwableProxyEventToString(event: ILoggingEvent): String {
 fun getDurationInMilliseconds(epochTime: Long): String {
     val elapsedMilliseconds = epochTime - LogConfiguration.start_time_milliseconds
     return elapsedMilliseconds.toString()
+}
+
+class JsonLoggerWrapper(private val wrappedLogger: Logger) {
+
+    companion object {
+
+        fun getLogger(forClassName: String): JsonLoggerWrapper {
+            val slf4jLogger: Logger = LoggerFactory.getLogger(forClassName)
+            return JsonLoggerWrapper(slf4jLogger)
+        }
+    }
+
+    fun debug(message: String, vararg tuples: String) {
+        if (wrappedLogger.isDebugEnabled) {
+            val semiFormatted = semiFormattedTuples(message, *tuples)
+            wrappedLogger.debug(semiFormatted)
+        }
+    }
+
+    fun info(message: String, vararg tuples: String) {
+        if (wrappedLogger.isInfoEnabled) {
+            val semiFormatted = semiFormattedTuples(message, *tuples)
+            wrappedLogger.info(semiFormatted)
+        }
+    }
+
+    fun warn(message: String, vararg tuples: String) {
+        if (wrappedLogger.isWarnEnabled) {
+            val semiFormatted = semiFormattedTuples(message, *tuples)
+            wrappedLogger.warn(semiFormatted)
+        }
+    }
+
+    fun error(message: String, vararg tuples: String) {
+        if (wrappedLogger.isErrorEnabled) {
+            val semiFormatted = semiFormattedTuples(message, *tuples)
+            wrappedLogger.error(semiFormatted)
+        }
+    }
+
+    fun error(message: String, error: Throwable, vararg tuples: String) {
+        if (wrappedLogger.isErrorEnabled) {
+            val semiFormatted = semiFormattedTuples(message, *tuples)
+            wrappedLogger.error(semiFormatted, error)
+        }
+    }
 }
 
 class LoggerLayoutAppender : LayoutBase<ILoggingEvent>() {

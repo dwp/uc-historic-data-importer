@@ -4,9 +4,8 @@ import app.configuration.CipherInstanceProvider
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.exceptions.DecryptionException
+import app.utils.logging.JsonLoggerWrapper
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import java.security.Key
@@ -45,6 +44,6 @@ class DecryptionProcessor(val cipherInstanceProvider: CipherInstanceProvider) : 
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(DecryptionProcessor::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(DecryptionProcessor::class.toString())
     }
 }

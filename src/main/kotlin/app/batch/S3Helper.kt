@@ -1,13 +1,12 @@
 package app.batch
 
 import app.exceptions.S3Exception
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsV2Request
 import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
@@ -44,7 +43,7 @@ class S3Helper {
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(S3Helper::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(S3Helper::class.toString())
         const val maxAttempts = 5
         const val initialBackoffMillis = 1000L
         const val backoffMultiplier = 2.0

@@ -4,8 +4,7 @@ import app.domain.DecompressedStream
 import app.domain.DecryptedStream
 import app.domain.EncryptedStream
 import app.domain.InputStreamPair
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import app.utils.logging.JsonLoggerWrapper
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
@@ -28,7 +27,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor
 class JobConfiguration {
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(JobConfiguration::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(JobConfiguration::class.toString())
     }
 
     @Bean

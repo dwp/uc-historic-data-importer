@@ -4,10 +4,9 @@ import app.domain.EncryptedStream
 import app.domain.EncryptionMetadata
 import app.domain.InputStreamPair
 import app.exceptions.MetadataException
+import app.utils.logging.JsonLoggerWrapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
@@ -48,6 +47,6 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(EncryptionMetadataProcessor::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(EncryptionMetadataProcessor::class.toString())
     }
 }

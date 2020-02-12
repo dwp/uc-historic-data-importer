@@ -1,11 +1,10 @@
 package app.batch
 
+import app.utils.logging.JsonLoggerWrapper
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
 import com.google.gson.Gson
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.nio.ByteBuffer
 import java.text.ParseException
@@ -14,7 +13,7 @@ import java.util.zip.CRC32
 
 @Component
 class MessageUtils {
-    val logger: Logger = LoggerFactory.getLogger(MessageUtils::class.toString())
+    val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageUtils::class.toString())
     val EPOCH = "1980-01-01T00:00:00.000Z"
     val typeDefault = "HDI"
 

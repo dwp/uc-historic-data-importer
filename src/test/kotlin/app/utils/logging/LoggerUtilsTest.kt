@@ -123,7 +123,7 @@ class LoggerUtilsTest {
         val mockLogger: org.slf4j.Logger = mock()
         whenever(mockLogger.isDebugEnabled).thenReturn(true)
 
-        logDebug(mockLogger, "main-message", "key1", "value1", "key2", "value2")
+        JsonLoggerWrapper(mockLogger).debug("main-message", "key1", "value1", "key2", "value2")
 
         verify(mockLogger, times(1)).isDebugEnabled
         verify(mockLogger, times(1)).debug("main-message\", \"key1\":\"value1\", \"key2\":\"value2")
@@ -135,7 +135,7 @@ class LoggerUtilsTest {
         val mockLogger: org.slf4j.Logger = mock()
         whenever(mockLogger.isInfoEnabled).thenReturn(true)
 
-        logInfo(mockLogger, "main-message", "key1", "value1", "key2", "value2")
+        JsonLoggerWrapper(mockLogger).info("main-message", "key1", "value1", "key2", "value2")
 
         verify(mockLogger, times(1)).isInfoEnabled
         verify(mockLogger, times(1)).info("main-message\", \"key1\":\"value1\", \"key2\":\"value2")
@@ -147,7 +147,7 @@ class LoggerUtilsTest {
         val mockLogger: org.slf4j.Logger = mock()
         whenever(mockLogger.isErrorEnabled).thenReturn(true)
 
-        logError(mockLogger, "main-message", "key1", "value1", "key2", "value2")
+        JsonLoggerWrapper(mockLogger).error("main-message", "key1", "value1", "key2", "value2")
 
         verify(mockLogger, times(1)).isErrorEnabled
         verify(mockLogger, times(1)).error("main-message\", \"key1\":\"value1\", \"key2\":\"value2")
@@ -160,7 +160,7 @@ class LoggerUtilsTest {
         whenever(mockLogger.isErrorEnabled).thenReturn(true)
         val exception = RuntimeException("boom")
 
-        logError(mockLogger, "main-message", exception, "key1", "value1", "key2", "value2")
+        JsonLoggerWrapper(mockLogger).error("main-message", exception, "key1", "value1", "key2", "value2")
 
         verify(mockLogger, times(1)).isErrorEnabled
         verify(mockLogger, times(1)).error(eq("main-message\", \"key1\":\"value1\", \"key2\":\"value2"), same(exception))

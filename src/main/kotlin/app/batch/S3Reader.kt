@@ -2,12 +2,11 @@ package app.batch
 
 import app.domain.InputStreamPair
 import app.domain.S3ObjectSummaryPair
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ListObjectsV2Request
 import com.amazonaws.services.s3.model.ListObjectsV2Result
 import com.amazonaws.services.s3.model.S3ObjectSummary
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemReader
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -113,6 +112,6 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(S3Reader::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(S3Reader::class.toString())
     }
 }

@@ -1,12 +1,11 @@
 package app.batch
 
 import app.domain.ManifestRecord
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
@@ -54,7 +53,7 @@ open class StreamingManifestWriter {
     private fun escape(value: String) = StringEscapeUtils.escapeCsv(value)
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(StreamingManifestWriter::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(StreamingManifestWriter::class.toString())
     }
 
 }

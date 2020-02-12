@@ -2,12 +2,11 @@ package app.batch
 
 import app.domain.DecompressedStream
 import app.services.CipherService
+import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.lang.StringEscapeUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.batch.item.ItemWriter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -107,7 +106,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(LintWriter::class.toString())
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(LintWriter::class.toString())
     }
 }
 

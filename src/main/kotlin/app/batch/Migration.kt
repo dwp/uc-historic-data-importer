@@ -1,13 +1,13 @@
 package app.batch
 
+import app.utils.logging.JsonLoggerWrapper
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.hbase.TableName
-import org.apache.log4j.Logger
 
 fun HbaseClient.migrate() {
-    val logger = Logger.getLogger(HbaseClient::class.java)
+    val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HbaseClient::class.toString())
 
     connection.admin.use { admin ->
         val namespaces = admin.listNamespaceDescriptors().map { it.name }
