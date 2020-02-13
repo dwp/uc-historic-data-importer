@@ -11,7 +11,7 @@ class JobCompletionNotificationListener(private val hbaseClient: HbaseClient) : 
 
     override fun afterJob(jobExecution: JobExecution) {
         hbaseClient.close()
-        logger.info("Finished, status: '${jobExecution.status}'.")
+        logger.info("Finished job", "job_status", "${jobExecution.status}")
     }
 
     companion object {

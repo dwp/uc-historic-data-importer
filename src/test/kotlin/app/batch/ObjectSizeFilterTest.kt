@@ -63,6 +63,6 @@ class ObjectSizeFilterTest {
         val captor = argumentCaptor<ILoggingEvent>()
         verify(mockAppender, times(1)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
-        assertEquals(formattedMessages[0], "Rejecting '$s3Key': size - $objectSize greater than the maximum allowed: $maxSize.")
+        assertEquals("Rejecting oversized file\", \"s3_location\":\"S3_KEY\", \"s3_object_size\":\"150\", \"max_size\":\"100", formattedMessages[0])
     }
 }

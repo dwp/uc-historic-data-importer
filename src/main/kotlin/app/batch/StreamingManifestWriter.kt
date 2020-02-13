@@ -24,18 +24,18 @@ open class StreamingManifestWriter {
                 BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
                     val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
                     s3.putObject(request)
-                    logger.info("Written manifest '$manifestFile' on attempt ${attempts + 1}/$maxManifestAttempts to 's3://$manifestBucket/$manifestPrefix/$manifestFileName', size: $manifestSize")
+                    logger.info("Written manifest", "attempt_number", "${attempts + 1}", "manifest_size", "$manifestSize", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName")
                     success = true
                     return
                 }
             }
             catch (e: Exception) {
                 ++attempts
-                logger.warn("Failed to write manifest '${manifestFile}' on attempt $attempts/$maxManifestAttempts: '${e.message}'")
+                logger.warn("Failed to write manifest", "attempt_number", "$attempts", "max_attempts", "$maxManifestAttempts", "error_message", "${e.message}")
             }
         }
 
-        logger.error("Failed to write manifest '${manifestFile}' after $maxManifestAttempts attempts, giving up.")
+        logger.error("Failed to write manifest after max attempts - giving up", "manifest_file", manifestFile.name, "max_attempts", "$maxManifestAttempts")
     }
 
     fun manifestMetadata(fileName: String, size: Long) =

@@ -26,7 +26,7 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val UNSET_TEXT = "NOT_SET"
+private const val UNSET_TEXT = "NOT_SET"
 private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
 
 private var hostname = InetAddress.getLocalHost().hostName
@@ -34,7 +34,7 @@ private var environment = System.getProperty("environment", UNSET_TEXT)
 private var application = System.getProperty("application", UNSET_TEXT)
 private var app_version = System.getProperty("app_version", UNSET_TEXT)
 private var component = System.getProperty("component", UNSET_TEXT)
-var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+var correlation_id: String = System.getProperty("correlation_id", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
 class LogConfiguration {
@@ -151,10 +151,9 @@ fun getDurationInMilliseconds(epochTime: Long): String {
     return elapsedMilliseconds.toString()
 }
 
-class JsonLoggerWrapper(private val wrappedLogger: Logger) {
+class JsonLoggerWrapper(private val delegateLogger: Logger) {
 
     companion object {
-
         fun getLogger(forClassName: String): JsonLoggerWrapper {
             val slf4jLogger: Logger = LoggerFactory.getLogger(forClassName)
             return JsonLoggerWrapper(slf4jLogger)
@@ -162,37 +161,37 @@ class JsonLoggerWrapper(private val wrappedLogger: Logger) {
     }
 
     fun debug(message: String, vararg tuples: String) {
-        if (wrappedLogger.isDebugEnabled) {
+        if (delegateLogger.isDebugEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.debug(semiFormatted)
+            delegateLogger.debug(semiFormatted)
         }
     }
 
     fun info(message: String, vararg tuples: String) {
-        if (wrappedLogger.isInfoEnabled) {
+        if (delegateLogger.isInfoEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.info(semiFormatted)
+            delegateLogger.info(semiFormatted)
         }
     }
 
     fun warn(message: String, vararg tuples: String) {
-        if (wrappedLogger.isWarnEnabled) {
+        if (delegateLogger.isWarnEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.warn(semiFormatted)
+            delegateLogger.warn(semiFormatted)
         }
     }
 
     fun error(message: String, vararg tuples: String) {
-        if (wrappedLogger.isErrorEnabled) {
+        if (delegateLogger.isErrorEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.error(semiFormatted)
+            delegateLogger.error(semiFormatted)
         }
     }
 
     fun error(message: String, error: Throwable, vararg tuples: String) {
-        if (wrappedLogger.isErrorEnabled) {
+        if (delegateLogger.isErrorEnabled) {
             val semiFormatted = semiFormattedTuples(message, *tuples)
-            wrappedLogger.error(semiFormatted, error)
+            delegateLogger.error(semiFormatted, error)
         }
     }
 }

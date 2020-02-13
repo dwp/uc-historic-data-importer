@@ -1,12 +1,13 @@
 package app.batch
 
 import app.domain.HBaseRecord
+import app.utils.logging.JsonLoggerWrapper
 import org.apache.hadoop.hbase.*
-import org.apache.hadoop.hbase.client.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.apache.hadoop.hbase.client.Connection
+import org.apache.hadoop.hbase.client.ConnectionFactory
+import org.apache.hadoop.hbase.client.Put
 
-open class HbaseClient (
+open class HbaseClient(
     val connection: Connection,
     val dataFamily: ByteArray,
     val dataQualifier: ByteArray
@@ -14,11 +15,11 @@ open class HbaseClient (
     companion object {
         fun connect() = HbaseClient(
             ConnectionFactory.createConnection(HBaseConfiguration.create(Config.Hbase.config)),
-                Config.Hbase.dataFamily.toByteArray(),
-                Config.Hbase.dataQualifier.toByteArray()
+            Config.Hbase.dataFamily.toByteArray(),
+            Config.Hbase.dataQualifier.toByteArray()
         )
 
-        val logger: Logger = LoggerFactory.getLogger(HbaseClient::class.java)
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HbaseClient::class.toString())
     }
 
     open fun putBatch(tableName: String, inserts: List<HBaseRecord>) {
@@ -48,10 +49,10 @@ open class HbaseClient (
             logger.info("Creating table '$dataTableName'.")
             connection.admin.createTable(HTableDescriptor(dataTableName).apply {
                 addFamily(HColumnDescriptor(dataFamily)
-                            .apply {
-                                maxVersions = Int.MAX_VALUE
-                                minVersions = 1
-                            })
+                    .apply {
+                        maxVersions = Int.MAX_VALUE
+                        minVersions = 1
+                    })
             })
             tables[tableName] = true
         }
@@ -61,9 +62,9 @@ open class HbaseClient (
         val extantNamespaces = mutableMapOf<String, Boolean>()
 
         connection.admin.listNamespaceDescriptors()
-                .forEach {
-                    extantNamespaces[it.name] = true
-                }
+            .forEach {
+                extantNamespaces[it.name] = true
+            }
 
         extantNamespaces
     }

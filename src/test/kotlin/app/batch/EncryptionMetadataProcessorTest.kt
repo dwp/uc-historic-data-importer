@@ -4,6 +4,7 @@ import app.domain.EncryptionMetadata
 import app.domain.InputStreamPair
 import app.exceptions.MetadataException
 import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayInputStream
 
@@ -34,7 +35,7 @@ class EncryptionMetadataProcessorTest {
         assertEquals(expected, result.encryptionMetadata)
     }
 
-    @Test(expected = MetadataException::class)
+    @Test
     fun testMalformedEncryptionMetadataNotOk() {
         val s3key = "S3_KEY"
         try {
@@ -51,11 +52,10 @@ class EncryptionMetadataProcessorTest {
 
             val pair = InputStreamPair(dataInputStream, ByteArrayInputStream(malformedJson), "S3_KEY", 100L)
             EncryptionMetadataProcessor().process(pair)
+            fail("Expected MetadataException")
         }
         catch (e: MetadataException) {
-            val message = "Failed to parse encryption metadata for '$s3key'."
-            assertEquals(message, e.message)
-            throw e
+            assertEquals("Failed to parse encryption metadata: s3_location: S3_KEY", e.message)
         }
     }
 

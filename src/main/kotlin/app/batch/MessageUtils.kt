@@ -32,7 +32,7 @@ class MessageUtils {
                 return df.parse(timeStampAsStr).time
             }
             catch (e: Exception) {
-                logger.debug("'$timeStampAsStr' did not match date format '$it'")
+                logger.debug("Found invalid timestamp format", "bad_candidate", "$timeStampAsStr", "valid_format", it)
             }
         }
         throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
@@ -45,7 +45,7 @@ class MessageUtils {
             return lastModified
         }
 
-        logger.warn("No _lastModifiedDateTime in message defaulting to '$EPOCH'.")
+        logger.warn("No _lastModifiedDateTime in message so using default", "default_timestamp", EPOCH)
         return EPOCH
     }
 
@@ -56,7 +56,7 @@ class MessageUtils {
             return type
         }
 
-        logger.warn("No @type in message defaulting to '$typeDefault'.")
+        logger.warn("No @type in message so useing default", "default_type", typeDefault)
         return typeDefault
     }
 
@@ -71,7 +71,7 @@ class MessageUtils {
             return if (message == null) null else message.obj("_id")
         }
         catch (e: Exception) {
-            logger.warn("Message does not contain valid json object with  _id field")
+            logger.warn("Message does not contain valid json object with _id field")
             return null
         }
     }
@@ -81,7 +81,7 @@ class MessageUtils {
             return json.obj("_id")
         }
         catch (e: Exception) {
-            logger.warn("DB Object does not contain valid json object with  _id field")
+            logger.warn("DB Object does not contain valid json object with _id field")
             return null
         }
     }

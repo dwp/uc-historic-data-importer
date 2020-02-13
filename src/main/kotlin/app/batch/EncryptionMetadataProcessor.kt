@@ -25,9 +25,9 @@ class EncryptionMetadataProcessor : ItemProcessor<InputStreamPair, EncryptedStre
             throw e
         }
         catch (e: Exception) {
-            val message = "Failed to parse encryption metadata for '${item.s3key}'."
-            logger.error(message)
-            throw MetadataException(message, e)
+            val message = "Failed to parse encryption metadata"
+            logger.error(message, "s3_location", item.s3key)
+            throw MetadataException("$message: s3_location: ${item.s3key}", e)
         }
     }
 

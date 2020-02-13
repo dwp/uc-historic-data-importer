@@ -70,8 +70,9 @@ class MessageProducer {
             null
         }
         val valueFromArguments = environment.get("hdi.version")
-        logger.info("valueFromManifest: '$valueFromManifest', valueFromArguments: '$valueFromArguments'.")
-        valueFromManifest ?: valueFromArguments ?: "No hdi version available."
+        val result = valueFromManifest ?: valueFromArguments ?: "No hdi version available."
+        logger.info("Getting HDI version","value_from_manifest", "$valueFromManifest", "value_from_arguments", "$valueFromArguments", "result_version", result)
+        result
     }
 
     private val unitOfWorkId by lazy {
