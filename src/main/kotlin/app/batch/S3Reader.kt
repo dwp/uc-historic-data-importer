@@ -94,7 +94,7 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         }
         while (results != null && results.isTruncated)
 
-        logger.info("Found objects n s3", "s3_objects_found", "s3://$bucketName/$fullPrefix", "s3_location", "${objectSummaries.size}")
+        logger.info("Found objects in s3", "s3_objects_found", "s3://$bucketName/$fullPrefix", "s3_location", "${objectSummaries.size}")
         val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
         val keyPairs =
             keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },

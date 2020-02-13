@@ -137,12 +137,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
 
-                                    val topic = "$kafkaTopicPrefix.$database.$collection"
                                     if (runMode != RUN_MODE_MANIFEST) {
                                         if (batchSizeBytes + message.length >= maxBatchVolume && batch.size > 0) {
                                             try {
                                                 logger.info("Attempting to write batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
-                                                putBatch(batch)
+                                                putBatch(tableName, batch)
                                                 logger.info("Written batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                                             }
                                             catch (e: Exception) {
@@ -194,7 +193,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     if (batch.size > 0) {
                         try {
                             logger.info("Attempting to write batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
-                            putBatch(batch)
+                            putBatch(tableName, batch)
                             logger.info("Written batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                             batch = mutableListOf()
                             batchSizeBytes = 0
