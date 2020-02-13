@@ -15,9 +15,9 @@ class KeyPairGenerator {
         val (unMatched, matched) = keysMap.map { it }.partition { it.key == null }
         val unMatchedFlattened = unMatched.flatMap { it.value }
 
-        logger.warn("Found keys not matching regex", "file_format", "$fileFormat", "non_matching_count", "${unMatchedFlattened.count()}")
         if (unMatchedFlattened.isNotEmpty()) {
-            logger.warn("Found unmatched keys", "unmatched_keys", unMatchedFlattened.joinToString(", "))
+            logger.warn("Found unmatched keys not matching regex", "unmatched_count", "${unMatchedFlattened.count()}",
+                "file_format", "$fileFormat", "unmatched_keys", unMatchedFlattened.joinToString(", "))
         }
 
         val keyPairs = matched.map { pair ->
@@ -28,7 +28,7 @@ class KeyPairGenerator {
             val metadataKey = pair.value.find { ti -> ti.contains(metadataFileExtension) }
 
             if (neitherDataNorMetadataKey.isNotEmpty()) {
-                logger.warn("Found file(s) that matched format but neither data or metadata file extensions", "bad_files", "${neitherDataNorMetadataKey.joinToString(", ")} ")
+                logger.warn("Found file(s) that matched format but neither data or metadata file extensions", "bad_files", "${neitherDataNorMetadataKey.joinToString(", ")}")
             }
 
             KeyPair(dataKey, metadataKey)

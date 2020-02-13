@@ -51,9 +51,9 @@ class StreamingManifestWriterTest {
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         for (i in 1..10) {
-            assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' on attempt $i\\/10: 'null'"))
+            assertTrue(formattedMessages.contains("Failed to write manifest\", \"attempt_number\":\"$i\", \"max_attempts\":\"10\", \"error_message\":\"null"))
         }
-        assertTrue(formattedMessages.contains("Failed to write manifest 'manifest.csv' after 10 attempts, giving up."))
+        assertTrue(formattedMessages.contains("Failed to write manifest after max attempts - giving up\", \"manifest_file\":\"manifest.csv\", \"max_attempts\":\"10"))
     }
 
 }
