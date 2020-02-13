@@ -57,39 +57,12 @@ class UCHistoricDataImporterSpec : FunSpec() {
 
         test("Messages in Hbase should match the count 4") {
             val hbase = HbaseClient.connect()
-<<<<<<< HEAD
-            val scan = Scan()
-            val count = hbase.connection.getTable(TableName.valueOf("k2hb:ingest")).use { table ->
-                val scanner = table.getScanner(scan)
-                val size = scanner.map { it }.size
-                scanner.close()
-                size
-            }
-
-            logger.info("Messages count : $count")
-            count shouldBe 4
-        }
-
-        test("Topics in Hbase should match the count 3") {
-            val hbase = HbaseClient.connect()
-            val scan = Scan()
-            val count = hbase.connection.getTable(TableName.valueOf("k2hb:ingest-topic")).use { table ->
-                val scanner = table.getScanner(scan)
-                val size = scanner.map { it }.size
-                scanner.close()
-                size
-            }
-
-            logger.info("Topic count : $count")
-            count shouldBe 3
-=======
             val t1count = tableCount(hbase.connection, "database_1:collection_1")
             t1count shouldBe 1
             val t2count = tableCount(hbase.connection, "database_1:collection_2")
             t2count shouldBe 2
             val t3count = tableCount(hbase.connection, "database_2:collection_3")
             t3count shouldBe 1
->>>>>>> origin
         }
 
         test("Messages in Hbase are decipherable") {
