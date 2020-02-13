@@ -42,3 +42,4 @@ dump/
 docker/gradle/gradle.properties
 docker/gradle/settings.gradle.kts
 *.csv
+docker/s3-init/env/

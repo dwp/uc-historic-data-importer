@@ -101,6 +101,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
                 val collection = groups[2]!!.value // ditto
                 val fileNumber = groups[3]!!.value // ditto
+                val tableName = "$database:$collection".replace("-", "_")
+                ensureTable(tableName)
+
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var fileProcessedRecords = 0
                 val gson = Gson()
@@ -116,20 +119,16 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             batchSizeBytes = 0
                             val reader = getBufferedReader(inputStream)
                             reader.forEachLine { line ->
-
                                 if (attempts > 1 && reader.lineNumber < fileProcessedRecords) {
                                     return@forEachLine
                                 }
-
                                 try {
                                     val json = messageUtils.parseGson(line)
                                     val id = gson.toJson(idObject(json))
-
                                     if (StringUtils.isBlank(id) || id == "null") {
                                         logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
                                         return@forEachLine
                                     }
-
                                     val encryptionResult = encryptDbObject(dataKeyResult, line, fileName, id)
                                     val message = messageProducer.produceMessage(json, id, encryptionResult, dataKeyResult,
                                         database, collection)
@@ -155,10 +154,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        batch.add(HBaseRecord(topic.toByteArray(),
-                                            formattedKey,
-                                            message.toByteArray(),
-                                            lastModifiedTimestampLong))
+                                        batch.add(HBaseRecord(formattedKey, message.toByteArray(), lastModifiedTimestampLong))
                                         batchSizeBytes += message.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
@@ -238,14 +234,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    fun putBatch(records: List<HBaseRecord>) {
+    fun putBatch(table: String, records: List<HBaseRecord>) {
 
         var success = false
         var attempts = 0
         var exception: Exception? = null
         while (!success && attempts < maxAttempts.toInt()) {
             try {
-                hbase.putBatch(records)
+                hbase.putBatch(table, records)
                 success = true
             }
             catch (e: Exception) {
@@ -266,6 +262,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             }
         }
 
+    }
+
+    fun ensureTable(tableName: String) {
+        hbase.ensureTable(tableName)
     }
 
     fun getBufferedReader(inputStream: InputStream?) = LineNumberReader(InputStreamReader(inputStream))

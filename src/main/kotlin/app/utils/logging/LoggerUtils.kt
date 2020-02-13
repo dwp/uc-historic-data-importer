@@ -26,7 +26,7 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 
-private val UNSET_TEXT = "NOT_SET"
+private const val UNSET_TEXT = "NOT_SET"
 private val defaultFormat = makeUtcDateFormat() // 2001-07-04T12:08:56.235
 
 private var hostname = InetAddress.getLocalHost().hostName
@@ -34,7 +34,7 @@ private var environment = System.getProperty("environment", UNSET_TEXT)
 private var application = System.getProperty("application", UNSET_TEXT)
 private var app_version = System.getProperty("app_version", UNSET_TEXT)
 private var component = System.getProperty("component", UNSET_TEXT)
-var correlation_id = System.getProperty("correlation_id", UNSET_TEXT)
+var correlation_id: String = System.getProperty("correlation_id", UNSET_TEXT)
 private var staticData = makeLoggerStaticDataTuples()
 
 class LogConfiguration {
@@ -57,11 +57,7 @@ fun makeLoggerStaticDataTuples(): String {
         "\"app_version\":\"$app_version\", " +
         "\"component\":\"$component\", " +
         "\"correlation_id\":\"$correlation_id\", " +
-        "\"data_table\":\"$hBaseDataTable\", " +
-        "\"data_family\":\"$hBaseDataFamily\", " +
-        "\"topic_table\":\"$hBaseTopicTable\", " +
-        "\"topic_family\":\"$hBaseTopicFamily\", " +
-        "\"topic_qualifier\":\"$hBaseTopicQualifier\""
+        "\"data_family\":\"$hBaseDataFamily\""
 }
 
 fun resetLoggerStaticFieldsForTests() {
@@ -158,7 +154,6 @@ fun getDurationInMilliseconds(epochTime: Long): String {
 class JsonLoggerWrapper(private val delegateLogger: Logger) {
 
     companion object {
-
         fun getLogger(forClassName: String): JsonLoggerWrapper {
             val slf4jLogger: Logger = LoggerFactory.getLogger(forClassName)
             return JsonLoggerWrapper(slf4jLogger)

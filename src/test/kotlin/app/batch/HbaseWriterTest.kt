@@ -55,7 +55,7 @@ class HbaseWriterTest {
     private lateinit var cipherService: CipherService
 
     @MockBean
-    private lateinit var hbase: HbaseClient
+    private lateinit var hbaseClient: HbaseClient
 
     @MockBean
     private lateinit var messageProducer: MessageProducer
@@ -71,7 +71,6 @@ class HbaseWriterTest {
 
     @Test
     fun should_Log_Error_For_Invalid_Json_And_continue() {
-
         val root = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME) as ch.qos.logback.classic.Logger
         val mockAppender: Appender<ILoggingEvent> = mock()
         root.addAppender(mockAppender)
@@ -95,12 +94,8 @@ class HbaseWriterTest {
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
 
         doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
-
-        val topic = "adb.collection".toByteArray()
-        val key = formattedKey.toByteArray()
-        val message1 = message.toByteArray()
-
-        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
+        doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
+        doNothing().whenever(hBaseWriter).putBatch(any(), any())
 
         val data = listOf(invalidJson2, validJson)
         val inputStreams = mutableListOf(getInputStream(data, validFileName))
@@ -138,11 +133,8 @@ class HbaseWriterTest {
 
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
 
-        val topic = "adb.collection".toByteArray()
-        val key = formattedKey.toByteArray()
-        val message1 = message.toByteArray()
-
-        doNothing().`when`(hbase).putVersion(topic, key, message1, 100)
+        doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
+        doNothing().whenever(hBaseWriter).putBatch(any(), any())
         doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
 
         val data = listOf(invalidJson2, validJsonWithoutId)
@@ -177,7 +169,8 @@ class HbaseWriterTest {
         given(s3.getObject("bucket", validFileName)).willReturn(s3Object)
         //whenever(hBaseWriter.getBufferedReader(any())).thenThrow(RuntimeException("wtf"))
         doThrow(RuntimeException("RESET ERROR")).whenever(hBaseWriter).getBufferedReader(any())
-        doNothing().whenever(hbase).putBatch(any())
+        doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
+        doNothing().whenever(hBaseWriter).putBatch(any(), any())
         doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
         val byteArray = """{ "_id": {"key": "value"}}""".toByteArray()
         given(cipherService.decompressingDecryptingStream(any(), any(), any())).willReturn(ByteArrayInputStream(byteArray))
@@ -257,12 +250,12 @@ class HbaseWriterTest {
     @Test
     fun testPutBatchRetries() {
         try {
-            given(hbase.putBatch(any())).willThrow(java.lang.RuntimeException("Failed to put batch"))
-            val record = HBaseRecord("topic".toByteArray(), "key".toByteArray(), "body".toByteArray(), 1.toLong())
-            hBaseWriter.putBatch(listOf(record))
+            given(hbaseClient.putBatch(any(), any())).willThrow(java.lang.RuntimeException("Failed to put batch"))
+            val record = HBaseRecord("key".toByteArray(), "body".toByteArray(), 1.toLong())
+            hBaseWriter.putBatch("ns:table", listOf(record))
         }
         catch (e: Exception) {
-            verify(hbase, times(5)).putBatch(any())
+            verify(hbaseClient, times(5)).putBatch(any(), any())
         }
     }
 
@@ -292,8 +285,9 @@ class HbaseWriterTest {
         given(messageUtils.getLastModifiedTimestamp(any())).willReturn("1980-01-01T00:00:00.000Z")
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
+        doNothing().whenever(hBaseWriter).ensureTable(any())
         hBaseWriter.write(items)
-        verify(hBaseWriter, times(100)).putBatch(any())
+        verify(hBaseWriter, times(100)).putBatch(any(), any())
     }
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {

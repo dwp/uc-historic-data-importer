@@ -45,7 +45,7 @@ create_paginated_data() {
 }
 
 create_voluminous_data() {
-    for file in database-1.collection-1.*; do
+    for file in database*; do
         aws --endpoint-url=$(aws_s3_endpoint) s3 cp \
             $file s3://$(aws_s3_prefix)/$file
     done

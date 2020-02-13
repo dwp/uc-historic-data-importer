@@ -8,6 +8,7 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.FunSpec
 import io.kotlintest.spring.SpringListener
 import org.apache.hadoop.hbase.TableName
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -42,12 +43,21 @@ class UCHistoricDataImporterSpec : FunSpec() {
     @Value("\${s3.manifest.prefix.folder:test-manifest-exporter}")
     private lateinit var s3ManifestPrefixFolder: String
 
+    private fun tableCount(connection: Connection, tableName: String) =
+        connection.getTable(TableName.valueOf(tableName)).use { table ->
+            val scanner = table.getScanner(Scan())
+            val size = scanner.map { it }.size
+            scanner.close()
+            size
+        }
+
 
     init {
         Security.addProvider(BouncyCastleProvider())
 
         test("Messages in Hbase should match the count 4") {
             val hbase = HbaseClient.connect()
+<<<<<<< HEAD
             val scan = Scan()
             val count = hbase.connection.getTable(TableName.valueOf("k2hb:ingest")).use { table ->
                 val scanner = table.getScanner(scan)
@@ -72,47 +82,59 @@ class UCHistoricDataImporterSpec : FunSpec() {
 
             logger.info("Topic count : $count")
             count shouldBe 3
+=======
+            val t1count = tableCount(hbase.connection, "database_1:collection_1")
+            t1count shouldBe 1
+            val t2count = tableCount(hbase.connection, "database_1:collection_2")
+            t2count shouldBe 2
+            val t3count = tableCount(hbase.connection, "database_2:collection_3")
+            t3count shouldBe 1
+>>>>>>> origin
         }
 
         test("Messages in Hbase are decipherable") {
             val hbase = HbaseClient.connect()
-            hbase.connection.getTable(TableName.valueOf("k2hb:ingest")).use { table ->
-                val scan = Scan()
-                val scanner = table.getScanner(scan)
-                scanner.forEach { result ->
 
-                    val familyMap = result.noVersionMap
+            for (tableName in listOf("database_1:collection_1", "database_1:collection_2", "database_2:collection_3")) {
+                hbase.connection.getTable(TableName.valueOf(tableName)).use { table ->
+                    val scan = Scan()
+                    val scanner = table.getScanner(scan)
+                    scanner.forEach { result ->
 
-                    if (familyMap.size == 0) {
-                        fail("No column family on the table.")
-                    }
+                        val familyMap = result.noVersionMap
 
-                    familyMap.forEach { (_, columnMap) ->
-                        columnMap.forEach { (_, cell) ->
-                            val json = cell.toString(Charset.defaultCharset())
-                            val dataBlock = Gson().fromJson(json, JsonObject::class.java)
-                            val messageInfo = dataBlock.getAsJsonObject("message")
-                            val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
-                            val encryptionInfo = messageInfo.getAsJsonObject("encryption")
-                            val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
-                            val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
-                            if (encryptedDbObject != null) {
-                                try {
-                                    val decryptedKey = decryptedDatakey(encryptedEncryptionKey)
-                                    val decryptedDbObject = decrypt(decryptedKey, initializationVector, encryptedDbObject)
-                                    //verify it is valid json:
-                                    Gson().fromJson(decryptedDbObject, JsonObject::class.java)
+                        if (familyMap.size == 0) {
+                            fail("No column family on the table.")
+                        }
+
+                        familyMap.forEach { (_, columnMap) ->
+                            columnMap.forEach { (_, cell) ->
+                                val json = cell.toString(Charset.defaultCharset())
+                                val dataBlock = Gson().fromJson(json, JsonObject::class.java)
+                                val messageInfo = dataBlock.getAsJsonObject("message")
+                                val encryptedDbObject = messageInfo.getAsJsonPrimitive("dbObject")?.asString
+                                val encryptionInfo = messageInfo.getAsJsonObject("encryption")
+                                val encryptedEncryptionKey = encryptionInfo.getAsJsonPrimitive("encryptedEncryptionKey").asString
+                                val initializationVector = encryptionInfo.getAsJsonPrimitive("initialisationVector").asString
+                                if (encryptedDbObject != null) {
+                                    try {
+                                        val decryptedKey = decryptedDatakey(encryptedEncryptionKey)
+                                        val decryptedDbObject = decrypt(decryptedKey, initializationVector, encryptedDbObject)
+                                        //verify it is valid json:
+                                        Gson().fromJson(decryptedDbObject, JsonObject::class.java)
+                                    }
+                                    catch (e: Exception) {
+                                        fail("Decrypted db object should be parseable as json.")
+                                    }
                                 }
-                                catch (e: Exception) {
-                                    fail("Decrypted db object should be parseable as json.")
+                                else {
+                                    fail("No encrypted db object.")
                                 }
-                            }
-                            else {
-                                fail("No encrypted db object.")
                             }
                         }
                     }
                 }
+
             }
         }
 

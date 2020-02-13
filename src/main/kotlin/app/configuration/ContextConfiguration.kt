@@ -1,7 +1,6 @@
 package app.configuration
 
 import app.batch.HbaseClient
-import app.batch.migrate
 import app.utils.logging.JsonLoggerWrapper
 import org.apache.http.impl.client.HttpClients
 import org.springframework.beans.factory.annotation.Value
@@ -42,11 +41,7 @@ class ContextConfiguration {
 
     @Bean
     @Profile("hbase")
-    fun hbaseClient(): HbaseClient {
-        val hbase = HbaseClient.connect()
-        hbase.migrate()
-        return hbase
-    }
+    fun hbaseClient() = HbaseClient.connect()
 
     @Value("\${object.maximum.size:2200000000}")
     lateinit var maxSize: String
