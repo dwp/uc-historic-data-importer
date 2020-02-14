@@ -40,21 +40,35 @@ open class HbaseClient(
         val namespace = dataTableName.namespaceAsString
 
         if (!namespaces.contains(namespace)) {
-            logger.info("Creating namespace '$namespace'.")
-            connection.admin.createNamespace(NamespaceDescriptor.create(namespace).build())
-            namespaces[namespace] = true
+            try {
+                logger.info("Creating namespace '$namespace'.")
+                connection.admin.createNamespace(NamespaceDescriptor.create(namespace).build())
+            }
+            catch (e: NamespaceExistException) {
+                logger.info("'$namespace' already exists, probably created by another process")
+            }
+            finally {
+                namespaces[namespace] = true
+            }
         }
 
         if (!tables.contains(tableName)) {
-            logger.info("Creating table '$dataTableName'.")
-            connection.admin.createTable(HTableDescriptor(dataTableName).apply {
-                addFamily(HColumnDescriptor(dataFamily)
-                    .apply {
-                        maxVersions = Int.MAX_VALUE
-                        minVersions = 1
-                    })
-            })
-            tables[tableName] = true
+            try {
+                logger.info("Creating table '$dataTableName'.")
+                connection.admin.createTable(HTableDescriptor(dataTableName).apply {
+                    addFamily(HColumnDescriptor(dataFamily)
+                        .apply {
+                            maxVersions = Int.MAX_VALUE
+                            minVersions = 1
+                        })
+                })
+            }
+            catch (e: Exception) {
+                logger.info("'$tableName' already exists, probably created by another process")
+            }
+            finally {
+                tables[tableName] = true
+            }
         }
     }
 
