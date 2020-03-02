@@ -52,9 +52,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${hbase.retry.backoff.multiplier:2}")
     private lateinit var backoffMultiplier: String // = 2
 
-    @Value("\${kafka.topic.prefix:db}")
-    private lateinit var kafkaTopicPrefix: String
-
     @Value("\${manifest.output.directory:.}")
     private lateinit var manifestOutputDirectory: String
 

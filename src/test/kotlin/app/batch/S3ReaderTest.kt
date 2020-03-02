@@ -33,10 +33,7 @@ import java.nio.charset.StandardCharsets
     "aws.region=eu-west-1",
     "s3.bucket=bucket1",
     "s3.prefix.folder=test",
-    "s3.suffixes.csv=output1",
-    "s3.key.regex=([\\w]*\\.[\\w]*\\.[0-9]{4}\\.json\\.gz)",
-    "s3.data.key.extension=\\.enc$",
-    "s3.metadata.key.extension=\\.encryption\\.json$"
+    "s3.suffixes.csv=output1"
 ])
 class S3ReaderTest {
 
@@ -46,9 +43,9 @@ class S3ReaderTest {
     private val S3_SUFFIX_1 = "output1"
     private val S3_SUFFIX_2 = "output2"
     private val VALID_DATA_KEY_1 = "test/output1/adb.collection.00001.json.gz.enc"
-    private val VALID_METADATA_KEY_1 = "test/output1/adb.collection.00001.json.gz.encryption.json"
+    private val VALID_METADATA_KEY_1 = "test/output1/adb.collection.00001.json.encryption.json"
     private val VALID_DATA_KEY_2 = "test/output2/adb.other-collection.00002.json.gz.enc"
-    private val VALID_METADATA_KEY_2 = "test/output2/adb.other-collection.00002.json.gz.encryption.json"
+    private val VALID_METADATA_KEY_2 = "test/output2/adb.other-collection.00002.json.encryption.json"
     private val OBJECT_CONTENT_1_1 = "SAMPLE_1_1"
     private val OBJECT_CONTENT_1_2 = "SAMPLE_1_2"
     private val OBJECT_CONTENT_2_1 = "SAMPLE_2_1"
@@ -69,9 +66,9 @@ class S3ReaderTest {
     @Test
     fun should_page_when_results_truncated() {
         val page1Object1Key = "database1.collection1.0001.json.gz.enc"
-        val page1Object2Key = "database1.collection1.0001.json.gz.encryption.json"
+        val page1Object2Key = "database1.collection1.0001.json.encryption.json"
         val page2Object1Key = "database1.collection2.0001.json.gz.enc"
-        val page2Object2Key = "database1.collection2.0001.json.gz.encryption.json"
+        val page2Object2Key = "database1.collection2.0001.json.encryption.json"
         val continuationToken = "CONTINUATION_TOKEN"
 
         val page1ObjectSummary1 = mockS3ObjectSummary(page1Object1Key)
@@ -127,7 +124,7 @@ class S3ReaderTest {
     @Test
     fun should_not_page_when_results_not_truncated() {
         val page1Object1Key = "database1.collection1.0001.json.gz.enc"
-        val page1Object2Key = "database1.collection1.0001.json.gz.encryption.json"
+        val page1Object2Key = "database1.collection1.0001.json.encryption.json"
 
         val page1ObjectSummary1 = mockS3ObjectSummary(page1Object1Key)
         val page1ObjectSummary2 = mockS3ObjectSummary(page1Object2Key)
@@ -347,7 +344,7 @@ class S3ReaderTest {
 
     private fun mockS3Object() =
         mock<S3Object> {
-            on { objectContent } doReturn mock<S3ObjectInputStream>()
+            on { objectContent } doReturn mock()
         }
 
     private fun mockS3ObjectSummary(objectKey: String) =

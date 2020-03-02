@@ -111,7 +111,7 @@ class S3ReaderRetryTest {
 
     private fun mockS3Object() =
         mock<S3Object> {
-            on { objectContent } doReturn mock<S3ObjectInputStream>()
+            on { objectContent } doReturn mock()
         }
 
 }

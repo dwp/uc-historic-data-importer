@@ -39,7 +39,6 @@ import java.security.Key
 ])
 class HbaseWriterTest {
 
-    val validJsonWithoutTimeStamp = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
     val validJsonWithoutId = """{"type":"addressDeclaration"}""".trimIndent()
     val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
     val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
@@ -199,8 +198,7 @@ class HbaseWriterTest {
         id.addProperty("key", "value")
         message.add("_id", id)
         val actual = hBaseWriter.idObject(message)
-        val expected = id
-        assertEquals(expected, actual)
+        assertEquals(id, actual)
     }
 
     @Test
@@ -275,7 +273,7 @@ class HbaseWriterTest {
         byteArrayOutputStream.close()
         val byteArray = byteArrayOutputStream.toByteArray()
         val items = mutableListOf(DecompressedStream(ByteArrayInputStream(byteArray),
-            "database.collection.0001.json.gz.enc", mock<Key>(), "AAAAAAAAAAAAAAAAAAAAAA=="))
+            "database.collection.0001.json.gz.enc", mock(), "AAAAAAAAAAAAAAAAAAAAAA=="))
 
         given(messageUtils.parseGson(any())).willReturn(Gson().fromJson(json, com.google.gson.JsonObject::class.java))
         whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
