@@ -83,7 +83,6 @@ services:
       - s3-init
     container_name: uc-historic-data-importer
     command: >-
-      --logging.level.root=DEBUG
       --spring.main.banner-mode=off
       --hbase.zookeeper.quorum=hbase
       --aws.region=eu-west-2
@@ -94,9 +93,6 @@ services:
       --s3.prefix.folder=test
       --s3.suffixes.csv=prefix,prefix2
       --s3.service.endpoint=http://s3:4572
-      --filename.format.regex=([A-Za-z0-9-]+\.[A-Za-z0-9-]+\.[0-9]+\.json\.gz)
-      --filename.format.data.extension=\.enc$$
-      --filename.format.metadata.extension=\.encryption\.json$$
       --kafka.topic.prefix=db
       --trace.id=1234
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng,hbaseWriter

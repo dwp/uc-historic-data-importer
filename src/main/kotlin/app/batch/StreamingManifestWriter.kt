@@ -15,7 +15,7 @@ open class StreamingManifestWriter {
     fun sendManifest(s3: AmazonS3, manifestFile: File, manifestBucket: String, manifestPrefix: String, maxManifestAttempts: Int) {
         var attempts = 0
         var success = false
-        while (!success && attempts < maxManifestAttempts.toInt()) {
+        while (!success && attempts < maxManifestAttempts) {
             try {
                 val manifestSize = manifestFile.length()
                 val manifestFileName = manifestFile.name

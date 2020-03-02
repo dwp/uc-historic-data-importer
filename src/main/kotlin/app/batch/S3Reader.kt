@@ -27,10 +27,10 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
     @Value("\${s3.suffixes.csv}")
     lateinit var s3SuffixesCsv: String
 
-    @Value("\${filename.format.regex:([\\w-]+\\\.[\\w-]+\\\.[0-9]+\\\.json\\\.gz)}")
+    @Value("\${filename.format.regex:[\\w-]+\\.[\\w-]+\\.[0-9]+\\.json}")
     private lateinit var fileNameFormat: String
 
-    @Value("\${filename.format.data.extension:\\.enc$}")
+    @Value("\${filename.format.data.extension:\\.gz\\.enc$}")
     private lateinit var fileNameFormatDataExtension: String
 
     @Value("\${filename.format.metadata.extension:\\.encryption\\.json$}")

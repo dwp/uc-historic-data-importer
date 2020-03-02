@@ -37,7 +37,6 @@ class EncryptionMetadataProcessorTest {
 
     @Test
     fun testMalformedEncryptionMetadataNotOk() {
-        val s3key = "S3_KEY"
         try {
             val dataInputStream = ByteArrayInputStream("DATA INPUT STREAM".toByteArray())
             val encryptionKeyId = "encryptionKeyId"

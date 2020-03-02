@@ -228,7 +228,7 @@ class LoggerUtilsTest {
 
     @Test
     fun testLoggerLayoutAppender_WillReturnSkinnyJson_WhenCalledWithEmptyEvent() {
-        val result = LoggerLayoutAppender().doLayout(mock<ILoggingEvent>())
+        val result = LoggerLayoutAppender().doLayout(mock())
         val expected = """{ "timestamp":"1970-01-01T00:00:00.000", "log_level":"null", "message":"null", "thread":"null", "logger":"null", "duration_in_milliseconds":"-9876543000", "hostname":"test-host", "environment":"test-env", "application":"my-app", "app_version":"v1", "component":"tests", "correlation_id":"test1", "data_family":"cf" }
 """
         assertEquals(expected, result)

@@ -26,9 +26,6 @@ object Config {
 
         val dataFamily = hBaseDataFamily
         val dataQualifier = hBaseDataQualifier
-        val topicTable = hBaseTopicTable
-        val topicFamily = hBaseTopicFamily
-        val topicQualifier = hBaseTopicQualifier
     }
 
 }

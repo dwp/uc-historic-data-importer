@@ -23,7 +23,7 @@ class HbaseClientTest {
             on { name } doReturn namespace
         }
 
-        val adm = mock<Admin>() {
+        val adm = mock<Admin> {
             on { listNamespaceDescriptors() } doReturn arrayOf(namespaceDescriptor)
             on { listTableNames() } doReturn arrayOf(tableName)
         }
@@ -48,7 +48,7 @@ class HbaseClientTest {
             on { name } doReturn namespace
         }
 
-        val adm = mock<Admin>() {
+        val adm = mock<Admin> {
             on { listNamespaceDescriptors() } doReturn arrayOf(namespaceDescriptor)
             on { listTableNames() } doReturn arrayOf(tableName)
         }
@@ -88,7 +88,7 @@ class HbaseClientTest {
             on { name } doReturn namespace
         }
 
-        val adm = mock<Admin>() {
+        val adm = mock<Admin> {
             on { listNamespaceDescriptors() } doReturn arrayOf(namespaceDescriptor)
             on { listTableNames() } doReturn arrayOf(tableName)
         }

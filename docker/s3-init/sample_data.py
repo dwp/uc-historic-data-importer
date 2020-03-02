@@ -93,7 +93,7 @@ def main():
                 encrypt(encryption_metadata['plaintextDatakey'],
                         contents.encode("utf8"), args.encrypt)
 
-        metadata_file = f'{batch}.{batch_nos[batch]:04d}.json.gz.encryption.json'
+        metadata_file = f'{batch}.{batch_nos[batch]:04d}.json.encryption.json'
         with open(metadata_file, 'w') as metadata:
             print(f'Writing metadata file {metadata_file}')
             json.dump(encryption_metadata, metadata, indent=4)
