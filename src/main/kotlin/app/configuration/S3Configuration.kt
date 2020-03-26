@@ -21,8 +21,6 @@ class S3Configuration {
 
         val clientConfiguration = ClientConfiguration().apply {
             maxConnections = maximumS3Connections.toInt()
-
-
         }
 
         return AmazonS3ClientBuilder.standard()

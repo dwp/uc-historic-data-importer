@@ -18,15 +18,18 @@ open class StreamingManifestWriter {
         while (!success && attempts < maxManifestAttempts) {
             try {
                 val manifestSize = manifestFile.length()
-                val manifestFileName = manifestFile.name
-                val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
-                val prefix = "$manifestPrefix/$manifestFileName"
-                BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
-                    val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
-                    s3.putObject(request)
-                    logger.info("Written manifest", "attempt_number", "${attempts + 1}", "manifest_size", "$manifestSize", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName")
-                    success = true
-                    return
+                if (manifestSize > 0) {
+                    val manifestFileName = manifestFile.name
+                    val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
+                    val prefix = "$manifestPrefix/$manifestFileName"
+                    BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
+                        val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
+                        s3.putObject(request)
+                        logger.info("Written manifest", "attempt_number", "${attempts + 1}", "manifest_size", "$manifestSize", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName")
+                        success = true
+                        return
+                    }
+
                 }
             }
             catch (e: Exception) {
