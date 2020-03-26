@@ -18,8 +18,8 @@ open class StreamingManifestWriter {
         while (!success && attempts < maxManifestAttempts) {
             try {
                 val manifestSize = manifestFile.length()
+                val manifestFileName = manifestFile.name
                 if (manifestSize > 0) {
-                    val manifestFileName = manifestFile.name
                     val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
                     val prefix = "$manifestPrefix/$manifestFileName"
                     BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
@@ -29,6 +29,9 @@ open class StreamingManifestWriter {
                         success = true
                         return
                     }
+                }
+                else {
+                    logger.info("Not written zero-byte manifest","manifest_size", "$manifestSize", "manifest_file_name", manifestFileName)
 
                 }
             }
