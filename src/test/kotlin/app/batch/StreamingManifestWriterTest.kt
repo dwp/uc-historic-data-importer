@@ -41,6 +41,7 @@ class StreamingManifestWriterTest {
         val manifestFile = mock<File> {
             on { name } doReturn "manifest.csv"
             on { toString() } doReturn "manifest.csv"
+            on { length() } doReturn 10
         }
         val manifestBucket = "manifestBucket"
         val manifestPrefix = "manifestPrefix"
