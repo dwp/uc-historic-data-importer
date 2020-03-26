@@ -32,6 +32,8 @@ open class StreamingManifestWriter {
                 }
                 else {
                     logger.info("Skipped zero-byte manifest", "manifest_size", "$manifestSize", "manifest_file_name", manifestFileName)
+                    success = true
+                    return
 
                 }
             }
