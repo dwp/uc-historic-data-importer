@@ -67,47 +67,47 @@ ignore:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-559094
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-559094:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-559106
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-559106:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560762
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560762:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560766
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-560766:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561362
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561362:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561373
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561373:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561585
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561585:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561586
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561586:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561587
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-561587:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-IONETTY-559515
+  SNYK-JAVA-IONETTY-559515:
     - '*':
         reason: transient dependency though hbase client version to which we are tied.
         expires: 2020-04-20T00:00:00.000Z
-  SNYK-JAVA-IONETTY-559516
+  SNYK-JAVA-IONETTY-559516:
     - '*':
         reason: transient dependency though hbase client version to which we are tied.
         expires: 2020-04-20T00:00:00.000Z
