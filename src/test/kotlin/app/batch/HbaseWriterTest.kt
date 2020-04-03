@@ -87,7 +87,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("something")
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
-        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", false, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 
         val formattedKey = "0000-0000-00001"
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
@@ -121,12 +121,12 @@ class HbaseWriterTest {
         whenever(messageUtils.parseGson(invalidJson2)).thenThrow(RuntimeException("parse error"))
         val jsonObject = JsonObject()
         whenever(messageUtils.parseGson(validJsonWithoutId)).thenReturn(com.google.gson.JsonObject())
-        whenever(messageUtils.getIdFromDbObject(jsonObject)).thenReturn(null)
+        whenever(messageUtils.getId(jsonObject)).thenReturn(null)
 
         whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
         whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
         val message = "message"
-        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""",
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", false,
             encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 
@@ -197,28 +197,40 @@ class HbaseWriterTest {
         val id = com.google.gson.JsonObject()
         id.addProperty("key", "value")
         message.add("_id", id)
-        val actual = hBaseWriter.idObject(message)
-        assertEquals(id, actual)
+        val expectedId = Gson().toJson(id)
+        val expectedModified = false
+        val (actualId, actualModified) = hBaseWriter.id(Gson(), message)
+        assertEquals(expectedId, actualId)
+        assertEquals(actualModified, expectedModified)
     }
 
     @Test
-    fun testIdStringReturnedAsObject() {
+    fun testIdStringReturnedAsString() {
         val message = com.google.gson.JsonObject()
         message.addProperty("_id", "id")
-        val actual = hBaseWriter.idObject(message)
-        val expected = com.google.gson.JsonObject()
-        expected.addProperty("id", "id")
-        assertEquals(expected, actual)
+        val actual = hBaseWriter.id(Gson(), message)
+        assertEquals(Pair("id", false), actual)
+    }
+
+    @Test
+    fun testMongoIdStringReturnedAsString() {
+        val message = com.google.gson.JsonObject()
+        val oid = com.google.gson.JsonObject()
+        val oidValue = "OID_VALUE"
+        oid.addProperty("\$oid", oidValue)
+        message.add("_id", oid)
+        val actual = hBaseWriter.id(Gson(), message)
+        assertEquals(Pair(oidValue, true), actual)
     }
 
     @Test
     fun testIdNumberReturnedAsObject() {
         val message = com.google.gson.JsonObject()
         message.addProperty("_id", 12345)
-        val actual = hBaseWriter.idObject(message)
-        val expected = com.google.gson.JsonObject()
-        expected.addProperty("id", "12345")
-        assertEquals(expected, actual)
+        val actual = hBaseWriter.id(Gson(), message)
+        val expectedId = "12345"
+        val expectedModified = false
+        assertEquals(Pair(expectedId, expectedModified), actual)
     }
 
     @Test
@@ -228,20 +240,41 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         message.add("_id", arrayValue)
-        val actual = hBaseWriter.idObject(message)
-        val expected = null
+        val actual = hBaseWriter.id(Gson(), message)
+        val expected = Pair("", false)
         assertEquals(expected, actual)
     }
 
     @Test
-    fun testIdNullReturnedAsNull() {
+    fun testIdNullReturnedAsEmpty() {
         val message = com.google.gson.JsonObject()
         val nullValue = com.google.gson.JsonNull.INSTANCE
         message.add("_id", nullValue)
-        val actual = hBaseWriter.idObject(message)
-        val expected = null
+        val actual = hBaseWriter.id(Gson(), message)
+        val expected = Pair("", false)
         assertEquals(expected, actual)
+    }
 
+    @Test
+    fun testUnencryptedDbObjWhenIdNotModified() {
+        val lineFromDump = "An unencrypted line read from the dump"
+        val unencryptedDbObject = hBaseWriter.unencryptedDbObject(Gson(), """{ "key", "value" }""", false, com.google.gson.JsonObject(), lineFromDump)
+        assertEquals(lineFromDump, unencryptedDbObject)
+    }
+
+    @Test
+    fun testUnencryptedDbObjectWhenIdModified() {
+        val lineFromDump = "An unencrypted line read from the dump"
+        val id = "OID_WRENCHED_FROM_MONGO_ID"
+        val obj = com.google.gson.JsonObject()
+        val oid = com.google.gson.JsonObject()
+        oid.addProperty("\$oid", "oid")
+        obj.add("_id", oid)
+        val expectedObject = com.google.gson.JsonObject()
+        expectedObject.addProperty("_id", id)
+        val expected = Gson().toJson(expectedObject)
+        val unencryptedDbObject = hBaseWriter.unencryptedDbObject(Gson(), id, true, obj, lineFromDump)
+        assertEquals(expected, unencryptedDbObject)
     }
 
     @Test
@@ -278,7 +311,7 @@ class HbaseWriterTest {
         given(messageUtils.parseGson(any())).willReturn(Gson().fromJson(json, com.google.gson.JsonObject::class.java))
         whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
         given(cipherService.encrypt(any(), any())).willReturn(EncryptionResult("AAAAAAAAAAAAAAAAAAAAAA==", "qwertyuiop"))
-        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
+        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
         given(messageUtils.getLastModifiedTimestamp(any())).willReturn("1980-01-01T00:00:00.000Z")
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())

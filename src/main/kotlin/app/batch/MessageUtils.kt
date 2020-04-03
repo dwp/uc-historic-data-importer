@@ -60,28 +60,40 @@ class MessageUtils {
         return typeDefault
     }
 
-    fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
+    open fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
         val id: JsonObject? = body?.let { getId(it) }
         return if (id == null) ByteArray(0) else generateKey(id)
     }
 
     fun getId(json: JsonObject): JsonObject? {
-        try {
-            val message: JsonObject? = json.obj("message")
-            return if (message == null) null else message.obj("_id")
-        }
-        catch (e: Exception) {
-            logger.warn("Message does not contain valid json object with _id field")
-            return null
-        }
-    }
+        val message = json["message"]
+        if (message != null && message is JsonObject) {
+            val id = message["_id"]
 
-    fun getIdFromDbObject(json: JsonObject): JsonObject? {
-        try {
-            return json.obj("_id")
+            if (id != null) {
+                if (id is JsonObject) {
+                    return id
+                }
+                else if (id is String) {
+                    val idObject = JsonObject()
+                    idObject["id"] = id
+                    return idObject
+                }
+                else if (id is Int) {
+                    val idObject = JsonObject()
+                    idObject["id"] = "$id"
+                    return idObject
+                }
+                else {
+                    return null
+                }
+            }
+            else {
+                return null
+            }
+
         }
-        catch (e: Exception) {
-            logger.warn("DB Object does not contain valid json object with _id field")
+        else {
             return null
         }
     }

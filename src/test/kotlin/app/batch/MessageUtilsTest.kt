@@ -369,42 +369,14 @@ class MessageUtilsTest {
         idJson shouldBe null
     }
 
-    @Test
-    fun id_is_returned_from_valid_dbobject() {
-
-        val jsonOne: JsonObject = messageUtils.parseJson("{\"_id\":{\"test_key\":\"test_value\"}}")
-        val idString = "{\"test_key\":\"test_value\"}"
-
-        val idJson: JsonObject? = messageUtils.getIdFromDbObject(jsonOne)
-
-        idJson?.toJsonString() shouldBe idString
-    }
 
     @Test
-    fun null_is_returned_from_json_where_message__exists() {
+    fun altered_id_is_returned_from_json_where_id_is_not_an_object() {
 
-        val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":{\"test_key\":\"test_value\"}}}")
-        val idJson: JsonObject? = messageUtils.getIdFromDbObject(jsonOne)
-
-        idJson shouldBe null
-    }
-
-    @Test
-    fun null_is_returned_from_json_where_id_in_dbobject_is_missing() {
-
-        val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"test_object\":{\"test_key\":\"test_value\"}}}")
-        val idJson: JsonObject? = messageUtils.getIdFromDbObject(jsonOne)
-
-        idJson shouldBe null
-    }
-
-    @Test
-    fun null_is_returned_from_json_where_id_is_not_an_object() {
-
-        val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":\"test_value\"}}")
+        val jsonOne: JsonObject = messageUtils.parseJson("""{"message":{"_id":"test_value"}}""")
         val idJson: JsonObject? = messageUtils.getId(jsonOne)
-
-        idJson shouldBe null
+        val expected = JsonObject(mutableMapOf("id" to "test_value"))
+        idJson shouldBe expected
     }
 
     @Test
@@ -453,8 +425,9 @@ class MessageUtilsTest {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":\"test_value\"}}")
         val key: ByteArray = messageUtils.generateKeyFromRecordBody(jsonOne)
-
-        key shouldBe ByteArray(0)
+        val noChecksum = String(key).substring(3)
+        val expected = """{"id":"test_value"}"""
+        noChecksum shouldBe expected
     }
 
     @Test

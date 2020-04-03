@@ -10,8 +10,9 @@
           "type": "string"
         },
         "_id": {
-          "type": "object",
-          "minProperties": 1
+          "type": [ "object", "string", "integer" ],
+          "minProperties": 1,
+          "minLength": 1
         },
         "_lastModifiedDateTime": {
           "type": "string",

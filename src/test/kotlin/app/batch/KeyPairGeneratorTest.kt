@@ -66,7 +66,6 @@ class KeyPairGeneratorTest {
         verify(mockAppender, times(4)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         val expected = "Found unmatched keys not matching regex\", \"unmatched_count\":\"2\", \"file_format\":\"[\\\\w-]+\\\\.[\\\\w-]+\\\\.[0-9]+\\\\.json\", \"unmatched_keys\":\"abc.json, edf.json"
-        println(expected)
         assertTrue(formattedMessages.contains(expected))
         assertEquals(expectedKeyPairs, actualKeyPairs)
     }
