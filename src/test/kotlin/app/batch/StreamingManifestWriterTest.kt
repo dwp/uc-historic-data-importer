@@ -16,9 +16,9 @@ class StreamingManifestWriterTest {
     @Test
     fun testEscapedCSV() {
         val manifestWriter = StreamingManifestWriter()
-        val manifestRecord = ManifestRecord(""""_id":{"declarationId": "1234567890"}""", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "IMPORT", "HDI")
+        val manifestRecord = ManifestRecord(""""_id":{"declarationId": "1234567890"}""", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "IMPORT", "HDI", "ORIGINAL_ID")
         val actual = manifestWriter.csv(manifestRecord)
-        val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\",100000000,\"dbwithcomma,\",\"collectionwithdoublequote\"\"\",IMPORT,HDI\n"
+        val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\",100000000,\"dbwithcomma,\",\"collectionwithdoublequote\"\"\",IMPORT,HDI,ORIGINAL_ID\n"
         assertEquals(expected, actual)
     }
 

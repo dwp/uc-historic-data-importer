@@ -13,6 +13,8 @@ import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.beust.klaxon.JsonObject
 import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -62,9 +64,6 @@ class HbaseWriterTest {
     @MockBean
     private lateinit var messageUtils: MessageUtils
 
-    @MockBean
-    private lateinit var manifestWriter: ManifestWriter
-
     @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
 
@@ -92,7 +91,6 @@ class HbaseWriterTest {
         val formattedKey = "0000-0000-00001"
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
 
-        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
         doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
 
@@ -134,7 +132,6 @@ class HbaseWriterTest {
 
         doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
-        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
 
         val data = listOf(invalidJson2, validJsonWithoutId)
         val inputStreams = mutableListOf(getInputStream(data, validFileName))
@@ -169,7 +166,6 @@ class HbaseWriterTest {
         doThrow(RuntimeException("RESET ERROR")).whenever(hBaseWriter).getBufferedReader(any())
         doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
-        doNothing().whenever(manifestWriter).generateManifest(any(), any(), any(), any())
         val byteArray = """{ "_id": {"key": "value"}}""".toByteArray()
         given(cipherService.decompressingDecryptingStream(any(), any(), any())).willReturn(ByteArrayInputStream(byteArray))
         given(messageUtils.parseGson(any())).willReturn(Gson().fromJson("""{ "_id": {"key": "value"}}""", com.google.gson.JsonObject::class.java))
@@ -193,41 +189,35 @@ class HbaseWriterTest {
 
     @Test
     fun testIdObjectReturnedAsObject() {
-        val message = com.google.gson.JsonObject()
         val id = com.google.gson.JsonObject()
         id.addProperty("key", "value")
-        message.add("_id", id)
         val expectedId = Gson().toJson(id)
         val expectedModified = false
-        val (actualId, actualModified) = hBaseWriter.id(Gson(), message)
+        val (actualId, actualModified) = hBaseWriter.id(Gson(), id)
         assertEquals(expectedId, actualId)
         assertEquals(actualModified, expectedModified)
     }
 
     @Test
     fun testIdStringReturnedAsString() {
-        val message = com.google.gson.JsonObject()
-        message.addProperty("_id", "id")
-        val actual = hBaseWriter.id(Gson(), message)
+        val id = JsonPrimitive("id")
+        val actual = hBaseWriter.id(Gson(), id)
         assertEquals(Pair("id", false), actual)
     }
 
     @Test
     fun testMongoIdStringReturnedAsString() {
-        val message = com.google.gson.JsonObject()
         val oid = com.google.gson.JsonObject()
         val oidValue = "OID_VALUE"
         oid.addProperty("\$oid", oidValue)
-        message.add("_id", oid)
-        val actual = hBaseWriter.id(Gson(), message)
+        val actual = hBaseWriter.id(Gson(), oid)
         assertEquals(Pair(oidValue, true), actual)
     }
 
     @Test
     fun testIdNumberReturnedAsObject() {
-        val message = com.google.gson.JsonObject()
-        message.addProperty("_id", 12345)
-        val actual = hBaseWriter.id(Gson(), message)
+        val id = JsonPrimitive( 12345)
+        val actual = hBaseWriter.id(Gson(), id)
         val expectedId = "12345"
         val expectedModified = false
         assertEquals(Pair(expectedId, expectedModified), actual)
@@ -235,22 +225,18 @@ class HbaseWriterTest {
 
     @Test
     fun testIdArrayReturnedAsNull() {
-        val message = com.google.gson.JsonObject()
         val arrayValue = com.google.gson.JsonArray()
         arrayValue.add("1")
         arrayValue.add("2")
-        message.add("_id", arrayValue)
-        val actual = hBaseWriter.id(Gson(), message)
+        val actual = hBaseWriter.id(Gson(), arrayValue)
         val expected = Pair("", false)
         assertEquals(expected, actual)
     }
 
     @Test
     fun testIdNullReturnedAsEmpty() {
-        val message = com.google.gson.JsonObject()
         val nullValue = com.google.gson.JsonNull.INSTANCE
-        message.add("_id", nullValue)
-        val actual = hBaseWriter.id(Gson(), message)
+        val actual = hBaseWriter.id(Gson(), nullValue)
         val expected = Pair("", false)
         assertEquals(expected, actual)
     }

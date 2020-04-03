@@ -9,6 +9,7 @@ import app.services.KeyService
 import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
 import org.springframework.batch.item.ItemWriter
@@ -115,29 +116,29 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             ++attempts
                             batchSizeBytes = 0
                             val reader = getBufferedReader(inputStream)
-                            reader.forEachLine { line ->
+                            reader.forEachLine { lineFromDump ->
                                 if (attempts > 1 && reader.lineNumber < fileProcessedRecords) {
                                     return@forEachLine
                                 }
                                 try {
-                                    val json = messageUtils.parseGson(line)
-                                    val (id, modified) = id(gson, json)
-
+                                    val lineAsJson = messageUtils.parseGson(lineFromDump)
+                                    val originalId = lineAsJson.get("_id")
+                                    val (id, idWasModified) = id(gson, originalId)
                                     if (StringUtils.isBlank(id) || id == "null") {
                                         logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
                                         return@forEachLine
                                     }
 
-                                    val dbObject = unencryptedDbObject(gson, id, modified, json, line)
+                                    val dbObject = unencryptedDbObject(gson, id, idWasModified, lineAsJson, lineFromDump)
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, dbObject)
-                                    val message = messageProducer.produceMessage(json, id, modified, encryptionResult, dataKeyResult,
+                                    val messageWrapper = messageProducer.produceMessage(lineAsJson, id, idWasModified, encryptionResult, dataKeyResult,
                                         database, collection)
-                                    val messageJsonObject = messageUtils.parseJson(message)
+                                    val messageJsonObject = messageUtils.parseJson(messageWrapper)
                                     val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
                                     val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                                     if (runMode != RUN_MODE_MANIFEST) {
-                                        if (batchSizeBytes + message.length >= maxBatchVolume && batch.size > 0) {
+                                        if (batchSizeBytes + messageWrapper.length >= maxBatchVolume && batch.size > 0) {
                                             try {
                                                 logger.info("Attempting to write batch", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                                                 putBatch(tableName, batch)
@@ -152,11 +153,16 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        batch.add(HBaseRecord(formattedKey, message.toByteArray(), lastModifiedTimestampLong))
-                                        batchSizeBytes += message.length
+                                        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
+                                        batchSizeBytes += messageWrapper.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
-                                        val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI")
+                                        if (idWasModified) {
+                                            println("id: $id")
+                                        }
+                                        val incomingId = if (idWasModified) incomingId(gson, originalId) else id
+
+                                        val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", "HDI", incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 }
@@ -215,8 +221,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     }
 
-    fun unencryptedDbObject(gson: Gson, id: String, modified: Boolean, json: JsonObject, line: String) =
-            if (modified) {
+    fun unencryptedDbObject(gson: Gson, id: String, modifiedId: Boolean, json: JsonObject, line: String) =
+            if (modifiedId) {
                 json.remove("_id")
                 json.addProperty("_id", id)
                 gson.toJson(json)
@@ -225,8 +231,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 line
             }
 
-    fun id(gson: Gson, json: JsonObject): Pair<String, Boolean> {
-        val id = json.get("_id")
+    fun id(gson: Gson, id: JsonElement?): Pair<String, Boolean> {
 
         if (id != null) {
             if (id.isJsonObject) {
@@ -247,6 +252,23 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
         else {
             return Pair("", false)
+        }
+    }
+
+    fun incomingId(gson: Gson, id: JsonElement?): String {
+        if (id != null) {
+            if (id.isJsonObject) {
+                return gson.toJson(id.asJsonObject)
+            }
+            else if (id.isJsonPrimitive) {
+                return id.asJsonPrimitive.asString
+            }
+            else {
+                return ""
+            }
+        }
+        else {
+            return ""
         }
     }
 

@@ -17,7 +17,7 @@ open class StreamingManifestWriter {
         var success = false
         while (!success && attempts < maxManifestAttempts) {
             try {
-                val manifestSize = manifestFile.length()
+                    val manifestSize = manifestFile.length()
                 val manifestFileName = manifestFile.name
                 if (manifestSize > 0) {
                     val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
@@ -54,7 +54,7 @@ open class StreamingManifestWriter {
         }
 
     fun csv(manifestRecord: ManifestRecord) =
-        "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)}\n"
+        "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)},${escape(manifestRecord.originalId)}\n"
 
     fun topicName(db: String, collection: String) = "db.$db.$collection"
 
