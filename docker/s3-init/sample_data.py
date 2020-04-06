@@ -67,6 +67,12 @@ def main():
             corrupted = record[0:int(len(record)/2)]
             contents = contents + corrupted + "\n"
 
+        if args.mongo_id:
+            print("Adding record with mongo id.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j, True)
+            print(record)
+            contents = contents + record + "\n"
+
         if args.record_with_no_id:
             print("Adding record with no id.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
@@ -123,10 +129,15 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
         return (base64.b64encode(initialisation_vector).decode('ascii'),
                 unencrypted_bytes)
 
-def db_object_json(batch, i):
+def db_object_json(batch, i, native_id=False):
     """Returns a sample dbRecord object with unique ids."""
     record = db_object(i)
-    record['_id']['declarationId'] = f'{batch}-{(i//20) + 1}'
+
+    if native_id:
+        record['_id'] = {'$oid': f'{batch}-{(i//20) + 1}'}
+    else:
+        record['_id']['declarationId'] = f'{batch}-{(i//20) + 1}'
+
     record['contractId'] = guid()
     record['addressNumber']['cryptoId'] = guid()
     record['townCity']['cryptoId'] = guid()
@@ -187,6 +198,8 @@ def command_line_args():
                         help='Add a record with no timestamp to each file.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
+    parser.add_argument('-o', '--mongo-id', action='store_true',
+                        help='Add a record with a mongo native id.')
     parser.add_argument('-n', '--file-count',
                         help='The number of files to create.')
     parser.add_argument('-s', '--batch-size',

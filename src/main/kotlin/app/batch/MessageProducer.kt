@@ -19,6 +19,7 @@ class MessageProducer {
 
     fun produceMessage(jsonObject: JsonObject,
                        id: String,
+                       modified: Boolean,
                        encryptionResult: EncryptionResult,
                        dataKeyResult: DataKeyResult,
                        database: String,
@@ -35,6 +36,7 @@ class MessageProducer {
         // SimpleDateFormat is not thread-safe so we need a new one every time
         val standardDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
         val timestamp = standardDateFormat.format(Date())
+        val messageId = if (modified) """"$id"""" else id
 
         return """{
    "unitOfWorkId": "$unitOfWorkId",
@@ -44,7 +46,8 @@ class MessageProducer {
    "version": "$hdiVersion",
    "message": {
        "@type": "$type",
-       "_id": $id,
+       "_id": $messageId,
+       "mongo_format_stripped_from_id": $modified,
        "_lastModifiedDateTime": "$lastModified",
        "collection" : "$collection",
        "db": "$database",

@@ -58,11 +58,11 @@ class UCHistoricDataImporterSpec : FunSpec() {
         test("Messages in Hbase should match the count 4") {
             val hbase = HbaseClient.connect()
             val t1count = tableCount(hbase.connection, "database_1:collection_1")
-            t1count shouldBe 1
+            t1count shouldBe 2
             val t2count = tableCount(hbase.connection, "database_1:collection_2")
-            t2count shouldBe 2
+            t2count shouldBe 4
             val t3count = tableCount(hbase.connection, "database_2:collection_3")
-            t3count shouldBe 1
+            t3count shouldBe 2
         }
 
         test("Messages in Hbase are decipherable") {
@@ -112,51 +112,56 @@ class UCHistoricDataImporterSpec : FunSpec() {
         }
 
         test("Should match  manifest file count, content  generated in S3") {
+            val oid ="\$oid"
             val expected = """
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462000,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462001,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462002,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462003,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462004,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462005,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462006,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462007,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462008,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462009,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",315532800000,database-1,collection-1,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462000,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462001,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462002,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462003,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462004,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462005,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462006,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462007,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462008,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462009,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",315532800000,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462000,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462001,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462002,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462003,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462004,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462005,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462006,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462007,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462008,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462009,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",315532800000,database-1,collection-2,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462000,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462001,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462002,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462003,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462004,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462005,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462006,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462007,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462008,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462009,database-2,collection-3,IMPORT,HDI
-            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",315532800000,database-2,collection-3,IMPORT,HDI
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462000,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462001,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462002,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462003,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462004,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462005,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462006,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462007,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462008,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462009,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |database-1.collection-1.0002-1,1543676462009,database-1,collection-1,IMPORT,HDI,"{""$oid"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",315532800000,database-1,collection-1,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462000,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462001,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462002,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462003,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462004,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462005,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462006,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462007,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462008,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462009,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |database-1.collection-2.0001-1,1543676462009,database-1,collection-2,IMPORT,HDI,"{""$oid"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",315532800000,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462000,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462001,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462002,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462003,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462004,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462005,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462006,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462007,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462008,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462009,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |database-1.collection-2.0002-1,1543676462009,database-1,collection-2,IMPORT,HDI,"{""$oid"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",315532800000,database-1,collection-2,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462000,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462001,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462002,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462003,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462004,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462005,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462006,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462007,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462008,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462009,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
+            |database-2.collection-3.0001-1,1543676462009,database-2,collection-3,IMPORT,HDI,"{""$oid"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",315532800000,database-2,collection-3,IMPORT,HDI,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
             """.trimMargin().trimIndent()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
@@ -165,7 +170,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 val objectContent = s3Client.getObject(summary.bucketName, summary.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.trim().split("\n").size
-                assertEquals(11, noOfRecordsPerFile)
+                assertEquals(12, noOfRecordsPerFile)
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
