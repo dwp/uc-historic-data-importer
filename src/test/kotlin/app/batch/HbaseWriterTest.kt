@@ -45,6 +45,7 @@ class HbaseWriterTest {
     val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
     val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
     val validFileName = "adb.collection.0001.json.gz.enc"
+    val EPOCH = "1980-01-01T00:00:00.000Z"
 
     @MockBean
     private lateinit var keyService: KeyService
@@ -83,8 +84,7 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(validJson)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("something")
-        whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
+        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", false, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
 
@@ -120,9 +120,9 @@ class HbaseWriterTest {
         val jsonObject = JsonObject()
         whenever(messageUtils.parseGson(validJsonWithoutId)).thenReturn(com.google.gson.JsonObject())
         whenever(messageUtils.getId(jsonObject)).thenReturn(null)
+        whenever(messageUtils.getId(jsonObject)).thenReturn(null)
 
-        whenever(messageUtils.getLastModifiedTimestamp(jsonObject)).thenReturn("")
-        whenever(messageUtils.getTimestampAsLong("")).thenReturn(100)
+        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", false,
             encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
@@ -242,25 +242,67 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun testUnencryptedDbObjWhenIdNotModified() {
-        val lineFromDump = "An unencrypted line read from the dump"
-        val unencryptedDbObject = hBaseWriter.unencryptedDbObject(Gson(), """{ "key", "value" }""", false, com.google.gson.JsonObject(), lineFromDump)
-        assertEquals(lineFromDump, unencryptedDbObject)
+    fun testLastModifiedDateTimeAsNonDateObjectReturnedAsEpoch() {
+        val lastModified = com.google.gson.JsonObject()
+        val lastModifiedValue = "testDateField"
+        lastModified.addProperty("\$notDate", lastModifiedValue)
+        val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified)
+        val expected = Pair(EPOCH, true)
+        assertEquals(expected, actual)
     }
 
     @Test
-    fun testUnencryptedDbObjectWhenIdModified() {
+    fun testLastModifiedDateTimeAsDateObjectReturnedAsDateFieldValue() {
+        val lastModified = com.google.gson.JsonObject()
+        val lastModifiedValue = "testDateField"
+        lastModified.addProperty("\$date", lastModifiedValue)
+        val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified)
+        val expected = Pair(lastModifiedValue, true)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testLastModifiedDateTimeAsStringReturnedAsValue() {
+        val lastModified = JsonPrimitive("testDateString")
+        val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified)
+        val expected = Pair("testDateString", false)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testLastModifiedDateTimeArrayReturnedAsEpoch() {
+        val arrayValue = com.google.gson.JsonArray()
+        arrayValue.add("1")
+        arrayValue.add("2")
+        val actual = hBaseWriter.lastModifiedDateTime(Gson(), arrayValue)
+        val expected = Pair(EPOCH, true)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testLastModifiedDateTimeNullReturnedAsEpoch() {
+        val nullValue = com.google.gson.JsonNull.INSTANCE
+        val actual = hBaseWriter.lastModifiedDateTime(Gson(), nullValue)
+        val expected = Pair(EPOCH, true)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testOverwriteFieldValueOverwritesCorrectValue() {
         val lineFromDump = "An unencrypted line read from the dump"
         val id = "OID_WRENCHED_FROM_MONGO_ID"
+        val lastModifiedDateTime = "DATETIME_WRENCHED_FROM_MONGO_ID"
+        val lastModifiedDateTimeNew = "NEW_DATETIME"
         val obj = com.google.gson.JsonObject()
-        val oid = com.google.gson.JsonObject()
-        oid.addProperty("\$oid", "oid")
-        obj.add("_id", oid)
-        val expectedObject = com.google.gson.JsonObject()
-        expectedObject.addProperty("_id", id)
-        val expected = Gson().toJson(expectedObject)
-        val unencryptedDbObject = hBaseWriter.unencryptedDbObject(Gson(), id, true, obj, lineFromDump)
-        assertEquals(expected, unencryptedDbObject)
+        obj.addProperty("_id", id)
+        obj.addProperty("_lastModifiedDateTime", lastModifiedDateTime)
+        obj.addProperty("other", "TEST")
+        val expected = com.google.gson.JsonObject()
+        obj.addProperty("_id", id)
+        obj.addProperty("_lastModifiedDateTime", lastModifiedDateTimeNew)
+        obj.addProperty("other", "TEST")
+        val actual = hBaseWriter.overwriteFieldValue(Gson(), "_lastModifiedDateTime", lastModifiedDateTimeNew, obj)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -298,7 +340,7 @@ class HbaseWriterTest {
         whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
         given(cipherService.encrypt(any(), any())).willReturn(EncryptionResult("AAAAAAAAAAAAAAAAAAAAAA==", "qwertyuiop"))
         given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
-        given(messageUtils.getLastModifiedTimestamp(any())).willReturn("1980-01-01T00:00:00.000Z")
+        given(messageUtils.getTimestampAsLong(any())).willReturn(315532800000)
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
         doNothing().whenever(hBaseWriter).ensureTable(any())

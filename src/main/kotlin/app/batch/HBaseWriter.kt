@@ -79,6 +79,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     private val RUN_MODE_MANIFEST = "manifest"
     private val RUN_MODE_IMPORT = "import"
+    private val EPOCH = "1980-01-01T00:00:00.000Z"
 
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
@@ -129,13 +130,24 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         return@forEachLine
                                     }
 
-                                    val dbObject = unencryptedDbObject(gson, id, idWasModified, lineAsJson, lineFromDump)
-                                    val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, dbObject)
-                                    val messageWrapper = messageProducer.produceMessage(lineAsJson, id, idWasModified, encryptionResult, dataKeyResult,
+                                    val originalLastModifiedDateTime = lineAsJson.get("_lastModifiedDateTime")
+                                    val (lastModifiedDateTime, lastModifiedDateTimeWasModified) = lastModifiedDateTime(gson, originalLastModifiedDateTime)
+
+                                    var dbObject = lineAsJson
+                                    if (idWasModified) {
+                                        dbObject = overwriteFieldValue(gson, "_id", id, dbObject)
+                                    }
+
+                                    if (lastModifiedDateTimeWasModified) {
+                                        dbObject = overwriteFieldValue(gson, "_lastModifiedDateTime", lastModifiedDateTime, dbObject)
+                                    }
+                                    
+                                    val updatedDbObject = dbObject
+                                    val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, updatedDbObject)
+                                    val messageWrapper = messageProducer.produceMessage(lineAsJson, id, idWasModified, lastModifiedDateTime, lastModifiedDateTimeWasModified, encryptionResult, dataKeyResult,
                                         database, collection)
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
-                                    val lastModifiedTimestampStr = messageUtils.getLastModifiedTimestamp(messageJsonObject)
-                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedTimestampStr)
+                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedDateTime)
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                                     if (runMode != RUN_MODE_MANIFEST) {
                                         if (batchSizeBytes + messageWrapper.length >= maxBatchVolume && batch.size > 0) {
@@ -221,15 +233,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     }
 
-    fun unencryptedDbObject(gson: Gson, id: String, modifiedId: Boolean, json: JsonObject, line: String) =
-            if (modifiedId) {
-                json.remove("_id")
-                json.addProperty("_id", id)
-                gson.toJson(json)
-            }
-            else {
-                line
-            }
+    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject) =
+        json.remove(fieldKey)
+        json.addProperty(fieldKey, fieldValue)
+        gson.toJson(json)
 
     fun id(gson: Gson, id: JsonElement?): Pair<String, Boolean> {
 
@@ -252,6 +259,35 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
         else {
             return Pair("", false)
+        }
+    }
+
+    fun lastModifiedDateTime(gson: Gson, incomingDateTime: JsonElement?): Pair<String, Boolean> {
+
+        if (incomingDateTime != null) {
+            if (incomingDateTime.isJsonObject) {
+                val obj = incomingDateTime.asJsonObject!!
+                if (obj.size() == 1 && obj["\$date"] != null && obj["\$date"].isJsonPrimitive) {
+                    return Pair(obj["\$date"].asJsonPrimitive.asString, true)
+                }
+                else {
+                    logger.debug("_lastModifiedDateTime was an object, without a \$date field", "incoming_value", "${incomingDateTime}", "outgoing_value", "${EPOCH}")
+                    return Pair(EPOCH, true)
+                }
+            }
+            else if (incomingDateTime.isJsonPrimitive) {
+                val outgoing_value = incomingDateTime.asJsonPrimitive.asString
+                logger.debug("_lastModifiedDateTime was a string", "incoming_value", "${incomingDateTime}", "outgoing_value", "${outgoing_value}")
+                return Pair(outgoing_value, false)
+            }
+            else {
+                logger.warn("Invalid _lastModifiedDateTime object", "incoming_value", "${incomingDateTime}", "outgoing_value", "${EPOCH}")
+                return Pair(EPOCH, true)
+            }
+        }
+        else {
+            logger.warn("No incoming _lastModifiedDateTime object", "incoming_value", "${incomingDateTime}", "outgoing_value", "${EPOCH}")
+            return Pair(EPOCH, true)
         }
     }
 
