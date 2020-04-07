@@ -354,12 +354,12 @@ class MessageUtilsTest {
     fun type_is_returned_from_valid_input() {
         val jsonString = """{
             "message": {
-               "@type": "HDI",
+               "@type": "MONGO_IMPORT_TWO",
             }
         }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        messageUtils.getType(json) shouldBe "HDI"
+        messageUtils.getType(json) shouldBe "MONGO_IMPORT_TWO"
     }
 
     @Test

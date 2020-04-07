@@ -15,7 +15,7 @@ import java.util.zip.CRC32
 class MessageUtils {
     val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageUtils::class.toString())
     val EPOCH = "1980-01-01T00:00:00.000Z"
-    val typeDefault = "HDI"
+    val typeDefault = "MONGO_IMPORT"
 
     fun parseGson(line: String): com.google.gson.JsonObject =
         Gson().fromJson(line, com.google.gson.JsonObject::class.java)
