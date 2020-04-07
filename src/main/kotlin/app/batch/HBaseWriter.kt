@@ -133,17 +133,16 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val originalLastModifiedDateTime = lineAsJson.get("_lastModifiedDateTime")
                                     val (lastModifiedDateTime, lastModifiedDateTimeWasModified) = lastModifiedDateTime(gson, originalLastModifiedDateTime)
 
-                                    var dbObject = lineAsJson
+                                    var updatedLineAsJson = lineAsJson
                                     if (idWasModified) {
-                                        dbObject = overwriteFieldValue(gson, "_id", id, dbObject)
+                                        updatedLineAsJson = overwriteFieldValue(gson, "_id", id, updatedLineAsJson)
                                     }
                                     if (lastModifiedDateTimeWasModified) {
-                                        dbObject = overwriteFieldValue(gson, "_lastModifiedDateTime", lastModifiedDateTime, dbObject)
+                                        updatedLineAsJson = overwriteFieldValue(gson, "_lastModifiedDateTime", lastModifiedDateTime, updatedLineAsJson)
                                     }
-                                    val updatedDbObject = dbObject
 
-                                    val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, updatedDbObject)
-                                    val messageWrapper = messageProducer.produceMessage(lineAsJson, id, idWasModified, lastModifiedDateTime, lastModifiedDateTimeWasModified, encryptionResult, dataKeyResult,
+                                    val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, updatedLineAsJson.toString())
+                                    val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id, idWasModified, lastModifiedDateTime, lastModifiedDateTimeWasModified, encryptionResult, dataKeyResult,
                                         database, collection)
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
                                     val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedDateTime)
@@ -232,7 +231,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     }
 
-    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject): String {
+    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject): JsonObject {
         json.remove(fieldKey)
         json.addProperty(fieldKey, fieldValue)
         return gson.toJson(json)
