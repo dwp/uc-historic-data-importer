@@ -86,7 +86,9 @@ class HbaseWriterTest {
 
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
-        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", false, encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", 
+                false, """{ "key": "value" }""", false, encryptionResult, dataKeyResult, "adb", 
+                "collection")).thenReturn(message)
 
         val formattedKey = "0000-0000-00001"
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
@@ -124,8 +126,9 @@ class HbaseWriterTest {
 
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
-        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", false,
-            encryptionResult, dataKeyResult, "adb", "collection")).thenReturn(message)
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", 
+                false, """{ "key": "value" }""", false, encryptionResult, dataKeyResult, "adb", 
+                "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 
         whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
@@ -339,7 +342,7 @@ class HbaseWriterTest {
         given(messageUtils.parseGson(any())).willReturn(Gson().fromJson(json, com.google.gson.JsonObject::class.java))
         whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
         given(cipherService.encrypt(any(), any())).willReturn(EncryptionResult("AAAAAAAAAAAAAAAAAAAAAA==", "qwertyuiop"))
-        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
+        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
         given(messageUtils.getTimestampAsLong(any())).willReturn(315532800000)
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
