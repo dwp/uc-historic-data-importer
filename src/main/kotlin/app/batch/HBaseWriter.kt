@@ -232,7 +232,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     }
 
-    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject) {
+    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject): JsonObject {
         json.remove(fieldKey)
         json.addProperty(fieldKey, fieldValue)
         gson.toJson(json)
