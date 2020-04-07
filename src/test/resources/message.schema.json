@@ -15,7 +15,7 @@
           "minLength": 1
         },
         "mongo_format_stripped_from_id": {
-          "type": "string"
+          "type": "boolean"
         },
         "last_modified_date_time_was_altered": {
           "type": "boolean"
