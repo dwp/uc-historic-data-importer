@@ -137,12 +137,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     if (idWasModified) {
                                         dbObject = overwriteFieldValue(gson, "_id", id, dbObject)
                                     }
-
                                     if (lastModifiedDateTimeWasModified) {
                                         dbObject = overwriteFieldValue(gson, "_lastModifiedDateTime", lastModifiedDateTime, dbObject)
                                     }
-                                    
                                     val updatedDbObject = dbObject
+
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, updatedDbObject)
                                     val messageWrapper = messageProducer.produceMessage(lineAsJson, id, idWasModified, lastModifiedDateTime, lastModifiedDateTimeWasModified, encryptionResult, dataKeyResult,
                                         database, collection)
@@ -233,13 +232,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     }
 
-    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject) =
+    fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject) {
         json.remove(fieldKey)
         json.addProperty(fieldKey, fieldValue)
         gson.toJson(json)
+    }
 
     fun id(gson: Gson, id: JsonElement?): Pair<String, Boolean> {
-
         if (id != null) {
             if (id.isJsonObject) {
                 val obj = id.asJsonObject!!
@@ -263,7 +262,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     }
 
     fun lastModifiedDateTime(gson: Gson, incomingDateTime: JsonElement?): Pair<String, Boolean> {
-
         if (incomingDateTime != null) {
             if (incomingDateTime.isJsonObject) {
                 val obj = incomingDateTime.asJsonObject!!
