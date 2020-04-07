@@ -112,7 +112,7 @@ class MessageProducerTest {
 
         val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
         val id = "AN_ID"
-        val dateTime = "A_DATE"
+        val dateTime = "2019-11-13T14:02:03.000+0000"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
