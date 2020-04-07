@@ -97,118 +97,38 @@ class MessageUtilsTest {
 
     @Test
     fun valid_timestamp_format_in_the_message_gets_parsed_as_long_correctly() {
-        val jsonString = """{
-            "traceId": "00001111-abcd-4567-1234-1234567890ab",
-            "unitOfWorkId": "00002222-abcd-4567-1234-1234567890ab",
-            "@type": "V4",
-            "version": "core-X.release_XXX.XX",
-            "timestamp": "2018-12-14T15:01:02.000+0000",
-            "message": {
-                "@type": "MONGO_UPDATE",
-                "collection": "exampleCollectionName",
-                "db": "exampleDbName",
-                "_id": {
-                    "exampleId": "aaaa1111-abcd-4567-1234-1234567890ab"
-                },
-               "_lastModifiedDateTime": "2018-12-14T15:01:02.000Z",
-                "encryption": {
-                    "encryptionKeyId": "55556666-abcd-89ab-1234-1234567890ab",
-                    "encryptedEncryptionKey": "bHJjhg2Jb0uyidkl867gtFkjl4fgh9Ab",
-                    "initialisationVector": "kjGyvY67jhJHVdo2",
-                    "keyEncryptionKeyId": "example-key_2019-12-14_01"
-                },
-                "dbObject": "bubHJjhg2Jb0uyidkl867gtFkjl4fgh9AbubHJjhg2Jb0uyidkl867gtFkjl4fgh9AbubHJjhg2Jb0uyidkl867gtFkjl4fgh9A"
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
-        val timestamp = messageUtils.getLastModifiedTimestamp(json)
-        val timeStampAsLong = messageUtils.getTimestampAsLong(timestamp)
-        timestamp shouldBe "2018-12-14T15:01:02.000Z"
+        val timeStampAsLong = messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000Z")
         timeStampAsLong shouldBe 1544799662000
     }
 
     @Test
     fun Invalid_timestamp_format_in_the_message_throws_Exception() {
-        val jsonString = """{
-            "message": {
-               "_lastModifiedDateTime":  "2018-12-14",
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
-        val timestamp = messageUtils.getLastModifiedTimestamp(json)
-        timestamp shouldBe "2018-12-14"
         shouldThrow<ParseException> {
-            messageUtils.getTimestampAsLong(timestamp)
+            messageUtils.getTimestampAsLong("2018-12-14")
         }
     }
 
     @Test
-    fun Invalid_json_with_missing_lastModifiedDateTime_attribute_throws_Exception() {
-        val jsonString = """{
-            "message": {
-               "_lastModifiedDateTimeNotTheCorrectName": "2018-12-14T15:01:02.000+0000",
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
-        messageUtils.getLastModifiedTimestamp(json) shouldBe messageUtils.EPOCH
-    }
-
-    @Test
     fun valid_dates_without_timezone_parses_without_exception() {
-        val jsonString = """{
-            "message": {
-               "_lastModifiedDateTime": "2018-12-14T15:01:02.000Z",
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
-        val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
-        1544799662000L shouldBe messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+        1544799662000L shouldBe messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000Z")
     }
 
     @Test
     fun valid_date_with_timezone_parses_without_exception() {
-        val jsonString = """{
-            "message": {
-               "_lastModifiedDateTime": "2018-12-14T15:01:02.000+0000",
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
-        val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
-        1544799662000L shouldBe messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+        1544799662000L shouldBe messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000+0000")
     }
 
     @Test
     fun Invalid_json_with_lastModifiedDateTime_attribute_value_as_empty_throws_Exception() {
-        val jsonString = """{
-            "message": {
-               "_lastModifiedDateTime": "",
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
         shouldThrow<ParseException> {
-            val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
-            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+            messageUtils.getTimestampAsLong("")
         }
     }
 
     @Test
     fun Invalid_json_with_lastModifiedDateTime_attribute_value_as_blank_throws_Exception() {
-        val jsonString = """{
-            "message": {
-               "_lastModifiedDateTime": "   ",
-            }
-        }"""
-
-        val json: JsonObject = messageUtils.parseJson(jsonString)
         shouldThrow<ParseException> {
-            val lastModifiedTimestamp = messageUtils.getLastModifiedTimestamp(json)
-            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+            messageUtils.getTimestampAsLong("   ")
         }
     }
 

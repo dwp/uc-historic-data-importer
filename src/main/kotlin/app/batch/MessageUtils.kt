@@ -38,17 +38,6 @@ class MessageUtils {
         throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
     }
 
-    fun getLastModifiedTimestamp(json: JsonObject?): String? {
-        val lastModified = json?.lookup<String?>("message._lastModifiedDateTime")?.get(0)
-
-        if (lastModified != null) {
-            return lastModified
-        }
-
-        logger.warn("No _lastModifiedDateTime in message so using default", "default_timestamp", EPOCH)
-        return EPOCH
-    }
-
     fun getType(json: JsonObject?): String {
         val type = json?.lookup<String?>("message.@type")?.get(0)
 

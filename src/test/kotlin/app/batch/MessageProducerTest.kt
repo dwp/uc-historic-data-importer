@@ -68,7 +68,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -82,12 +82,13 @@ class MessageProducerTest {
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
-                "@type": "MONGO_UPDATE",
+                "@type": "MONGO_IMPORT",
                 "_id": {
                   "idField": "$idFieldValue",
                   "anotherIdField": "$anotherIdFieldValue"
                 },
-                "mongo_format_stripped_from_id":false,
+                "mongo_format_stripped_from_id": false,
+                "last_modified_date_time_was_altered": false,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -101,20 +102,21 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     @Test
-    fun testModifiedIdReflectedInMessage() {
+    fun testModifiedFieldsReflectedInMessage() {
 
         val validJson = validJsonOne()
 
         val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
         val id = "AN_ID"
+        val dateTime = "2019-11-13T14:02:03.000+0000"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, true, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, true, dateTime, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -128,10 +130,11 @@ class MessageProducerTest {
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
-                "@type": "MONGO_UPDATE",
+                "@type": "MONGO_IMPORT",
                 "_id": "$id",
                 "mongo_format_stripped_from_id": true,
-                "_lastModifiedDateTime": "$dateValue",
+                "last_modified_date_time_was_altered": true,
+                "_lastModifiedDateTime": "$dateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -144,7 +147,7 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     @Test
@@ -181,7 +184,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject, id, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -200,7 +203,8 @@ class MessageProducerTest {
                   "idField": "$idFieldValue",
                   "anotherIdField": "$anotherIdFieldValue"
                 },
-                "mongo_format_stripped_from_id":false,
+                "mongo_format_stripped_from_id": false,
+                "last_modified_date_time_was_altered": false,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -214,169 +218,7 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
-    }
-
-    @Test
-    fun testEpochUsedIfEmptyModifiedDate() {
-
-        val id = """{
-            "idField": "$idFieldValue",
-            "anotherIdField": "$anotherIdFieldValue"
-        }"""
-
-        val validJson = """{
-            "_id": $id,
-            "@type": "$type",
-            "_lastModifiedDateTime": {
-                "$dateKey": "" 
-            }
-        }""".trimIndent()
-
-        val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
-        val encryptionResult = EncryptionResult(initialisationVector, encrypted)
-        val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-
-        val message = messageProducer.produceMessage(jsonObject, id, false, encryptionResult, dataKeyResult, database, collection)
-        val actual = Gson().fromJson(message, JsonObject::class.java)
-        val unitOfWorkId = actual["unitOfWorkId"]
-        val timestamp = actual["timestamp"]
-        assertNotNull(unitOfWorkId)
-        assertNotNull(timestamp)
-        actual.remove("unitOfWorkId")
-        actual.remove("timestamp")
-
-        validate(message)
-
-        val expected = """{
-              "traceId": "correlation1",
-              "@type": "HDI",
-              "version": "1.0.0",
-              "message": {
-                "@type": "$type",
-                "_id": {
-                  "idField": "$idFieldValue",
-                  "anotherIdField": "$anotherIdFieldValue"
-                },
-                "mongo_format_stripped_from_id": false,
-                "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
-                "collection": "$collection",
-                "db": "$database",
-                "dbObject": "$encrypted",
-                "encryption": {
-                  "keyEncryptionKeyId": "$dataKeyEncryptionKeyId",
-                  "initialisationVector": "$initialisationVector",
-                  "encryptedEncryptionKey": "$ciphertextDataKey"
-                }
-              }
-            }""".trimIndent()
-
-        val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
-    }
-
-    @Test
-    fun testEpochUsedIfNoModifiedDate() {
-        val type = "type"
-
-        val id = """{
-                "idField": "$idFieldValue",
-                "anotherIdField": "$anotherIdFieldValue"
-            }"""
-
-        val validJson = """{
-            "_id": $id,
-            "@type": "$type",
-            "_lastModifiedDateTime": {
-            }
-        }""".trimIndent()
-
-        val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
-        val encryptionResult = EncryptionResult(initialisationVector, encrypted)
-        val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val mockAppender: Appender<ILoggingEvent> = mock()
-        val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
-        logger.addAppender(mockAppender)
-        val message = messageProducer.produceMessage(jsonObject, id, false, encryptionResult, dataKeyResult, database, collection)
-        val actual = Gson().fromJson(message, JsonObject::class.java)
-
-        val expectedMessage = """{
-           "traceId": "correlation1",
-           "@type": "HDI",
-           "version": "1.0.0",
-           "message": {
-               "@type": "type",
-               "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
-               "mongo_format_stripped_from_id":false,
-               "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
-               "collection" : "collection",
-               "db": "database",
-               "dbObject": "encrypted",
-               "encryption": {
-                   "keyEncryptionKeyId": "cloudhsm:1,2",
-                   "initialisationVector": "initialisationVector",
-                   "encryptedEncryptionKey": "ciphertextDataKey"
-               }
-           }
-        }"""
-        val expected = Gson().fromJson(expectedMessage, JsonObject::class.java)
-
-        val unitOfWorkId = actual["unitOfWorkId"]
-        val timestamp = actual["timestamp"]
-        assertNotNull(unitOfWorkId)
-        assertNotNull(timestamp)
-        actual.remove("unitOfWorkId")
-        actual.remove("timestamp")
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun testRecordRejectedIfNoModifiedDateObject() {
-        val type = "type"
-        val id = """{
-                "idField": "$idFieldValue",
-                "anotherIdField": "$anotherIdFieldValue"
-            }"""
-
-        val validJson = """{
-            "_id": $id,
-            "@type": "$type"
-        }""".trimIndent()
-
-        val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
-        val encryptionResult = EncryptionResult(initialisationVector, encrypted)
-        val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject, id, false, encryptionResult, dataKeyResult, database, collection)
-        val actual = Gson().fromJson(message, JsonObject::class.java)
-        val unitOfWorkId = actual["unitOfWorkId"]
-        val timestamp = actual["timestamp"]
-        assertNotNull(unitOfWorkId)
-        assertNotNull(timestamp)
-        actual.remove("unitOfWorkId")
-        actual.remove("timestamp")
-
-        val expectedMessage = """{
-           "traceId": "correlation1",
-           "@type": "HDI",
-           "version": "1.0.0",
-           "message": {
-               "@type": "type",
-               "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
-               "mongo_format_stripped_from_id":false,
-               "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
-               "collection" : "collection",
-               "db": "database",
-               "dbObject": "encrypted",
-               "encryption": {
-                   "keyEncryptionKeyId": "cloudhsm:1,2",
-                   "initialisationVector": "initialisationVector",
-                   "encryptedEncryptionKey": "ciphertextDataKey"
-               }
-           }
-        }"""
-        val expected = Gson().fromJson(expectedMessage, JsonObject::class.java)
-
-        assertEquals(expected, actual)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     private fun validate(json: String) = schemaLoader().load().build().validate(JSONObject(json))
@@ -399,9 +241,7 @@ class MessageProducerTest {
                     "idField": "$anotherIdFieldValue",
                     "anotherIdField": "$idFieldValue"
                 },
-                "_lastModifiedDateTime": {
-                    "$dateKey": "$dateValue" 
-                }
+                "_lastModifiedDateTime": "$dateValue" 
             }""".trimIndent()
     }
 
@@ -411,9 +251,7 @@ class MessageProducerTest {
                     "idField": "$idFieldValue",
                     "anotherIdField": "$anotherIdFieldValue"
                 },
-                "_lastModifiedDateTime": {
-                    "$dateKey": "$dateValue" 
-                }
+                "_lastModifiedDateTime": "$dateValue" 
             }""".trimIndent()
     }
 
@@ -425,7 +263,7 @@ class MessageProducerTest {
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
         val jsonObjectOne = Gson().fromJson(json, JsonObject::class.java)
         val id = Gson().toJson(jsonObjectOne.getAsJsonObject("_id"))
-        val messageOne = messageProducer.produceMessage(jsonObjectOne, id, false, encryptionResult, dataKeyResult, database, collection)
+        val messageOne = messageProducer.produceMessage(jsonObjectOne, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
         val actualOne = Gson().fromJson(messageOne, JsonObject::class.java)
         return actualOne.getAsJsonPrimitive(field).asString
     }

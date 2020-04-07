@@ -19,24 +19,19 @@ class MessageProducer {
 
     fun produceMessage(jsonObject: JsonObject,
                        id: String,
-                       modified: Boolean,
+                       idWasModified: Boolean,
+                       lastModifiedDateTime: String,
+                       lastModifiedDateTimeWasModified: Boolean,
                        encryptionResult: EncryptionResult,
                        dataKeyResult: DataKeyResult,
                        database: String,
                        collection: String): String {
-        var lastModified = jsonObject.getAsJsonObject("_lastModifiedDateTime")
-            ?.getAsJsonPrimitive("\$date")
-            ?.asString
-            ?: "1980-01-01T00:00:00.000Z"
-
-        lastModified = if (StringUtils.isNotBlank(lastModified)) lastModified else "1980-01-01T00:00:00.000Z"
-
-        val type = jsonObject.getAsJsonPrimitive("@type")?.asString ?: "MONGO_UPDATE"
+        val type = jsonObject.getAsJsonPrimitive("@type")?.asString ?: "MONGO_IMPORT"
 
         // SimpleDateFormat is not thread-safe so we need a new one every time
         val standardDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
         val timestamp = standardDateFormat.format(Date())
-        val messageId = if (modified) """"$id"""" else id
+        val messageId = if (idWasModified) """"$id"""" else id
 
         return """{
    "unitOfWorkId": "$unitOfWorkId",
@@ -47,8 +42,9 @@ class MessageProducer {
    "message": {
        "@type": "$type",
        "_id": $messageId,
-       "mongo_format_stripped_from_id": $modified,
-       "_lastModifiedDateTime": "$lastModified",
+       "mongo_format_stripped_from_id": $idWasModified,
+       "last_modified_date_time_was_altered": $lastModifiedDateTimeWasModified,
+       "_lastModifiedDateTime": "$lastModifiedDateTime",
        "collection" : "$collection",
        "db": "$database",
        "dbObject": "${encryptionResult.encrypted}",
