@@ -141,7 +141,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         updatedLineAsJson = overwriteFieldValue(gson, "_lastModifiedDateTime", lastModifiedDateTime, updatedLineAsJson)
                                     }
 
-                                    val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, updatedLineAsJson.toString())
+                                    val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, gson.toJson(updatedLineAsJson))
                                     val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id, idWasModified, lastModifiedDateTime, lastModifiedDateTimeWasModified, encryptionResult, dataKeyResult,
                                         database, collection)
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
@@ -234,7 +234,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject): JsonObject {
         json.remove(fieldKey)
         json.addProperty(fieldKey, fieldValue)
-        return gson.toJson(json)
+        return json
     }
 
     fun id(gson: Gson, id: JsonElement?): Pair<String, Boolean> {
