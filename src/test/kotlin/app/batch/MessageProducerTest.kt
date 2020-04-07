@@ -82,7 +82,7 @@ class MessageProducerTest {
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
-                "@type": "MONGO_UPDATE",
+                "@type": "MONGO_IMPORT",
                 "_id": {
                   "idField": "$idFieldValue",
                   "anotherIdField": "$anotherIdFieldValue"
@@ -130,7 +130,7 @@ class MessageProducerTest {
               "@type": "HDI",
               "version": "1.0.0",
               "message": {
-                "@type": "MONGO_UPDATE",
+                "@type": "MONGO_IMPORT",
                 "_id": "$id",
                 "mongo_format_stripped_from_id": true,
                 "last_modified_date_time_was_altered": true,
