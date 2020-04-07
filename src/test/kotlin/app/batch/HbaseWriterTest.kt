@@ -292,7 +292,6 @@ class HbaseWriterTest {
 
     @Test
     fun testOverwriteFieldValueOverwritesCorrectValue() {
-        val lineFromDump = "An unencrypted line read from the dump"
         val id = "OID_WRENCHED_FROM_MONGO_ID"
         val lastModifiedDateTime = "DATETIME_WRENCHED_FROM_MONGO_ID"
         val lastModifiedDateTimeNew = "NEW_DATETIME"
@@ -301,9 +300,9 @@ class HbaseWriterTest {
         obj.addProperty("_lastModifiedDateTime", lastModifiedDateTime)
         obj.addProperty("other", "TEST")
         val expected = com.google.gson.JsonObject()
-        obj.addProperty("_id", id)
-        obj.addProperty("_lastModifiedDateTime", lastModifiedDateTimeNew)
-        obj.addProperty("other", "TEST")
+        expected.addProperty("_id", id)
+        expected.addProperty("_lastModifiedDateTime", lastModifiedDateTimeNew)
+        expected.addProperty("other", "TEST")
         val actual = hBaseWriter.overwriteFieldValue(Gson(), "_lastModifiedDateTime", lastModifiedDateTimeNew, obj)
         assertEquals(expected, actual)
     }

@@ -88,7 +88,7 @@ class MessageProducerTest {
                   "anotherIdField": "$anotherIdFieldValue"
                 },
                 "mongo_format_stripped_from_id": false,
-                "last_modified_date_time_was_altered": true,
+                "last_modified_date_time_was_altered": false,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -112,10 +112,11 @@ class MessageProducerTest {
 
         val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
         val id = "AN_ID"
+        val dateTime = "A_DATE"
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, true, dateValue, true, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, true, dateTime, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -133,7 +134,7 @@ class MessageProducerTest {
                 "_id": "$id",
                 "mongo_format_stripped_from_id": true,
                 "last_modified_date_time_was_altered": true,
-                "_lastModifiedDateTime": "$dateValue",
+                "_lastModifiedDateTime": "$dateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -240,7 +241,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
 
-        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -262,7 +263,7 @@ class MessageProducerTest {
                   "anotherIdField": "$anotherIdFieldValue"
                 },
                 "mongo_format_stripped_from_id": false,
-                "last_modified_date_time_was_altered": false,
+                "last_modified_date_time_was_altered": true,
                 "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
                 "collection": "$collection",
                 "db": "$database",
@@ -301,7 +302,7 @@ class MessageProducerTest {
         val mockAppender: Appender<ILoggingEvent> = mock()
         val logger = LoggerFactory.getLogger(MessageProducer::class.toString()) as ch.qos.logback.classic.Logger
         logger.addAppender(mockAppender)
-        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
 
         val expectedMessage = """{
@@ -312,7 +313,7 @@ class MessageProducerTest {
                "@type": "type",
                "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
                "mongo_format_stripped_from_id": false,
-               "last_modified_date_time_was_altered": false,
+               "last_modified_date_time_was_altered": true,
                "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
                "collection" : "collection",
                "db": "database",
@@ -336,7 +337,7 @@ class MessageProducerTest {
     }
 
     @Test
-    fun testRecordRejectedIfNoModifiedDateObject() {
+    fun testEpochUsedIfNoModifiedDateObject() {
         val type = "type"
         val id = """{
                 "idField": "$idFieldValue",
@@ -351,7 +352,7 @@ class MessageProducerTest {
         val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -368,7 +369,7 @@ class MessageProducerTest {
                "@type": "type",
                "_id": {"idField":"idFieldValue","anotherIdField":"anotherIdFieldValue"},
                "mongo_format_stripped_from_id":false,
-               "last_modified_date_time_was_altered": false,
+               "last_modified_date_time_was_altered": true,
                "_lastModifiedDateTime": "1980-01-01T00:00:00.000Z",
                "collection" : "collection",
                "db": "database",
@@ -405,9 +406,7 @@ class MessageProducerTest {
                     "idField": "$anotherIdFieldValue",
                     "anotherIdField": "$idFieldValue"
                 },
-                "_lastModifiedDateTime": {
-                    "$dateKey": "$dateValue" 
-                }
+                "_lastModifiedDateTime": "$dateValue" 
             }""".trimIndent()
     }
 
@@ -417,9 +416,7 @@ class MessageProducerTest {
                     "idField": "$idFieldValue",
                     "anotherIdField": "$anotherIdFieldValue"
                 },
-                "_lastModifiedDateTime": {
-                    "$dateKey": "$dateValue" 
-                }
+                "_lastModifiedDateTime": "$dateValue" 
             }""".trimIndent()
     }
 

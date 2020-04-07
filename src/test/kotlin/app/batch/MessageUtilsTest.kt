@@ -121,7 +121,6 @@ class MessageUtilsTest {
             }
         }"""
 
-        val json: JsonObject = messageUtils.parseJson(jsonString)
         val timeStampAsLong = messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000Z")
         timeStampAsLong shouldBe 1544799662000
     }
