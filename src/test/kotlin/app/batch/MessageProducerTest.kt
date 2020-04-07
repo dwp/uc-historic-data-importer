@@ -102,7 +102,7 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     @Test
@@ -147,7 +147,7 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     @Test
@@ -218,7 +218,7 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     @Test
@@ -277,7 +277,8 @@ class MessageProducerTest {
             }""".trimIndent()
 
         val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
-        assertEquals(expectedObject, actual)
+
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
     }
 
     @Test
@@ -333,7 +334,7 @@ class MessageProducerTest {
         assertNotNull(timestamp)
         actual.remove("unitOfWorkId")
         actual.remove("timestamp")
-        assertEquals(expected, actual)
+        assertEquals("Expected: '$expected', Actual: '$actual'", expected, actual)
     }
 
     @Test
@@ -383,7 +384,7 @@ class MessageProducerTest {
         }"""
         val expected = Gson().fromJson(expectedMessage, JsonObject::class.java)
 
-        assertEquals(expected, actual)
+        assertEquals("Expected: '$expected', Actual: '$actual'", expected, actual)
     }
 
     private fun validate(json: String) = schemaLoader().load().build().validate(JSONObject(json))
