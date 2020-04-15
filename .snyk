@@ -103,6 +103,14 @@ ignore:
     - '*':
         reason: transient dependency though amazon aws.
         expires: 2020-04-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-564887:
+    - '*':
+        reason: transient dependency though amazon aws.
+        expires: 2020-05-20T00:00:00.000Z
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-564888:
+    - '*':
+        reason: transient dependency though amazon aws.
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-IONETTY-559515:
     - '*':
         reason: transient dependency though hbase client version to which we are tied.
