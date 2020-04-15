@@ -87,6 +87,14 @@ def main():
             del jso['_lastModifiedDateTime']
             contents = contents + json.dumps(jso) + "\n"
 
+        if args.record_with_no_timestamps:
+            print("Adding record with no timestamps.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            del jso['_lastModifiedDateTime']
+            del jso['createdDateTime']
+            contents = contents + json.dumps(jso) + "\n"
+
         if args.compress:
             print("Compressing.")
             compressed = gzip.compress(contents.encode("ascii"))
@@ -196,6 +204,8 @@ def command_line_args():
                         help='Add a record with no id to each file.')
     parser.add_argument('-d', '--record-with-no-timestamp', action='store_true',
                         help='Add a record with no timestamp to each file.')
+    parser.add_argument('-t', '--record-with-no-timestamps', action='store_true',
+                        help='Add a record with no modified or created timestamp to each file.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
     parser.add_argument('-o', '--mongo-id', action='store_true',

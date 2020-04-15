@@ -68,7 +68,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, false, dateValue, false, false, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -89,6 +89,8 @@ class MessageProducerTest {
                 },
                 "mongo_format_stripped_from_id": false,
                 "last_modified_date_time_was_altered": false,
+                "created_date_time_was_altered": false,
+                "removed_date_time_was_altered": true,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -116,7 +118,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, true, dateTime, true, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, true, dateTime, true, true, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -134,6 +136,8 @@ class MessageProducerTest {
                 "_id": "$id",
                 "mongo_format_stripped_from_id": true,
                 "last_modified_date_time_was_altered": true,
+                "created_date_time_was_altered": true,
+                "removed_date_time_was_altered": false,
                 "_lastModifiedDateTime": "$dateTime",
                 "collection": "$collection",
                 "db": "$database",
@@ -184,7 +188,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, id, false, dateValue, false, false, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -205,6 +209,8 @@ class MessageProducerTest {
                 },
                 "mongo_format_stripped_from_id": false,
                 "last_modified_date_time_was_altered": false,
+                "created_date_time_was_altered": false,
+                "removed_date_time_was_altered": false,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -263,7 +269,7 @@ class MessageProducerTest {
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
         val jsonObjectOne = Gson().fromJson(json, JsonObject::class.java)
         val id = Gson().toJson(jsonObjectOne.getAsJsonObject("_id"))
-        val messageOne = messageProducer.produceMessage(jsonObjectOne, id, false, dateValue, false, encryptionResult, dataKeyResult, database, collection)
+        val messageOne = messageProducer.produceMessage(jsonObjectOne, id, false, dateValue, false, false, false, encryptionResult, dataKeyResult, database, collection)
         val actualOne = Gson().fromJson(messageOne, JsonObject::class.java)
         return actualOne.getAsJsonPrimitive(field).asString
     }
