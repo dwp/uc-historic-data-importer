@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.Reader
@@ -23,12 +24,14 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.security.Key
 import java.security.Security
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @SpringBootTest(classes = [S3DummyConfiguration::class])
+@ActiveProfiles("localS3")
 class UCHistoricDataImporterSpec : FunSpec() {
 
     override fun listeners() = listOf(SpringListener)
@@ -125,6 +128,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462008,database-1,collection-1,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1543676462009,database-1,collection-1,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
             |database-1.collection-1.0002-1,1543676462009,database-1,collection-1,IMPORT,MONGO_IMPORT,"{""$oid"":""database-1.collection-1.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",1426854205183,database-1,collection-1,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}",315532800000,database-1,collection-1,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-1.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462000,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462001,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
@@ -137,6 +141,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462008,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1543676462009,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
             |database-1.collection-2.0001-1,1543676462009,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""$oid"":""database-1.collection-2.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",1426854205183,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}",315532800000,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462000,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462001,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
@@ -149,6 +154,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462008,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1543676462009,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
             |database-1.collection-2.0002-1,1543676462009,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""$oid"":""database-1.collection-2.0002-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",1426854205183,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}",315532800000,database-1,collection-2,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-1.collection-2.0002-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462000,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462001,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
@@ -161,8 +167,9 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462008,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1543676462009,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
             |database-2.collection-3.0001-1,1543676462009,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""$oid"":""database-2.collection-3.0001-1""}"
+            |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",1426854205183,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
             |"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}",315532800000,database-2,collection-3,IMPORT,MONGO_IMPORT,"{""someId"":""RANDOM_GUID"",""declarationId"":""database-2.collection-3.0001-1""}"
-            """.trimMargin().trimIndent()
+            """.trimMargin()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
             val fileCount = summaries.size
@@ -170,13 +177,13 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 val objectContent = s3Client.getObject(summary.bucketName, summary.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.trim().split("\n").size
-                assertEquals(12, noOfRecordsPerFile)
+                assertEquals(13, noOfRecordsPerFile)
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
-            logger.info("all content $joinedContent")
             assertEquals(4, fileCount)
             assertEquals(expected, joinedContent)
+
         }
     }
 
