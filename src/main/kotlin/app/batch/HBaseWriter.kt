@@ -120,6 +120,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 try {
                                     val lineAsJson = messageUtils.parseGson(lineFromDump)
                                     val originalId = lineAsJson.get("_id")
+
                                     val (id, idModificationType) = id(gson, originalId)
                                     if (StringUtils.isBlank(id) || id == "null") {
                                         logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
@@ -153,7 +154,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, gson.toJson(updatedLineAsJson))
                                     val idWasModified = (Companion.MODIFIED_ID == idModificationType)
-                                    val idIsString = (Companion.UNMODIFIED_ID_STRING == idModificationType)
+                                    val idIsString = (Companion.UNMODIFIED_ID_STRING == idModificationType) || (idModificationType == MODIFIED_ID)
                                     val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id,
                                             idIsString, 
                                             idWasModified,
@@ -190,9 +191,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         batchSizeBytes += messageWrapper.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
-                                        if (idWasModified) {
-                                            println("id: $id")
-                                        }
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else id
 
                                         val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", typeString, incomingId)
