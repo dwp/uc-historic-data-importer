@@ -19,6 +19,7 @@ class MessageProducer {
 
     fun produceMessage(jsonObject: JsonObject,
                        id: String,
+                       idIsString: Boolean,
                        idWasModified: Boolean,
                        lastModifiedDateTime: String,
                        lastModifiedDateTimeWasModified: Boolean,
@@ -33,7 +34,7 @@ class MessageProducer {
         // SimpleDateFormat is not thread-safe so we need a new one every time
         val standardDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
         val timestamp = standardDateFormat.format(Date())
-        val messageId = if (idWasModified) """"$id"""" else id
+        val messageId = if (idIsString) """"$id"""" else id
 
         return """{
    "unitOfWorkId": "$unitOfWorkId",

@@ -120,7 +120,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 try {
                                     val lineAsJson = messageUtils.parseGson(lineFromDump)
                                     val originalId = lineAsJson.get("_id")
-                                    val (id, idWasModified) = id(gson, originalId)
+                                    val (id, idModificationType) = id(gson, originalId)
                                     if (StringUtils.isBlank(id) || id == "null") {
                                         logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
                                         return@forEachLine
@@ -135,7 +135,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             = lastModifiedDateTime(gson, originalLastModifiedDateTime, createdDateTime)
 
                                     var updatedLineAsJson = lineAsJson
-                                    if (idWasModified) {
+                                    if (idModificationType == Companion.MODIFIED_ID) {
                                         updatedLineAsJson = overwriteFieldValue(gson, "_id", id, updatedLineAsJson)
                                     }
 
@@ -152,7 +152,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
 
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, gson.toJson(updatedLineAsJson))
-                                    val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id, idWasModified,
+                                    val idWasModified = (Companion.MODIFIED_ID == idModificationType)
+                                    val idIsString = (Companion.UNMODIFIED_ID_STRING == idModificationType)
+                                    val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id,
+                                            idIsString, 
+                                            idWasModified,
                                             lastModifiedDateTime,
                                             lastModifiedDateTimeWasModified,
                                             StringUtils.isNotBlank(createdDateTime) && createdDateTimeWasModified,
@@ -256,26 +260,26 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         return json
     }
 
-    fun id(gson: Gson, id: JsonElement?): Pair<String, Boolean> {
+    fun id(gson: Gson, id: JsonElement?): Pair<String, String> {
         if (id != null) {
             return if (id.isJsonObject) {
                 val obj = id.asJsonObject!!
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
-                    Pair(obj["\$oid"].asJsonPrimitive.asString, true)
+                    Pair(obj["\$oid"].asJsonPrimitive.asString, Companion.MODIFIED_ID)
                 }
                 else {
-                    Pair(gson.toJson(id.asJsonObject), false)
+                    Pair(gson.toJson(id.asJsonObject), Companion.UNMODIFIED_ID_OBJECT)
                 }
             }
             else if (id.isJsonPrimitive) {
-                Pair(id.asJsonPrimitive.asString, false)
+                Pair(id.asJsonPrimitive.asString, Companion.UNMODIFIED_ID_STRING)
             }
             else {
-                Pair("", false)
+                Pair("", Companion.MODIFIED_ID)
             }
         }
         else {
-            return Pair("", false)
+            return Pair("", Companion.MODIFIED_ID)
         }
     }
 
@@ -410,5 +414,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         private const val EPOCH = "1980-01-01T00:00:00.000Z"
         private const val CREATED_DATE_TIME_FIELD = "createdDateTime"
         private const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        private const val UNMODIFIED_ID_OBJECT = "UNMODIFIED_ID_OBJECT"
+        private const val UNMODIFIED_ID_STRING = "UNMODIFIED_ID_STRING"
+        private const val MODIFIED_ID = "MODIFIED_ID"
     }
 }

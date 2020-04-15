@@ -86,7 +86,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", 
-                false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
+                false, false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
                 "collection")).thenReturn(message)
 
         val formattedKey = "0000-0000-00001"
@@ -126,7 +126,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", 
-                false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
+                false, false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
                 "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 
@@ -194,7 +194,7 @@ class HbaseWriterTest {
         val id = com.google.gson.JsonObject()
         id.addProperty("key", "value")
         val expectedId = Gson().toJson(id)
-        val expectedModified = false
+        val expectedModified = "UNMODIFIED_ID_OBJECT"
         val (actualId, actualModified) = hBaseWriter.id(Gson(), id)
         assertEquals(expectedId, actualId)
         assertEquals(actualModified, expectedModified)
@@ -204,7 +204,7 @@ class HbaseWriterTest {
     fun testIdStringReturnedAsString() {
         val id = JsonPrimitive("id")
         val actual = hBaseWriter.id(Gson(), id)
-        assertEquals(Pair("id", false), actual)
+        assertEquals(Pair("id", "UNMODIFIED_ID_STRING"), actual)
     }
 
     @Test
@@ -213,7 +213,7 @@ class HbaseWriterTest {
         val oidValue = "OID_VALUE"
         oid.addProperty("\$oid", oidValue)
         val actual = hBaseWriter.id(Gson(), oid)
-        assertEquals(Pair(oidValue, true), actual)
+        assertEquals(Pair(oidValue, "MODIFIED_ID"), actual)
     }
 
     @Test
@@ -221,7 +221,7 @@ class HbaseWriterTest {
         val id = JsonPrimitive( 12345)
         val actual = hBaseWriter.id(Gson(), id)
         val expectedId = "12345"
-        val expectedModified = false
+        val expectedModified = "UNMODIFIED_ID_STRING"
         assertEquals(Pair(expectedId, expectedModified), actual)
     }
 
@@ -231,7 +231,7 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         val actual = hBaseWriter.id(Gson(), arrayValue)
-        val expected = Pair("", false)
+        val expected = Pair("", "MODIFIED_ID")
         assertEquals(expected, actual)
     }
 
@@ -239,7 +239,7 @@ class HbaseWriterTest {
     fun testIdNullReturnedAsEmpty() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
         val actual = hBaseWriter.id(Gson(), nullValue)
-        val expected = Pair("", false)
+        val expected = Pair("", "MODIFIED_ID")
         assertEquals(expected, actual)
     }
 
@@ -395,7 +395,7 @@ class HbaseWriterTest {
         given(messageUtils.parseGson(any())).willReturn(Gson().fromJson(json, com.google.gson.JsonObject::class.java))
         whenever(keyService.batchDataKey()).thenReturn(DataKeyResult("", "", ""))
         given(cipherService.encrypt(any(), any())).willReturn(EncryptionResult("AAAAAAAAAAAAAAAAAAAAAA==", "qwertyuiop"))
-        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
+        given(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).willReturn("""{ "message": $json """)
         given(messageUtils.getTimestampAsLong(any())).willReturn(315532800000)
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
