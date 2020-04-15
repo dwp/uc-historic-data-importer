@@ -231,7 +231,7 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         val actual = hBaseWriter.id(Gson(), arrayValue)
-        val expected = Pair("", "UNMODIFIED_ID_OBJECT")
+        val expected = Pair("", "MODIFIED_ID")
         assertEquals(expected, actual)
     }
 
