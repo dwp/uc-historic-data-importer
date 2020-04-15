@@ -194,7 +194,7 @@ class HbaseWriterTest {
         val id = com.google.gson.JsonObject()
         id.addProperty("key", "value")
         val expectedId = Gson().toJson(id)
-        val expectedModified = false
+        val expectedModified = "UNMODIFIED_ID_OBJECT"
         val (actualId, actualModified) = hBaseWriter.id(Gson(), id)
         assertEquals(expectedId, actualId)
         assertEquals(actualModified, expectedModified)
@@ -204,7 +204,7 @@ class HbaseWriterTest {
     fun testIdStringReturnedAsString() {
         val id = JsonPrimitive("id")
         val actual = hBaseWriter.id(Gson(), id)
-        assertEquals(Pair("id", false), actual)
+        assertEquals(Pair("id", "UNMODIFIED_ID_STRING"), actual)
     }
 
     @Test
@@ -213,7 +213,7 @@ class HbaseWriterTest {
         val oidValue = "OID_VALUE"
         oid.addProperty("\$oid", oidValue)
         val actual = hBaseWriter.id(Gson(), oid)
-        assertEquals(Pair(oidValue, true), actual)
+        assertEquals(Pair(oidValue, "MODIFIED_ID"), actual)
     }
 
     @Test
@@ -221,7 +221,7 @@ class HbaseWriterTest {
         val id = JsonPrimitive( 12345)
         val actual = hBaseWriter.id(Gson(), id)
         val expectedId = "12345"
-        val expectedModified = false
+        val expectedModified = "UNMODIFIED_ID_STRING"
         assertEquals(Pair(expectedId, expectedModified), actual)
     }
 
@@ -231,7 +231,7 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         val actual = hBaseWriter.id(Gson(), arrayValue)
-        val expected = Pair("", false)
+        val expected = Pair("", "UNMODIFIED_ID_OBJECT")
         assertEquals(expected, actual)
     }
 
@@ -239,7 +239,7 @@ class HbaseWriterTest {
     fun testIdNullReturnedAsEmpty() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
         val actual = hBaseWriter.id(Gson(), nullValue)
-        val expected = Pair("", false)
+        val expected = Pair("", "MODIFIED_ID")
         assertEquals(expected, actual)
     }
 

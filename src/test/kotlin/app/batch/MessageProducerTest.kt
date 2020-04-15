@@ -133,8 +133,8 @@ class MessageProducerTest {
               "message": {
                 "@type": "MONGO_IMPORT",
                 "_id": "$idFieldValue",
-                "mongo_format_stripped_from_id": true,
-                "last_modified_date_time_was_altered": false,
+                "mongo_format_stripped_from_id": false,
+                "last_modified_date_time_was_altered": true,
                 "created_date_time_was_altered": true,
                 "removed_date_time_was_altered": false,
                 "_lastModifiedDateTime": "$dateTime",
