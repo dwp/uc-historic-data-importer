@@ -70,7 +70,6 @@ def main():
         if args.mongo_id:
             print("Adding record with mongo id.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j, True)
-            print(record)
             contents = contents + record + "\n"
 
         if args.record_with_no_id:
@@ -79,6 +78,14 @@ def main():
             jso = json.loads(record)
             del jso['_id']
             contents = contents + json.dumps(jso) + "\n"
+
+        if args.removed_record:
+            print("Adding a removed record.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            removed_record = { "_removed": jso }
+            print(removed_record)
+            contents = contents + json.dumps(removed_record) + "\n"
 
         if args.record_with_no_timestamp:
             print("Adding record with no timestamp.")
@@ -206,6 +213,8 @@ def command_line_args():
                         help='Add a record with no timestamp to each file.')
     parser.add_argument('-t', '--record-with-no-timestamps', action='store_true',
                         help='Add a record with no modified or created timestamp to each file.')
+    parser.add_argument('-r', '--removed-record', action='store_true',
+                        help='Add a removed record.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
     parser.add_argument('-o', '--mongo-id', action='store_true',
