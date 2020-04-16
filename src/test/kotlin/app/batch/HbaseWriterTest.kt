@@ -352,6 +352,106 @@ class HbaseWriterTest {
     }
 
     @Test
+    fun testReformatRemovedReturnsInnerRecordWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecord, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatRemovedReturnsOuterRecordWhenRemovedElementDoesNotExist() {
+        val outerRecord = """{ "_id": "123456789" }""".trimIndent()
+        val json = Gson().fromJson(outerRecord, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(outerRecord)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(outerRecord)
+        val expected = Gson().fromJson(outerRecord, com.google.gson.JsonObject::class.java)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatTransplantsLastModifiedWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789" }""".trimIndent()
+        val innerRecordWithTimestamp = """{ "_id": "123456789", "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord, "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatReplacesLastModifiedWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789", "_lastModifiedDateTime": "INNER_LAST_MODIFIED" }""".trimIndent()
+        val innerRecordWithTimestamp = """{ "_id": "123456789", "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord, "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatTransplantsRemovedTimeWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789" }""".trimIndent()
+        val innerRecordWithTimestamp = """{ "_id": "123456789", "_removedDateTime": "OUTER_REMOVED_TIME" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord, "_removedDateTime": "OUTER_REMOVED_TIME" }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatReplacesRemovedTimeWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789", "_removedDateTime": "INNER_REMOVED_TIME" }""".trimIndent()
+        val innerRecordWithTimestamp = """{ "_id": "123456789", "_removedDateTime": "OUTER_REMOVED_TIME" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord, "_removedDateTime": "OUTER_REMOVED_TIME" }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatTransplantsTimestampWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789" }""".trimIndent()
+        val innerRecordWithTimestamp = """{ "_id": "123456789", "timestamp": "OUTER_TIMESTAMP" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord, "timestamp": "OUTER_TIMESTAMP" }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testReformatReplacesTimestampWhenRemovedElementExists() {
+        val innerRecord = """{ "_id": "123456789", "timestamp": "INNER_TIMESTAMP" }""".trimIndent()
+        val innerRecordWithTimestamp = """{ "_id": "123456789", "timestamp": "OUTER_TIMESTAMP" }""".trimIndent()
+        val recordWithRemovedElement = """{ "_removed": $innerRecord, "timestamp": "OUTER_TIMESTAMP" }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
+        expected.addProperty("@type", "MONGO_DELETE")
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun testAbsentOptionalDateTimeAsObjectReturnedAsBlank() {
         val message = com.google.gson.JsonObject()
         val fieldName = "_optionalDateTime"

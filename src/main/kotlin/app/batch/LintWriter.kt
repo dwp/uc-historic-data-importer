@@ -60,7 +60,7 @@ class LintWriter(private val s3: AmazonS3, private val messageUtils: MessageUtil
                             val count = counts.getOrDefault(key, 0)
                             if (count < maxErrorsToLog.toInt()) {
                                 errors.add(ErrorRecord(line, key, lineNo))
-                                counts.put(key, count + 1)
+                                counts[key] = count + 1
                             }
                         }
                     }

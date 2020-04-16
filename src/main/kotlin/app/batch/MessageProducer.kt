@@ -6,7 +6,6 @@ import app.utils.logging.JsonLoggerWrapper
 import app.utils.logging.correlation_id
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
-import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
@@ -35,7 +34,7 @@ class MessageProducer {
         val standardDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
         val timestamp = standardDateFormat.format(Date())
         val messageId = if (idIsString) """"$id"""" else id
-
+        val wasDelete = type == "MONGO_DELETE"
         return """{
    "unitOfWorkId": "$unitOfWorkId",
    "timestamp": "$timestamp",
@@ -49,6 +48,7 @@ class MessageProducer {
        "last_modified_date_time_was_altered": $lastModifiedDateTimeWasModified,
        "created_date_time_was_altered": $createdDateTimeWasModified,
        "removed_date_time_was_altered": $removedDateTimeWasModified,
+       "historic_removed_record_altered_on_import": $wasDelete,
        "_lastModifiedDateTime": "$lastModifiedDateTime",
        "collection" : "$collection",
        "db": "$database",
@@ -73,7 +73,7 @@ class MessageProducer {
         catch (e: Exception) {
             null
         }
-        val valueFromArguments = environment.get("hdi.version")
+        val valueFromArguments = environment["hdi.version"]
         val result = valueFromManifest ?: valueFromArguments ?: "No hdi version available."
         logger.info("Getting HDI version","value_from_manifest", "$valueFromManifest", "value_from_arguments", "$valueFromArguments", "result_version", result)
         result

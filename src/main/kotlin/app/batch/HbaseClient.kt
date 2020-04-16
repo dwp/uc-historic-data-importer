@@ -8,9 +8,9 @@ import org.apache.hadoop.hbase.client.ConnectionFactory
 import org.apache.hadoop.hbase.client.Put
 
 open class HbaseClient(
-    val connection: Connection,
-    val dataFamily: ByteArray,
-    val dataQualifier: ByteArray
+        val connection: Connection,
+        private val dataFamily: ByteArray,
+        private val dataQualifier: ByteArray
 ) {
     companion object {
         fun connect() = HbaseClient(
