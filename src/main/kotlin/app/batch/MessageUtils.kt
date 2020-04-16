@@ -14,7 +14,6 @@ import java.util.zip.CRC32
 @Component
 class MessageUtils {
     val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageUtils::class.toString())
-    val EPOCH = "1980-01-01T00:00:00.000Z"
     val typeDefault = "MONGO_IMPORT"
 
     fun parseGson(line: String): com.google.gson.JsonObject =
@@ -49,7 +48,7 @@ class MessageUtils {
         return typeDefault
     }
 
-    open fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
+    fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
         val id: JsonObject? = body?.let { getId(it) }
         return if (id == null) ByteArray(0) else generateKey(id)
     }

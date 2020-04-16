@@ -6,7 +6,6 @@ import app.utils.logging.JsonLoggerWrapper
 import app.utils.logging.correlation_id
 import com.google.gson.JsonObject
 import com.jcabi.manifests.Manifests
-import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.env.Environment
 import org.springframework.core.env.get
@@ -73,7 +72,7 @@ class MessageProducer {
         catch (e: Exception) {
             null
         }
-        val valueFromArguments = environment.get("hdi.version")
+        val valueFromArguments = environment["hdi.version"]
         val result = valueFromManifest ?: valueFromArguments ?: "No hdi version available."
         logger.info("Getting HDI version","value_from_manifest", "$valueFromManifest", "value_from_arguments", "$valueFromArguments", "result_version", result)
         result

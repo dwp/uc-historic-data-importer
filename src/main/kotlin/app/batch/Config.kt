@@ -9,9 +9,6 @@ fun getEnv(envVar: String): String? {
 
 val hBaseDataFamily = getEnv("K2HB_HBASE_DATA_FAMILY") ?: "cf"
 val hBaseDataQualifier = getEnv("K2HB_HBASE_DATA_QUALIFIER") ?: "record"
-val hBaseTopicTable = getEnv("K2HB_HBASE_TOPIC_TABLE") ?: "k2hb:ingest-topic"
-val hBaseTopicFamily = getEnv("K2HB_HBASE_TOPIC_FAMILY") ?: "c"
-val hBaseTopicQualifier = getEnv("K2HB_HBASE_TOPIC_QUALIFIER") ?: "msg"
 
 object Config {
 

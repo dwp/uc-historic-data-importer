@@ -131,17 +131,17 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val (createdDateTime, createdDateTimeWasModified) = optionalDateTime(gson, CREATED_DATE_TIME_FIELD, lineAsJson)
                                     val (removedDateTime, removedDateTimeWasModified) = optionalDateTime(gson, REMOVED_DATE_TIME_FIELD, lineAsJson)
 
-                                    val originalLastModifiedDateTime = lineAsJson.get(Companion.LAST_MODIFIED_DATE_TIME_FIELD)
+                                    val originalLastModifiedDateTime = lineAsJson.get(LAST_MODIFIED_DATE_TIME_FIELD)
                                     val (lastModifiedDateTime, lastModifiedDateTimeWasModified)
                                             = lastModifiedDateTime(gson, originalLastModifiedDateTime, createdDateTime)
 
                                     var updatedLineAsJson = lineAsJson
-                                    if (idModificationType == Companion.MODIFIED_ID) {
+                                    if (idModificationType == MODIFIED_ID) {
                                         updatedLineAsJson = overwriteFieldValue(gson, "_id", id, updatedLineAsJson)
                                     }
 
                                     if (lastModifiedDateTimeWasModified) {
-                                        updatedLineAsJson = overwriteFieldValue(gson, Companion.LAST_MODIFIED_DATE_TIME_FIELD, lastModifiedDateTime, updatedLineAsJson)
+                                        updatedLineAsJson = overwriteFieldValue(gson, LAST_MODIFIED_DATE_TIME_FIELD, lastModifiedDateTime, updatedLineAsJson)
                                     }
 
                                     if (createdDateTimeWasModified) {
@@ -153,8 +153,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
 
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, gson.toJson(updatedLineAsJson))
-                                    val idWasModified = (Companion.MODIFIED_ID == idModificationType)
-                                    val idIsString = (Companion.UNMODIFIED_ID_STRING == idModificationType) || (idModificationType == MODIFIED_ID)
+                                    val idWasModified = (MODIFIED_ID == idModificationType)
+                                    val idIsString = (UNMODIFIED_ID_STRING == idModificationType) || (idModificationType == MODIFIED_ID)
                                     val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id,
                                             idIsString, 
                                             idWasModified,
@@ -263,21 +263,21 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             return if (id.isJsonObject) {
                 val obj = id.asJsonObject!!
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
-                    Pair(obj["\$oid"].asJsonPrimitive.asString, Companion.MODIFIED_ID)
+                    Pair(obj["\$oid"].asJsonPrimitive.asString, MODIFIED_ID)
                 }
                 else {
-                    Pair(gson.toJson(id.asJsonObject), Companion.UNMODIFIED_ID_OBJECT)
+                    Pair(gson.toJson(id.asJsonObject), UNMODIFIED_ID_OBJECT)
                 }
             }
             else if (id.isJsonPrimitive) {
-                Pair(id.asJsonPrimitive.asString, Companion.UNMODIFIED_ID_STRING)
+                Pair(id.asJsonPrimitive.asString, UNMODIFIED_ID_STRING)
             }
             else {
-                Pair("", Companion.MODIFIED_ID)
+                Pair("", MODIFIED_ID)
             }
         }
         else {
-            return Pair("", Companion.MODIFIED_ID)
+            return Pair("", MODIFIED_ID)
         }
     }
 
@@ -299,17 +299,17 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 }
                 incomingDateTime.isJsonPrimitive -> {
                     val outgoingValue = incomingDateTime.asJsonPrimitive.asString
-                    logger.debug("${Companion.LAST_MODIFIED_DATE_TIME_FIELD} was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
+                    logger.debug("${LAST_MODIFIED_DATE_TIME_FIELD} was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
                     return Pair(outgoingValue, false)
                 }
                 else -> {
-                    logger.warn("Invalid ${Companion.LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+                    logger.warn("Invalid ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
                     return Pair(fallBackDate, true)
                 }
             }
         }
         else {
-            logger.warn("No incoming ${Companion.LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+            logger.warn("No incoming ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
             return Pair(fallBackDate, true)
         }
     }

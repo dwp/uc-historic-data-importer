@@ -33,7 +33,7 @@ class S3Helper {
     @Throws(S3Exception::class)
     fun listObjectsV2Result(awsS3Client: AmazonS3, request: ListObjectsV2Request, objectSummaries: MutableList<S3ObjectSummary>): ListObjectsV2Result? {
         try {
-            var results1 = awsS3Client.listObjectsV2(request)
+            val results1 = awsS3Client.listObjectsV2(request)
             objectSummaries.addAll(results1.objectSummaries)
             return results1
         }
