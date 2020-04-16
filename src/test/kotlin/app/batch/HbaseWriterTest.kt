@@ -364,6 +364,17 @@ class HbaseWriterTest {
     }
 
     @Test
+    fun testReformatRemovedOverwritesTypeAttribute() {
+        val innerRecord = """{ "_id": "123456789", "@type": "MONGO_INSERT" }"""
+        val recordWithRemovedElement = """{ "_removed": $innerRecord }"""
+        val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
+        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
+        val actual = hBaseWriter.reformatRemoved(recordWithRemovedElement)
+        val expected = Gson().fromJson("""{ "_id": "123456789", "@type": "MONGO_DELETE" }""", com.google.gson.JsonObject::class.java)
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun testReformatRemovedReturnsOuterRecordWhenRemovedElementDoesNotExist() {
         val outerRecord = """{ "_id": "123456789" }""".trimIndent()
         val json = Gson().fromJson(outerRecord, com.google.gson.JsonObject::class.java)
@@ -449,6 +460,33 @@ class HbaseWriterTest {
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testCopyWhenFieldExistsInSourceButNotTarget() {
+        val sourceRecord = Gson().fromJson("""{ "SOURCE_KEY": "SOURCE_VALUE" }""", com.google.gson.JsonObject::class.java)
+        val targetRecord = Gson().fromJson("""{ "TARGET_KEY": "TARGET_VALUE" }""", com.google.gson.JsonObject::class.java)
+        val expected = Gson().fromJson("""{ "SOURCE_KEY": "SOURCE_VALUE", "TARGET_KEY": "TARGET_VALUE" }""", com.google.gson.JsonObject::class.java)
+        hBaseWriter.copyField("SOURCE_KEY", sourceRecord, targetRecord)
+        assertEquals(expected, targetRecord)
+    }
+
+    @Test
+    fun testCopyWhenFieldExistsInSourceAndTarget() {
+        val sourceRecord = Gson().fromJson("""{ "SHARED_KEY": "SOURCE_VALUE" }""", com.google.gson.JsonObject::class.java)
+        val targetRecord = Gson().fromJson("""{ "SHARED_KEY": "TARGET_VALUE" }""", com.google.gson.JsonObject::class.java)
+        val expected = Gson().fromJson("""{ "SHARED_KEY": "SOURCE_VALUE" }""", com.google.gson.JsonObject::class.java)
+        hBaseWriter.copyField("SHARED_KEY", sourceRecord, targetRecord)
+        assertEquals(expected, targetRecord)
+    }
+
+    @Test
+    fun testCopyWhenFieldNotInSource() {
+        val sourceRecord = Gson().fromJson("""{ "SOURCE_KEY": "SOURCE_VALUE" }""", com.google.gson.JsonObject::class.java)
+        val targetRecord = Gson().fromJson("""{ "TARGET_KEY": "TARGET_VALUE" }""", com.google.gson.JsonObject::class.java)
+        val expected = Gson().fromJson("""{ "TARGET_KEY": "TARGET_VALUE" }""", com.google.gson.JsonObject::class.java)
+        hBaseWriter.copyField("ABSENT_KEY", sourceRecord, targetRecord)
+        assertEquals(expected, targetRecord)
     }
 
     @Test
