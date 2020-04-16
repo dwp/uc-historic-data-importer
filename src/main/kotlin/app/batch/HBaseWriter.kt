@@ -119,8 +119,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 }
                                 try {
                                     val lineAsJson = reformatRemoved(lineFromDump)
-
-
                                     val originalId = lineAsJson.get("_id")
 
                                     val (id, idModificationType) = id(gson, originalId)
@@ -128,7 +126,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
                                         return@forEachLine
                                     }
-
 
                                     val (createdDateTime, createdDateTimeWasModified) = optionalDateTime(gson, CREATED_DATE_TIME_FIELD, lineAsJson)
                                     val (removedDateTime, removedDateTimeWasModified) = optionalDateTime(gson, REMOVED_DATE_TIME_FIELD, lineAsJson)
@@ -251,7 +248,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
 
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
-
     }
 
     fun reformatRemoved(recordFromDump: String): JsonObject {
