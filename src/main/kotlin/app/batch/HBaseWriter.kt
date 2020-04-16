@@ -265,7 +265,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    private fun copyField(fieldName: String, sourceRecord: JsonObject, targetRecord: JsonObject) {
+    fun copyField(fieldName: String, sourceRecord: JsonObject, targetRecord: JsonObject) {
         if (sourceRecord.has(fieldName)) {
             if (targetRecord.has(fieldName)) {
                 targetRecord.remove(fieldName)
