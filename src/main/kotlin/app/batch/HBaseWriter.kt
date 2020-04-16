@@ -118,7 +118,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     return@forEachLine
                                 }
                                 try {
-                                    val lineAsJson = messageUtils.parseGson(lineFromDump)
+                                    val lineAsJson = reformatRemoved(lineFromDump)
+
+
                                     val originalId = lineAsJson.get("_id")
 
                                     val (id, idModificationType) = id(gson, originalId)
@@ -250,6 +252,30 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
 
+    }
+
+    fun reformatRemoved(recordFromDump: String): JsonObject {
+        val record = messageUtils.parseGson(recordFromDump)
+
+        return if (record.has(REMOVED_RECORD_FIELD)) {
+            val removedRecord = record.getAsJsonObject(REMOVED_RECORD_FIELD).deepCopy()
+            copyField(LAST_MODIFIED_DATE_TIME_FIELD, record, removedRecord)
+            copyField(REMOVED_DATE_TIME_FIELD, record, removedRecord)
+            copyField(TIMESTAMP_FIELD, record, removedRecord)
+            removedRecord.addProperty("@type", "MONGO_DELETE")
+            removedRecord.deepCopy()
+        } else {
+            record
+        }
+    }
+
+    private fun copyField(fieldName: String, sourceRecord: JsonObject, targetRecord: JsonObject) {
+        if (sourceRecord.has(fieldName)) {
+            if (targetRecord.has(fieldName)) {
+                targetRecord.remove(fieldName)
+            }
+            targetRecord.add(fieldName, sourceRecord.get(fieldName))
+        }
     }
 
     fun overwriteFieldValue(gson: Gson, fieldKey: String, fieldValue: String, json: JsonObject): JsonObject {
@@ -410,8 +436,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         private const val RUN_MODE_MANIFEST = "manifest"
         private const val RUN_MODE_IMPORT = "import"
         private const val EPOCH = "1980-01-01T00:00:00.000Z"
+        private const val REMOVED_RECORD_FIELD = "_removed"
         private const val CREATED_DATE_TIME_FIELD = "createdDateTime"
         private const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        private const val TIMESTAMP_FIELD = "timestamp"
         private const val UNMODIFIED_ID_OBJECT = "UNMODIFIED_ID_OBJECT"
         private const val UNMODIFIED_ID_STRING = "UNMODIFIED_ID_STRING"
         private const val MODIFIED_ID = "MODIFIED_ID"

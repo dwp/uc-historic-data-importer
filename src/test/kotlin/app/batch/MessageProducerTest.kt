@@ -91,6 +91,57 @@ class MessageProducerTest {
                 "last_modified_date_time_was_altered": false,
                 "created_date_time_was_altered": false,
                 "removed_date_time_was_altered": true,
+                "historic_removed_record_altered_on_import": false,
+                "_lastModifiedDateTime": "$dateValue",
+                "collection": "$collection",
+                "db": "$database",
+                "dbObject": "$encrypted",
+                "encryption": {
+                  "keyEncryptionKeyId": "$dataKeyEncryptionKeyId",
+                  "initialisationVector": "$initialisationVector",
+                  "encryptedEncryptionKey": "$ciphertextDataKey"
+                }
+              }
+            }""".trimIndent()
+
+        val expectedObject = Gson().fromJson(expected, JsonObject::class.java)
+        assertEquals("Expected: '$expectedObject', Actual: '$actual'", expectedObject, actual)
+    }
+
+    @Test
+    fun testRemovedObjectGetsFlagAndType() {
+
+        val validJson = validDelete()
+
+        val jsonObject = Gson().fromJson(validJson, JsonObject::class.java)
+        val id = Gson().toJson(jsonObject.getAsJsonObject("_id"))
+        val encryptionResult = EncryptionResult(initialisationVector, encrypted)
+
+        val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
+        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, false, false, true, encryptionResult, dataKeyResult, database, collection)
+        val actual = Gson().fromJson(message, JsonObject::class.java)
+        val unitOfWorkId = actual["unitOfWorkId"]
+        val timestamp = actual["timestamp"]
+        assertNotNull(unitOfWorkId)
+        assertNotNull(timestamp)
+        actual.remove("unitOfWorkId")
+        actual.remove("timestamp")
+        validate(message)
+        val expected = """{
+              "traceId": "correlation1",
+              "@type": "HDI",
+              "version": "1.0.0",
+              "message": {
+                "@type": "MONGO_DELETE",
+                "_id": {
+                  "idField": "$idFieldValue",
+                  "anotherIdField": "$anotherIdFieldValue"
+                },
+                "mongo_format_stripped_from_id": false,
+                "last_modified_date_time_was_altered": false,
+                "created_date_time_was_altered": false,
+                "removed_date_time_was_altered": true,
+                "historic_removed_record_altered_on_import": true,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -137,6 +188,7 @@ class MessageProducerTest {
                 "last_modified_date_time_was_altered": true,
                 "created_date_time_was_altered": true,
                 "removed_date_time_was_altered": false,
+                "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateTime",
                 "collection": "$collection",
                 "db": "$database",
@@ -184,6 +236,7 @@ class MessageProducerTest {
                 "last_modified_date_time_was_altered": true,
                 "created_date_time_was_altered": true,
                 "removed_date_time_was_altered": false,
+                "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateTime",
                 "collection": "$collection",
                 "db": "$database",
@@ -257,6 +310,7 @@ class MessageProducerTest {
                 "last_modified_date_time_was_altered": false,
                 "created_date_time_was_altered": false,
                 "removed_date_time_was_altered": false,
+                "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateValue",
                 "collection": "$collection",
                 "db": "$database",
@@ -310,6 +364,17 @@ class MessageProducerTest {
     private fun validJsonWithStringId(): String {
         return """{
                 "_id": "$idFieldValue",
+                "_lastModifiedDateTime": "$dateValue" 
+            }""".trimIndent()
+    }
+
+    private fun validDelete(): String {
+        return """{
+                "_id": {
+                    "idField": "$idFieldValue",
+                    "anotherIdField": "$anotherIdFieldValue"
+                },
+                "@type": "MONGO_DELETE",
                 "_lastModifiedDateTime": "$dateValue" 
             }""".trimIndent()
     }

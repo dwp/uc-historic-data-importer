@@ -34,7 +34,7 @@ class MessageProducer {
         val standardDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
         val timestamp = standardDateFormat.format(Date())
         val messageId = if (idIsString) """"$id"""" else id
-
+        val wasDelete = type == "MONGO_DELETE"
         return """{
    "unitOfWorkId": "$unitOfWorkId",
    "timestamp": "$timestamp",
@@ -48,6 +48,7 @@ class MessageProducer {
        "last_modified_date_time_was_altered": $lastModifiedDateTimeWasModified,
        "created_date_time_was_altered": $createdDateTimeWasModified,
        "removed_date_time_was_altered": $removedDateTimeWasModified,
+       "historic_removed_record_altered_on_import": $wasDelete,
        "_lastModifiedDateTime": "$lastModifiedDateTime",
        "collection" : "$collection",
        "db": "$database",
