@@ -21,7 +21,7 @@ class MessageProducer {
                        idIsString: Boolean,
                        idWasModified: Boolean,
                        lastModifiedDateTime: String,
-                       lastModifiedDateTimeSourceKey: String
+                       lastModifiedDateTimeSourceKey: String,
                        createdDateTimeWasModified: Boolean,
                        removedDateTimeWasModified: Boolean,
                        encryptionResult: EncryptionResult,
