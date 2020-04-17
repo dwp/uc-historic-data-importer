@@ -86,7 +86,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", 
-                false, false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
+                false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, "adb",
                 "collection")).thenReturn(message)
 
         val formattedKey = "0000-0000-00001"
@@ -126,7 +126,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", 
-                false, false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
+                false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, "adb",
                 "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 
@@ -249,7 +249,7 @@ class HbaseWriterTest {
         val lastModifiedValue = "testDateField"
         lastModified.addProperty("\$notDate", lastModifiedValue)
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified, "CREATED_TIMESTAMP")
-        val expected = Pair("CREATED_TIMESTAMP", true)
+        val expected = Pair("CREATED_TIMESTAMP", "createdDateTime")
         assertEquals(expected, actual)
     }
 
@@ -259,7 +259,7 @@ class HbaseWriterTest {
         val lastModifiedValue = "testDateField"
         lastModified.addProperty("\$date", lastModifiedValue)
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified, "CREATED_TIMESTAMP")
-        val expected = Pair(lastModifiedValue, true)
+        val expected = Pair(lastModifiedValue, "_lastModifiedDateTimeStripped")
         assertEquals(expected, actual)
     }
 
@@ -267,7 +267,7 @@ class HbaseWriterTest {
     fun testLastModifiedDateTimeAsStringReturnedAsValue() {
         val lastModified = JsonPrimitive("testDateString")
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified, "CREATED_TIMESTAMP")
-        val expected = Pair("testDateString", false)
+        val expected = Pair("testDateString", "_lastModifiedDateTime")
         assertEquals(expected, actual)
     }
 
@@ -277,7 +277,7 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), arrayValue, "")
-        val expected = Pair(EPOCH, true)
+        val expected = Pair(EPOCH, "epoch")
         assertEquals(expected, actual)
     }
 
@@ -285,7 +285,7 @@ class HbaseWriterTest {
     fun testLastModifiedDateTimeNullReturnedAsCreatedWhenCreatedNotBlank() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), nullValue, "CREATED_TIMESTAMP")
-        val expected = Pair("CREATED_TIMESTAMP", true)
+        val expected = Pair("CREATED_TIMESTAMP", "createdDateTime")
         assertEquals(expected, actual)
     }
 
@@ -293,7 +293,7 @@ class HbaseWriterTest {
     fun testLastModifiedDateTimeNullReturnedAsEpochWhenCreatedBlank() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), nullValue, "")
-        val expected = Pair(EPOCH, true)
+        val expected = Pair(EPOCH, "epoch")
         assertEquals(expected, actual)
     }
 

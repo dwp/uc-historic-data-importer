@@ -68,7 +68,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, false, false, true, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, "_lastModifiedDateTime", false, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -93,6 +93,7 @@ class MessageProducerTest {
                 "removed_date_time_was_altered": true,
                 "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateValue",
+                "timestamp_created_from": "_lastModifiedDateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -118,7 +119,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, false, false, true, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, "_lastModifiedDateTime", false, true, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -143,6 +144,7 @@ class MessageProducerTest {
                 "removed_date_time_was_altered": true,
                 "historic_removed_record_altered_on_import": true,
                 "_lastModifiedDateTime": "$dateValue",
+                "timestamp_created_from": "_lastModifiedDateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -168,7 +170,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, idFieldValue, true, false, dateTime, true, true, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, idFieldValue, true, false, dateTime, "createdDateTime", true, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -190,6 +192,7 @@ class MessageProducerTest {
                 "removed_date_time_was_altered": false,
                 "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateTime",
+                "timestamp_created_from": "createdDateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -216,7 +219,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, true, true, dateTime, true, true, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, true, true, dateTime, "createdDateTime", true, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -238,6 +241,7 @@ class MessageProducerTest {
                 "removed_date_time_was_altered": false,
                 "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateTime",
+                "timestamp_created_from": "createdDateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -287,7 +291,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject, id, false, false, dateValue, false, false, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject, id, false, false, dateValue, "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
@@ -312,6 +316,7 @@ class MessageProducerTest {
                 "removed_date_time_was_altered": false,
                 "historic_removed_record_altered_on_import": false,
                 "_lastModifiedDateTime": "$dateValue",
+                "timestamp_created_from": "_lastModifiedDateTime",
                 "collection": "$collection",
                 "db": "$database",
                 "dbObject": "$encrypted",
@@ -387,7 +392,7 @@ class MessageProducerTest {
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
         val jsonObjectOne = Gson().fromJson(json, JsonObject::class.java)
         val id = Gson().toJson(jsonObjectOne.getAsJsonObject("_id"))
-        val messageOne = messageProducer.produceMessage(jsonObjectOne, id, false, false, dateValue, false, false, false, encryptionResult, dataKeyResult, database, collection)
+        val messageOne = messageProducer.produceMessage(jsonObjectOne, id, false, false, dateValue, "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, database, collection)
         val actualOne = Gson().fromJson(messageOne, JsonObject::class.java)
         return actualOne.getAsJsonPrimitive(field).asString
     }

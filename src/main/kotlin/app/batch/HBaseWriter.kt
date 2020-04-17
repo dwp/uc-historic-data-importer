@@ -131,7 +131,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val (removedDateTime, removedDateTimeWasModified) = optionalDateTime(gson, REMOVED_DATE_TIME_FIELD, lineAsJson)
 
                                     val originalLastModifiedDateTime = lineAsJson.get(LAST_MODIFIED_DATE_TIME_FIELD)
-                                    val (lastModifiedDateTime, lastModifiedDateTimeWasModified)
+                                    val (lastModifiedDateTime, lastModifiedDateTimeSourceField)
                                             = lastModifiedDateTime(gson, originalLastModifiedDateTime, createdDateTime)
 
                                     var updatedLineAsJson = lineAsJson
@@ -139,7 +139,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         updatedLineAsJson = overwriteFieldValue(gson, "_id", id, updatedLineAsJson)
                                     }
 
-                                    if (lastModifiedDateTimeWasModified) {
+                                    if (lastModifiedDateTimeSourceField != LAST_MODIFIED_DATE_TIME_FIELD) {
                                         updatedLineAsJson = overwriteFieldValue(gson, LAST_MODIFIED_DATE_TIME_FIELD, lastModifiedDateTime, updatedLineAsJson)
                                     }
 
@@ -158,7 +158,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             idIsString, 
                                             idWasModified,
                                             lastModifiedDateTime,
-                                            lastModifiedDateTimeWasModified,
+                                            lastModifiedDateTimeSourceField,
                                             StringUtils.isNotBlank(createdDateTime) && createdDateTimeWasModified,
                                             StringUtils.isNotBlank(removedDateTime) && removedDateTimeWasModified,
                                             encryptionResult,
@@ -303,36 +303,37 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    fun lastModifiedDateTime(gson: Gson, incomingDateTime: JsonElement?, createdDateTime: String): Pair<String, Boolean> {
+    fun lastModifiedDateTime(gson: Gson, incomingDateTime: JsonElement?, createdDateTime: String): Pair<String, String> {
 
         val fallBackDate = if (StringUtils.isNotBlank(createdDateTime)) createdDateTime else EPOCH
+        val fallBackField = if (fallBackDate == EPOCH) EPOCH_FIELD else CREATED_DATE_TIME_FIELD
 
         if (incomingDateTime != null) {
             when {
                 incomingDateTime.isJsonObject -> {
                     val obj = incomingDateTime.asJsonObject!!
                     return if (obj.size() == 1 && obj["\$date"] != null && obj["\$date"].isJsonPrimitive) {
-                        Pair(obj["\$date"].asJsonPrimitive.asString, true)
+                        Pair(obj["\$date"].asJsonPrimitive.asString, LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED)
                     }
                     else {
                         logger.debug("_lastModifiedDateTime was an object, without a \$date field", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
-                        Pair(fallBackDate, true)
+                        Pair(fallBackDate, fallBackField)
                     }
                 }
                 incomingDateTime.isJsonPrimitive -> {
                     val outgoingValue = incomingDateTime.asJsonPrimitive.asString
                     logger.debug("${LAST_MODIFIED_DATE_TIME_FIELD} was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
-                    return Pair(outgoingValue, false)
+                    return Pair(outgoingValue, LAST_MODIFIED_DATE_TIME_FIELD)
                 }
                 else -> {
                     logger.warn("Invalid ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
-                    return Pair(fallBackDate, true)
+                    return Pair(fallBackDate, fallBackField)
                 }
             }
         }
         else {
             logger.warn("No incoming ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
-            return Pair(fallBackDate, true)
+            return Pair(fallBackDate, fallBackField)
         }
     }
 
@@ -429,6 +430,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     companion object {
         val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HBaseWriter::class.toString())
         private const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
+        private const val LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED = "_lastModifiedDateTimeStripped"
+        private const val EPOCH_FIELD = "epoch"
         private const val RUN_MODE_MANIFEST = "manifest"
         private const val RUN_MODE_IMPORT = "import"
         private const val EPOCH = "1980-01-01T00:00:00.000Z"
