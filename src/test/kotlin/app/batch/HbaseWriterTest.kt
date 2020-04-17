@@ -86,7 +86,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", 
-                false, false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
+                false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, "adb",
                 "collection")).thenReturn(message)
 
         val formattedKey = "0000-0000-00001"
@@ -126,7 +126,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", 
-                false, false, """{ "key": "value" }""", false, false, false, encryptionResult, dataKeyResult, "adb",
+                false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, "adb",
                 "collection")).thenReturn(message)
         val formattedKey = "0000-0000-00001"
 

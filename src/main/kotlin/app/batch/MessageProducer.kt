@@ -21,7 +21,7 @@ class MessageProducer {
                        idIsString: Boolean,
                        idWasModified: Boolean,
                        lastModifiedDateTime: String,
-                       lastModifiedDateTimeWasModified: Boolean,
+                       lastModifiedDateTimeSourceKey: String
                        createdDateTimeWasModified: Boolean,
                        removedDateTimeWasModified: Boolean,
                        encryptionResult: EncryptionResult,
@@ -35,6 +35,7 @@ class MessageProducer {
         val timestamp = standardDateFormat.format(Date())
         val messageId = if (idIsString) """"$id"""" else id
         val wasDelete = type == "MONGO_DELETE"
+        val lastModifiedDateTimeWasModified = lastModifiedDateTimeSourceKey != "_lastModifiedDateTime"
         return """{
    "unitOfWorkId": "$unitOfWorkId",
    "timestamp": "$timestamp",
@@ -50,6 +51,7 @@ class MessageProducer {
        "removed_date_time_was_altered": $removedDateTimeWasModified,
        "historic_removed_record_altered_on_import": $wasDelete,
        "_lastModifiedDateTime": "$lastModifiedDateTime",
+       "timestamp_created_from": "$lastModifiedDateTimeSourceKey",
        "collection" : "$collection",
        "db": "$database",
        "dbObject": "${encryptionResult.encrypted}",
