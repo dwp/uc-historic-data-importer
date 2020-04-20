@@ -43,13 +43,13 @@ These date formats are added by Mongo's export process when the data is just a s
 
 #### Transform details
 
-The following key is checked to see if it is a string value or an object value: `_id_`. If it is a string no transformation is performed. If it is an object, then it is checked to see if it has a `$oid` sub key. If it doesn't, then no tranformation is performed.
+The following key is checked to see if it is a string value or an object value: `_id`. If it is a string no transformation is performed. If it is an object, then it is checked to see if it has a `$oid` sub key. If it doesn't, then no transformation is performed.
 
 If it does, then the value of the `$oid` sub key is taken and used as the parent key field value.
 
 #### Transform reasoning
 
-When Mongo exports records, if it has no primark key as the id, then it generates an id and calls the key `$oid`. Therefore, this value appears in the data as the `_id` field. However on Kafka, this is stripped out and the `$oid` key is never seen, only it's value. Therefore we replicate this process.
+When Mongo exports records, if it has no primary key as the id, then it generates an id and calls the key `$oid`. Therefore, this value appears in the data as the `_id` field. However on Kafka, this is stripped out and the `$oid` key is never seen, only it's value. Therefore we replicate this process.
 
 ### Heirarchy for `_lastModifiedDateTime`
 
@@ -77,13 +77,13 @@ This means that an incoming record with the following structure:
 ```
 {
   "_id": {
-    "d_oid": "someoid"
+    "$oid": "someoid"
   },
   "_lastModifiedDateTime": {
-    "d_date": "2020-02-26T10:04:39.624Z"
+    "$date": "2020-02-26T10:04:39.624Z"
   },
   "_removedDateTime": {
-    "d_date": "2020-02-26T10:04:39.623Z"
+    "$date": "2020-02-26T10:04:39.623Z"
   },
   "timestamp": 1582711479624,
   "_removed": {
@@ -107,10 +107,10 @@ Would be transformed to the following structure:
   },
   "_version": 1,
   "_lastModifiedDateTime": {
-    "d_date": "2020-02-26T10:04:39.624Z"
+    "$date": "2020-02-26T10:04:39.624Z"
   },
   "_removedDateTime": {
-    "d_date": "2020-02-26T10:04:39.623Z"
+    "$date": "2020-02-26T10:04:39.623Z"
   },
   "timestamp": 1582711479624,
   ...
