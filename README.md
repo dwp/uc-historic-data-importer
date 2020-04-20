@@ -10,6 +10,12 @@ more unified basic set of operations. These can be checked by running:
 $ make help
 ```
 
+## Data Transformations
+
+When we import the entire set of historic data, there are a number of old and differing record structures to what we see when new data is sent across Kafka. To deal with this we tranform data in certain circumstances.
+
+Details of all the transforms we perform and the reasons why can be found on the [data transforms page](docs/data_transformations.md)
+
 ## Build
 
 Ensure a JVM is installed and run the gradle wrapper.
