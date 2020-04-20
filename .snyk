@@ -5,104 +5,104 @@ ignore:
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469676:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-469674:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-471943:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-472980:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
 
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-450207:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-450917:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-455617:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467014:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467015:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-467016:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMGOOGLEPROTOBUF-173761:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-174736:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-540500:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-548451:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-ORGAPACHEHADOOP-174573:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-ORGAPACHEHADOOP-32047:
     - '*':
         reason: removed, ticket raised for project remediation (DW-3136)
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-559094:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-559106:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-560762:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-560766:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-561362:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-561373:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-561585:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-561586:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-561587:
     - '*':
         reason: transient dependency though amazon aws.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-564887:
     - '*':
         reason: transient dependency though amazon aws.
@@ -114,9 +114,9 @@ ignore:
   SNYK-JAVA-IONETTY-559515:
     - '*':
         reason: transient dependency though hbase client version to which we are tied.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
   SNYK-JAVA-IONETTY-559516:
     - '*':
         reason: transient dependency though hbase client version to which we are tied.
-        expires: 2020-04-20T00:00:00.000Z
+        expires: 2020-05-20T00:00:00.000Z
 patch: {}
