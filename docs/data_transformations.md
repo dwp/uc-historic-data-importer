@@ -1,0 +1,129 @@
+# Data Transformations
+
+When we import the entire set of historic data, there are a number of old and differing record structures to what we see when new data is sent across Kafka.
+
+This component's job is to ingest the historic UC data and make it look like data that came from Kafka. This allows us to have a full historic record linked together for every document.
+
+Due to the changes in data structures between the two sources we have to make changes to the historic data in order to achieve this historic record per document.
+
+## Why not change Kafka data?
+
+The Kafka stream is considered golden and will always be using the latest data structure. Therefore the principal the system follows is to take the Kafka data as-is and instead change historic data to match it rather than the other way around.
+
+The historic data ingestion is a one time process and will not need to be repeated after the system is up and running.
+
+## Transformations performed
+
+The data transformations performed are stored in the following Jira epic: https://projects.ucd.gpn.gov.uk/browse/DW-3769.
+
+Below is a table listing the transformations that are performed on the historic data. Click on each type to see more details and reasoning for the change:
+
+| Transformation Type | Pre-Transform Example | Post-Transform Example |
+| ------------------- | --------------------- | ---------------------- | --------- |
+| [Strip dates with `$date` fields](#Strip-dates-with-`$date`-fields) | `{ "_lastModifiedDateTime": {"$date": "2019-01-01T01:01:01.000Z" }}` | `{ "_lastModifiedDateTime": "2019-01-01T01:01:01.000Z" }` |
+| [Strip ids with `$oid` fields](#Strip-ids-with-`$oid`-fields) | `{ "_id": {"$oid": "guid1" }}` | `{ "_id": "guid1" }` |
+| [Heirarchy for `_lastModifiedDateTime`](#Heirarchy-for-`_lastModifiedDateTime`) | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
+| [Re-structure `_removed` records](#Re-structure-`_removed`-records) | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
+
+## Transformation details and reasoning
+
+Below is a detailed explanation of the change made for each transform. Each transform is independant of other transforms and multiple transforms might happen to the same record.
+
+### Strip dates with `$date` fields
+
+#### Transform details
+
+The following keys are checked to see if they are strings or objects: `_lastModifiedDateTime`, `createdDateTime` and `_removedDateTime`. If they are present and strings no transformation is performed. If they are objects with a `$date` sub key, the value of the sub key is used as the parent key field value.
+
+#### Transform reasoning
+
+These date formats are added by Mongo's export process when the data is just a string. On Kafka, the `$date` field is not present and these date values appear as the post transform example. For the storage of records, a consistent date time structure is needed and this is used to ensure which version of the record is the latest version.
+
+### Strip ids with `$oid` fields
+
+#### Transform details
+
+The following key is checked to see if it is a string value or an object value: `_id`. If it is a string no transformation is performed. If it is an object, then it is checked to see if it has a `$oid` sub key. If it doesn't, then no transformation is performed.
+
+If it does, then the value of the `$oid` sub key is taken and used as the parent key field value.
+
+#### Transform reasoning
+
+When Mongo exports records, if it has no primary key as the id, then it generates an id and calls the key `$oid`. Therefore, this value appears in the data as the `_id` field. However on Kafka, this is stripped out and the `$oid` key is never seen, only it's value. Therefore we replicate this process.
+
+### Heirarchy for `_lastModifiedDateTime`
+
+#### Transform details
+
+When a record is receieved, the `_lastModifiedDateTime` field is checked. If it has an invalid value (null or empty), then the `createdDateTime` field is checked instead. If it is valid, then its value is used for `_lastModifiedDateTime`. It neither are present we use a fall back date of "1980-01-01T00:00:00.000Z".
+
+#### Transform reasoning
+
+To store all versions of records, there needs to be a timestamp assigned to every version of a record. To do this, we use the `_lastModifiedDateTime`. Some older records do not have this field in them. If this was not transformed, potentially these versions of the records would be stored out of order, creating data issues when the latest version of every record was desired. This transform ensures the integrity of the record history is maintained.
+
+### Re-structure `_removed` records
+
+#### Transform details
+
+When a record is processed, it is checked to see if it has a `_removed` key. If that's the case, the following steps are performed to transform the record:
+
+* If the root level has a `_lastModifiedDateTime` field, move this to be at the root of the `_removed` node
+* If the root level has a `_removedDateTime` field, move this to be at the root of the `_removed` node
+* If the root level has a `timestamp` field, move this to be at the root of the `_removed` node
+* Remove the `_removed` node and place all it's nodes up one to the root
+
+This means that an incoming record with the following structure:
+
+```
+{
+  "_id": {
+    "$oid": "someoid"
+  },
+  "_lastModifiedDateTime": {
+    "$date": "2020-02-26T10:04:39.624Z"
+  },
+  "_removedDateTime": {
+    "$date": "2020-02-26T10:04:39.623Z"
+  },
+  "timestamp": 1582711479624,
+  "_removed": {
+    "_entityVersion": 0,
+    "_id": {
+      "toDoId": "guid1"
+    },
+    "_version": 1,
+    ...
+  }
+}
+```
+
+Would be transformed to the following structure:
+
+```
+{
+  "_entityVersion": 0,
+  "_id": {
+    "toDoId": "guid1"
+  },
+  "_version": 1,
+  "_lastModifiedDateTime": {
+    "$date": "2020-02-26T10:04:39.624Z"
+  },
+  "_removedDateTime": {
+    "$date": "2020-02-26T10:04:39.623Z"
+  },
+  "timestamp": 1582711479624,
+  ...
+}
+```
+
+As explained above, there are other transforms that would edit the dates above, these would still happen but that is independant of this specific transform step.
+
+#### Transform reasoning
+
+When a record is soft deleted, the Kafka stream receives a MONGO_DELETE record, which is the delete notification containing the record details as is before the delete has been actioned. However in the historic data, the record looks like it does _after_ the delete has happened. This means the structure is very different between the two records. Due to the UC soft delete process where the record is moved to a `_removed` key, it also means there is no primary key any more on the record. When Mongo exports this record it therefore assigns a new id to it as an `$oid` key.
+
+If we did not transform these records, then the historic records would appear as a completely different record in the storage because of this generated id and you would have two records stored:
+
+1. The original record with the right id and all versions up to prior to the deletion (so with no `_removedDateTime` populated)
+2. A new record with an entirely different id and not linked to the previous versions that would hold the `_removedDateTime` value
