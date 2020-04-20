@@ -19,7 +19,7 @@ The data transformations performed are stored in the following Jira epic: https:
 Below is a table listing the transformations that are performed on the historic data. Click on each type to see more details and reasoning for the change:
 
 | Transformation Type | Pre-Transform Example | Post-Transform Example |
-| ------------------- | --------------------- | ---------------------- | --------- |
+| ------------------- | --------------------- | ---------------------- |
 | [Strip dates with `$date` fields](#Strip-dates-with-`$date`-fields) | `{ "_lastModifiedDateTime": {"$date": "2019-01-01T01:01:01.000Z" }}` | `{ "_lastModifiedDateTime": "2019-01-01T01:01:01.000Z" }` |
 | [Strip ids with `$oid` fields](#Strip-ids-with-`$oid`-fields) | `{ "_id": {"$oid": "guid1" }}` | `{ "_id": "guid1" }` |
 | [Heirarchy for `_lastModifiedDateTime`](#Heirarchy-for-`_lastModifiedDateTime`) | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
