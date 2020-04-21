@@ -31,7 +31,8 @@ data class ManifestRecord(val id: String,
                           val db: String,
                           val collection: String,
                           val source: String,
-                          val externalSource: String,
+                          val outerType: String,
+                          val innerType: String,
                           val originalId: String)
 
 data class HBaseRecord(val key: ByteArray, val body: ByteArray, val version: Long) {

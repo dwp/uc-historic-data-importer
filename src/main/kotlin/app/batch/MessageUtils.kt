@@ -44,7 +44,7 @@ class MessageUtils {
             return type
         }
 
-        logger.warn("No @type in message so useing default", "default_type", typeDefault)
+        logger.warn("No @type in message so using default", "default_type", typeDefault)
         return typeDefault
     }
 

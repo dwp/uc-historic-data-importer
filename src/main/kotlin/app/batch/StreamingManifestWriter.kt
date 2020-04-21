@@ -54,7 +54,7 @@ open class StreamingManifestWriter {
         }
 
     fun csv(manifestRecord: ManifestRecord) =
-        "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.externalSource)},${escape(manifestRecord.originalId)}\n"
+        "${escape(manifestRecord.id)},${escape(manifestRecord.timestamp.toString())},${escape(manifestRecord.db)},${escape(manifestRecord.collection)},${escape(manifestRecord.source)},${escape(manifestRecord.outerType)},${escape(manifestRecord.originalId)},${escape(manifestRecord.innerType)}\n"
 
     fun topicName(db: String, collection: String) = "db.$db.$collection"
 
