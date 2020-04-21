@@ -169,7 +169,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
                                     val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedDateTime)
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
-                                    val typeString = messageUtils.getType(messageJsonObject)
                                     if (runMode != RUN_MODE_MANIFEST) {
                                         if (batchSizeBytes + messageWrapper.length >= maxBatchVolume && batch.size > 0) {
                                             try {
@@ -191,8 +190,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else id
-
-                                        val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", typeString, incomingId)
+                                        val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
+                                        val innerType = messageUtils.getType(messageJsonObject)
+                                        val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 }
@@ -322,17 +322,17 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 }
                 incomingDateTime.isJsonPrimitive -> {
                     val outgoingValue = incomingDateTime.asJsonPrimitive.asString
-                    logger.debug("${LAST_MODIFIED_DATE_TIME_FIELD} was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
+                    logger.debug("$LAST_MODIFIED_DATE_TIME_FIELD was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
                     return Pair(outgoingValue, LAST_MODIFIED_DATE_TIME_FIELD)
                 }
                 else -> {
-                    logger.warn("Invalid ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+                    logger.warn("Invalid $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
                     return Pair(fallBackDate, fallBackField)
                 }
             }
         }
         else {
-            logger.warn("No incoming ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+            logger.warn("No incoming $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
             return Pair(fallBackDate, fallBackField)
         }
     }
