@@ -339,7 +339,7 @@ class S3ReaderTest {
                 }
             }
         }
-        assertTrue(objectContent.equals(textBuilder.toString().trim()))
+        assertTrue(objectContent == textBuilder.toString().trim())
     }
 
     private fun mockS3Object() =

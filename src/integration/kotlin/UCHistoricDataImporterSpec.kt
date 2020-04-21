@@ -24,7 +24,6 @@ import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.security.Key
 import java.security.Security
-import java.text.SimpleDateFormat
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec

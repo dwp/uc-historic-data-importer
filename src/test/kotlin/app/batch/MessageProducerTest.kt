@@ -4,11 +4,8 @@ import app.domain.DataKeyResult
 import app.domain.EncryptionResult
 import app.utils.logging.overrideLoggerStaticFieldsForTests
 import app.utils.logging.resetLoggerStaticFieldsForTests
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.Appender
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.nhaarman.mockitokotlin2.mock
 import org.everit.json.schema.loader.SchemaLoader
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -17,7 +14,6 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestPropertySource
@@ -267,8 +263,8 @@ class MessageProducerTest {
         val timestamp = timestamp(validJsonOne())
         val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").parse(timestamp)
         val end = Date()
-        assertTrue(start.before(date) || start.equals(date))
-        assertTrue(end.after(date) || end.equals(date))
+        assertTrue(start.before(date) || start == date)
+        assertTrue(end.after(date) || end == date)
     }
 
     @Test

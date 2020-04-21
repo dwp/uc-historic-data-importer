@@ -322,17 +322,17 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 }
                 incomingDateTime.isJsonPrimitive -> {
                     val outgoingValue = incomingDateTime.asJsonPrimitive.asString
-                    logger.debug("${LAST_MODIFIED_DATE_TIME_FIELD} was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
+                    logger.debug("$LAST_MODIFIED_DATE_TIME_FIELD was a string", "incoming_value", "$incomingDateTime", "outgoing_value", outgoingValue)
                     return Pair(outgoingValue, LAST_MODIFIED_DATE_TIME_FIELD)
                 }
                 else -> {
-                    logger.warn("Invalid ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+                    logger.warn("Invalid $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
                     return Pair(fallBackDate, fallBackField)
                 }
             }
         }
         else {
-            logger.warn("No incoming ${LAST_MODIFIED_DATE_TIME_FIELD} object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+            logger.warn("No incoming $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
             return Pair(fallBackDate, fallBackField)
         }
     }
