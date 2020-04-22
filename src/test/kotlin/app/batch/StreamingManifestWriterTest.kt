@@ -18,7 +18,7 @@ class StreamingManifestWriterTest {
         val manifestWriter = StreamingManifestWriter()
         val manifestRecord = ManifestRecord(""""_id":{"declarationId": "1234567890"}""", 100000000, "dbwithcomma,", "collectionwithdoublequote\"", "IMPORT", "OUTER_TYPE", "INNER_TYPE","ORIGINAL_ID")
         val actual = manifestWriter.csv(manifestRecord)
-        val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\",100000000,\"dbwithcomma,\",\"collectionwithdoublequote\"\"\",IMPORT,OUTER_TYPE,ORIGINAL_ID,INNER_TYPE\n"
+        val expected = "\"\"\"_id\"\":{\"\"declarationId\"\": \"\"1234567890\"\"}\"|100000000|\"dbwithcomma,\"|\"collectionwithdoublequote\"\"\"|IMPORT|OUTER_TYPE|ORIGINAL_ID|INNER_TYPE\n"
         assertEquals(expected, actual)
     }
 
