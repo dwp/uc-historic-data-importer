@@ -201,7 +201,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                 }
                                 catch (e: Exception) {
-                                    e.printStackTrace(System.err)
                                     logger.error("Error processing record", e, "line_number", "${reader.lineNumber}", "file_name", fileName, "error_message", "${e.message}")
                                 }
                             }
