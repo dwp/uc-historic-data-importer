@@ -24,6 +24,7 @@ Below is a table listing the transformations that are performed on the historic 
 | [Strip ids with `$oid` fields](#Strip-ids-with-`$oid`-fields) | `{ "_id": {"$oid": "guid1" }}` | `{ "_id": "guid1" }` |
 | [Heirarchy for `_lastModifiedDateTime`](#Heirarchy-for-`_lastModifiedDateTime`) | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
 | [Re-structure `_removed` records](#Re-structure-`_removed`-records) | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
+| [Flatten `createdDateTime` objects within `_ids`](Flatten-`createdDateTime`-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000Z" } }` |
 
 ## Transformation details and reasoning
 
@@ -127,3 +128,33 @@ If we did not transform these records, then the historic records would appear as
 
 1. The original record with the right id and all versions up to prior to the deletion (so with no `_removedDateTime` populated)
 2. A new record with an entirely different id and not linked to the previous versions that would hold the `_removedDateTime` value
+
+### Flatten `createdDateTime` objects within `_ids`
+#### Transform details
+In some collections the `_id` field is a compound object one of whose fields, `createdDateTime` is a mongo date field. 
+These date fields are flattened, i.e. the `createdDateTimeValue is set to the value of the `$date` sub-field.
+For example:
+```javascript
+{
+    "_id": {
+        "idField": "idValue",
+        "createdDateTime": {
+            "$date": "2020-02-26T10:04:39.624Z"    
+        }       
+    }
+}
+``` 
+becomes
+```javascript
+{
+    "_id": {
+        "idField": "idValue",
+        "createdDateTime": "2020-02-26T10:04:39.624Z"
+    }
+}
+``` 
+
+#### Transform reasoning
+If these records come over kafka following a modification they will be in the transformed format, and so to ensure that
+we add a new version to the correct record the ids must match and so we make id of the record imported from the dump
+look like it's kafka equivalent before persisting it to hbase.

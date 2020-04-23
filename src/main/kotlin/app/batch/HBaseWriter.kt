@@ -1,9 +1,6 @@
 package app.batch
 
-import app.domain.DataKeyResult
-import app.domain.DecompressedStream
-import app.domain.HBaseRecord
-import app.domain.ManifestRecord
+import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
 import app.utils.logging.JsonLoggerWrapper
@@ -135,8 +132,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             = lastModifiedDateTime(gson, originalLastModifiedDateTime, createdDateTime)
 
                                     var updatedLineAsJson = lineAsJson
-                                    if (idModificationType == MODIFIED_ID) {
+                                    if (idModificationType == IdModification.FlattenedMongoId) {
                                         updatedLineAsJson = overwriteFieldValue(gson, "_id", id, updatedLineAsJson)
+                                    }
+                                    else if (idModificationType == IdModification.FlattenedInnerDate) {
+                                        updatedLineAsJson = overwriteFieldValueWithObject(gson, "_id", gson.fromJson(id, JsonObject::class.java), updatedLineAsJson)
                                     }
 
                                     if (lastModifiedDateTimeSourceField != LAST_MODIFIED_DATE_TIME_FIELD) {
@@ -152,8 +152,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
 
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, gson.toJson(updatedLineAsJson))
-                                    val idWasModified = (MODIFIED_ID == idModificationType)
-                                    val idIsString = (UNMODIFIED_ID_STRING == idModificationType) || (idModificationType == MODIFIED_ID)
+                                    val idWasModified = (idModificationType == IdModification.FlattenedMongoId  ||
+                                            idModificationType == IdModification.FlattenedInnerDate)
+
+                                    val idIsString = (idModificationType == IdModification.UnmodifiedStringId) ||
+                                            (idModificationType == IdModification.FlattenedMongoId)
+
                                     val messageWrapper = messageProducer.produceMessage(updatedLineAsJson, id,
                                             idIsString, 
                                             idWasModified,
@@ -280,26 +284,42 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         return json
     }
 
-    fun id(gson: Gson, id: JsonElement?): Pair<String, String> {
+    fun overwriteFieldValueWithObject(gson: Gson, fieldKey: String, fieldValue: JsonElement, json: JsonObject): JsonObject {
+        json.remove(fieldKey)
+        json.add(fieldKey, fieldValue)
+        return json
+    }
+
+    fun id(gson: Gson, id: JsonElement?): Pair<String, IdModification> {
         if (id != null) {
             return if (id.isJsonObject) {
                 val obj = id.asJsonObject!!
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
-                    Pair(obj["\$oid"].asJsonPrimitive.asString, MODIFIED_ID)
+                    Pair(obj["\$oid"].asJsonPrimitive.asString, IdModification.FlattenedMongoId)
+                }
+                else if (obj[CREATED_DATE_TIME_FIELD] != null &&
+                        obj[CREATED_DATE_TIME_FIELD].isJsonObject &&
+                        obj[CREATED_DATE_TIME_FIELD].asJsonObject.size() == 1 &&
+                        obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"] != null &&
+                        obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"].isJsonPrimitive) {
+                    val dateString = obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"].asString
+                    obj.remove(CREATED_DATE_TIME_FIELD)
+                    obj.addProperty(CREATED_DATE_TIME_FIELD, dateString)
+                    Pair(gson.toJson(id.asJsonObject), IdModification.FlattenedInnerDate)
                 }
                 else {
-                    Pair(gson.toJson(id.asJsonObject), UNMODIFIED_ID_OBJECT)
+                    Pair(gson.toJson(id.asJsonObject), IdModification.UnmodifiedObjectId)
                 }
             }
             else if (id.isJsonPrimitive) {
-                Pair(id.asJsonPrimitive.asString, UNMODIFIED_ID_STRING)
+                Pair(id.asJsonPrimitive.asString, IdModification.UnmodifiedStringId)
             }
             else {
-                Pair("", MODIFIED_ID)
+                Pair("", IdModification.InvalidId)
             }
         }
         else {
-            return Pair("", MODIFIED_ID)
+            return Pair("", IdModification.InvalidId)
         }
     }
 
@@ -388,7 +408,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     }
 
     fun putBatch(table: String, records: List<HBaseRecord>) {
-
         var success = false
         var attempts = 0
         var exception: Exception? = null
@@ -423,7 +442,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     fun getBufferedReader(inputStream: InputStream?) = LineNumberReader(InputStreamReader(inputStream))
 
-    fun encryptDbObject(dataKey: String, line: String) = cipherService.encrypt(dataKey, line.toByteArray())
+    fun encryptDbObject(dataKey: String, line: String): EncryptionResult {
+        return cipherService.encrypt(dataKey, line.toByteArray())
+    }
 
     fun getDataKey(fileName: String) = keyService.batchDataKey()
 
@@ -439,8 +460,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         private const val CREATED_DATE_TIME_FIELD = "createdDateTime"
         private const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
         private const val TIMESTAMP_FIELD = "timestamp"
-        private const val UNMODIFIED_ID_OBJECT = "UNMODIFIED_ID_OBJECT"
-        private const val UNMODIFIED_ID_STRING = "UNMODIFIED_ID_STRING"
-        private const val MODIFIED_ID = "MODIFIED_ID"
+
+        enum class IdModification {
+            UnmodifiedObjectId,
+            UnmodifiedStringId,
+            FlattenedMongoId,
+            FlattenedInnerDate,
+            InvalidId
+        }
     }
 }

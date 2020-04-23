@@ -79,12 +79,20 @@ def main():
             del jso['_id']
             contents = contents + json.dumps(jso) + "\n"
 
+        if args.id_with_mongo_date_in:
+            print("Adding record with id with embedded mongo date.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            id = jso['_id']
+            id['createdDateTime'] = { "$date": "2010-01-01T00:00:00.000Z" }
+            print(jso)
+            contents = contents + json.dumps(jso) + "\n"
+
         if args.removed_record:
             print("Adding a removed record.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
             jso = json.loads(record)
             removed_record = { "_removed": jso }
-            print(removed_record)
             contents = contents + json.dumps(removed_record) + "\n"
 
         if args.record_with_no_timestamp:
@@ -205,28 +213,30 @@ def db_object(i):
 def command_line_args():
     """Parses, returns the supplied command line args."""
     parser = argparse.ArgumentParser(description='Generate sample encrypted data.')
-    parser.add_argument('-m', '--malformed-input', action='store_true',
-                        help='Add malformed inputs to each file.')
-    parser.add_argument('-i', '--record-with-no-id', action='store_true',
-                        help='Add a record with no id to each file.')
-    parser.add_argument('-d', '--record-with-no-timestamp', action='store_true',
-                        help='Add a record with no timestamp to each file.')
-    parser.add_argument('-t', '--record-with-no-timestamps', action='store_true',
-                        help='Add a record with no modified or created timestamp to each file.')
-    parser.add_argument('-r', '--removed-record', action='store_true',
-                        help='Add a removed record.')
-    parser.add_argument('-k', '--data-key-service',
-                        help='Use the specified data key service.')
-    parser.add_argument('-o', '--mongo-id', action='store_true',
-                        help='Add a record with a mongo native id.')
-    parser.add_argument('-n', '--file-count',
-                        help='The number of files to create.')
-    parser.add_argument('-s', '--batch-size',
-                        help='The number of records in each file.')
+    parser.add_argument('-a', '--id-with-mongo-date-in', action='store_true',
+                        help='Add a record with an id with a mongo created date time.')
     parser.add_argument('-c', '--compress', action='store_true',
                         help='Compress before encryption.')
+    parser.add_argument('-d', '--record-with-no-timestamp', action='store_true',
+                        help='Add a record with no timestamp to each file.')
     parser.add_argument('-e', '--encrypt', action='store_true',
                         help='Encrypt the data.')
+    parser.add_argument('-i', '--record-with-no-id', action='store_true',
+                        help='Add a record with no id to each file.')
+    parser.add_argument('-k', '--data-key-service',
+                        help='Use the specified data key service.')
+    parser.add_argument('-m', '--malformed-input', action='store_true',
+                        help='Add malformed inputs to each file.')
+    parser.add_argument('-n', '--file-count',
+                        help='The number of files to create.')
+    parser.add_argument('-o', '--mongo-id', action='store_true',
+                        help='Add a record with a mongo native id.')
+    parser.add_argument('-r', '--removed-record', action='store_true',
+                        help='Add a removed record.')
+    parser.add_argument('-s', '--batch-size',
+                        help='The number of records in each file.')
+    parser.add_argument('-t', '--record-with-no-timestamps', action='store_true',
+                        help='Add a record with no modified or created timestamp to each file.')
     return parser.parse_args()
 
 
