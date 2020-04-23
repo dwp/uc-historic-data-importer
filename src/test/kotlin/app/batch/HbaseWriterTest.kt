@@ -40,9 +40,9 @@ import java.security.Key
 ])
 class HbaseWriterTest {
 
-    val validJsonWithoutId = """{"type":"addressDeclaration"}""".trimIndent()
-    val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""".trimIndent()
-    val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}""".trimIndent()
+    val validJsonWithoutId = """{"type":"addressDeclaration"}"""
+    val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration""""
+    val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}"""
     val validFileName = "adb.collection.0001.json.gz.enc"
     val EPOCH = "1980-01-01T00:00:00.000Z"
 
@@ -66,6 +66,67 @@ class HbaseWriterTest {
 
     @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
+
+    @Test
+    fun shouldUpdateObjectPriorToEncryption() {
+        val date = "\$date"
+        val validJson = """{
+                |    "_id": {
+                |        "declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef",
+                |        "createdDateTime": {
+                |           "$date": "2000-01-01T00:00:00.000Z" 
+                |        }
+                |    },
+                |    "type":"addressDeclaration",
+                |    "_lastModifiedDateTime": {
+                |           "$date": "2010-01-01T00:00:00.000Z" 
+                |    }
+                |}""".trimMargin()
+
+        val json = Gson().fromJson(validJson, com.google.gson.JsonObject::class.java)
+        val dumpLine = json.toString()
+        val dataKeyResult = DataKeyResult("", "", "")
+        whenever(keyService.batchDataKey()).thenReturn(dataKeyResult)
+        val encryptionResult = EncryptionResult("", "")
+
+        whenever(cipherService.encrypt(any(), any())).thenReturn(encryptionResult)
+
+        val jsonObject = JsonObject()
+        whenever(messageUtils.parseGson(dumpLine)).thenReturn(json)
+        whenever(messageUtils.parseJson(dumpLine)).thenReturn(jsonObject)
+        whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
+
+        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
+        val message = "message"
+        whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""",
+                false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, encryptionResult, dataKeyResult, "adb",
+                "collection")).thenReturn(message)
+
+        val formattedKey = "0000-0000-00001"
+        whenever(messageUtils.generateKeyFromRecordBody(jsonObject)).thenReturn(formattedKey.toByteArray())
+
+        doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
+        doNothing().whenever(hBaseWriter).putBatch(any(), any())
+
+        val data = listOf(dumpLine)
+        val inputStreams = mutableListOf(getInputStream(data, validFileName))
+        hBaseWriter.write(inputStreams)
+
+        val dataKeyCaptor = argumentCaptor<String>()
+        val lineCaptor = argumentCaptor<String>()
+        verify(hBaseWriter, times(1)).encryptDbObject(dataKeyCaptor.capture(), lineCaptor.capture())
+        val expectedArgumentJson = """{
+                |    "type":"addressDeclaration",
+                |    "_id": {
+                |        "declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef",
+                |        "createdDateTime": "2000-01-01T00:00:00.000Z" 
+                |    },
+                |    "_lastModifiedDateTime": "2010-01-01T00:00:00.000Z"
+                |}""".trimMargin()
+
+        assertEquals(Gson().fromJson(expectedArgumentJson, com.google.gson.JsonObject::class.java),
+                Gson().fromJson(lineCaptor.firstValue, com.google.gson.JsonObject::class.java))
+    }
 
     @Test
     fun should_Log_Error_For_Invalid_Json_And_continue() {
@@ -194,17 +255,61 @@ class HbaseWriterTest {
         val id = com.google.gson.JsonObject()
         id.addProperty("key", "value")
         val expectedId = Gson().toJson(id)
-        val expectedModified = "UNMODIFIED_ID_OBJECT"
         val (actualId, actualModified) = hBaseWriter.id(Gson(), id)
         assertEquals(expectedId, actualId)
-        assertEquals(actualModified, expectedModified)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.UnmodifiedObjectId)
+    }
+
+    @Test
+    fun testIdObjectWithInnerDateReturnedAsObjectWithFlattenedDate() {
+        val dateField = "\$date"
+
+        val id = """
+            {
+                "id": "ID",
+                "createdDateTime": {
+                    $dateField: "EMBEDDED_DATE_FIELD"
+                }
+            }
+        """.trimIndent()
+
+        val (actualId, actualModified) =
+                hBaseWriter.id(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+
+        val expectedId = """
+            {
+                "id": "ID",
+                "createdDateTime": "EMBEDDED_DATE_FIELD"
+            }
+        """.trimIndent()
+
+        assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
+    }
+
+    @Test
+    fun testIdObjectWithInnerDateStringReturnedUnchanged() {
+        val dateField = "\$date"
+
+        val id = """
+            {
+                "id": "ID",
+                "createdDateTime": "EMBEDDED_DATE_FIELD"
+            }
+        """.trimIndent()
+
+        val (actualId, actualModified) =
+                hBaseWriter.id(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+
+        assertEquals(Gson().fromJson(id, com.google.gson.JsonObject::class.java).toString(), actualId)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.UnmodifiedObjectId)
     }
 
     @Test
     fun testIdStringReturnedAsString() {
         val id = JsonPrimitive("id")
         val actual = hBaseWriter.id(Gson(), id)
-        assertEquals(Pair("id", "UNMODIFIED_ID_STRING"), actual)
+        assertEquals(Pair("id", HBaseWriter.Companion.IdModification.UnmodifiedStringId), actual)
     }
 
     @Test
@@ -213,7 +318,7 @@ class HbaseWriterTest {
         val oidValue = "OID_VALUE"
         oid.addProperty("\$oid", oidValue)
         val actual = hBaseWriter.id(Gson(), oid)
-        assertEquals(Pair(oidValue, "MODIFIED_ID"), actual)
+        assertEquals(Pair(oidValue, HBaseWriter.Companion.IdModification.FlattenedMongoId), actual)
     }
 
     @Test
@@ -221,8 +326,7 @@ class HbaseWriterTest {
         val id = JsonPrimitive( 12345)
         val actual = hBaseWriter.id(Gson(), id)
         val expectedId = "12345"
-        val expectedModified = "UNMODIFIED_ID_STRING"
-        assertEquals(Pair(expectedId, expectedModified), actual)
+        assertEquals(Pair(expectedId, HBaseWriter.Companion.IdModification.UnmodifiedStringId), actual)
     }
 
     @Test
@@ -231,7 +335,7 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         val actual = hBaseWriter.id(Gson(), arrayValue)
-        val expected = Pair("", "MODIFIED_ID")
+        val expected = Pair("", HBaseWriter.Companion.IdModification.InvalidId)
         assertEquals(expected, actual)
     }
 
@@ -239,7 +343,7 @@ class HbaseWriterTest {
     fun testIdNullReturnedAsEmpty() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
         val actual = hBaseWriter.id(Gson(), nullValue)
-        val expected = Pair("", "MODIFIED_ID")
+        val expected = Pair("", HBaseWriter.Companion.IdModification.InvalidId)
         assertEquals(expected, actual)
     }
 
@@ -311,6 +415,33 @@ class HbaseWriterTest {
         expected.addProperty("_lastModifiedDateTime", lastModifiedDateTimeNew)
         expected.addProperty("other", "TEST")
         val actual = hBaseWriter.overwriteFieldValue(Gson(), "_lastModifiedDateTime", lastModifiedDateTimeNew, obj)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testOverwriteFieldWithObjectOverwritesCorrectValue() {
+        val id = Gson().fromJson("""{
+        |    "key1": "val1",
+        |    "key2": "val2"
+        |}""".trimMargin(), com.google.gson.JsonObject::class.java)
+
+
+        val obj = Gson().fromJson("""{
+        |    "_id": "OLD_ID",
+        |    "other_field": "OTHER_FIELD_VALUE"   
+        |}""".trimMargin(), com.google.gson.JsonObject::class.java)
+
+        val actual = hBaseWriter.overwriteFieldValueWithObject(Gson(),
+                "_id", id, obj)
+
+        val expected = Gson().fromJson("""{
+        |   "_id": {
+        |       "key1": "val1",
+        |       "key2": "val2"
+        |   },
+        |   "other_field": "OTHER_FIELD_VALUE"   
+        }""".trimMargin(), com.google.gson.JsonObject::class.java)
+
         assertEquals(expected, actual)
     }
 

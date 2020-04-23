@@ -17,7 +17,7 @@ open class StreamingManifestWriter {
         var success = false
         while (!success && attempts < maxManifestAttempts) {
             try {
-                    val manifestSize = manifestFile.length()
+                val manifestSize = manifestFile.length()
                 val manifestFileName = manifestFile.name
                 if (manifestSize > 0) {
                     val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
