@@ -289,8 +289,6 @@ class HbaseWriterTest {
 
     @Test
     fun testIdObjectWithInnerDateStringReturnedUnchanged() {
-        val dateField = "\$date"
-
         val id = """
             {
                 "id": "ID",

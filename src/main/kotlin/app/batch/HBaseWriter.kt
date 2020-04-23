@@ -409,7 +409,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     }
 
     fun putBatch(table: String, records: List<HBaseRecord>) {
-
         var success = false
         var attempts = 0
         var exception: Exception? = null
