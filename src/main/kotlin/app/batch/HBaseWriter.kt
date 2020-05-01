@@ -482,8 +482,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         private const val REMOVED_RECORD_FIELD = "_removed"
         private const val ARCHIVED_RECORD_FIELD = "_archived"
         private const val CREATED_DATE_TIME_FIELD = "createdDateTime"
-        private const val ARCHIVED_DATE_TIME_FIELD = "_removedDateTime"
-        private const val REMOVED_DATE_TIME_FIELD = "_archivedDateTime"
+        private const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        private const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         private const val TIMESTAMP_FIELD = "timestamp"
 
         enum class IdModification {
