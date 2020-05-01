@@ -240,7 +240,7 @@ def command_line_args():
                         help='Add a record with a mongo native id.')
     parser.add_argument('-r', '--removed-record', action='store_true',
                         help='Add a removed record.')
-    parser.add_argument('-r', '--archived-record', action='store_true',
+    parser.add_argument('-v', '--archived-record', action='store_true',
                         help='Add an archived record.')
     parser.add_argument('-s', '--batch-size',
                         help='The number of records in each file.')
