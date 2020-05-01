@@ -24,6 +24,7 @@ Below is a table listing the transformations that are performed on the historic 
 | [Strip ids with `$oid` fields](#Strip-ids-with-`$oid`-fields) | `{ "_id": {"$oid": "guid1" }}` | `{ "_id": "guid1" }` |
 | [Heirarchy for `_lastModifiedDateTime`](#Heirarchy-for-`_lastModifiedDateTime`) | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
 | [Re-structure `_removed` records](#Re-structure-`_removed`-records) | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
+| [Re-structure `_archived` records](#Re-structure-`_archived`-records) | `{ "_id": {"$oid": "guid1" }}, "_archived": "[entire record]"` | `{ [entire record] }` |
 | [Flatten `createdDateTime` objects within `_ids`](Flatten-`createdDateTime`-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000Z" } }` |
 
 ## Transformation details and reasoning
@@ -34,7 +35,7 @@ Below is a detailed explanation of the change made for each transform. Each tran
 
 #### Transform details
 
-The following keys are checked to see if they are strings or objects: `_lastModifiedDateTime`, `createdDateTime` and `_removedDateTime`. If they are present and strings no transformation is performed. If they are objects with a `$date` sub key, the value of the sub key is used as the parent key field value.
+The following keys are checked to see if they are strings or objects: `_lastModifiedDateTime`, `createdDateTime`, `_removedDateTime` and `_archivedDateTime`. If they are present and strings no transformation is performed. If they are objects with a `$date` sub key, the value of the sub key is used as the parent key field value.
 
 #### Transform reasoning
 
@@ -128,6 +129,73 @@ If we did not transform these records, then the historic records would appear as
 
 1. The original record with the right id and all versions up to prior to the deletion (so with no `_removedDateTime` populated)
 2. A new record with an entirely different id and not linked to the previous versions that would hold the `_removedDateTime` value
+
+### Re-structure `_archived` records
+
+#### Transform details
+
+When a record is processed, it is checked to see if it has a `_archived` key. If that's the case, the following steps are performed to transform the record:
+
+* If the root level has a `_lastModifiedDateTime` field, move this to be at the root of the `_archived` node
+* If the root level has a `_archivedDateTime` field, move this to be at the root of the `_archived` node
+* If the root level has a `timestamp` field, move this to be at the root of the `_archived` node
+* Remove the `_archived` node and place all it's nodes up one to the root
+
+This means that an incoming record with the following structure:
+
+```
+{
+  "_id": {
+    "$oid": "someoid"
+  },
+  "_lastModifiedDateTime": {
+    "$date": "2020-02-26T10:04:39.624Z"
+  },
+  "_archivedDateTime": {
+    "$date": "2020-02-26T10:04:39.623Z"
+  },
+  "timestamp": 1582711479624,
+  "_archived": {
+    "_entityVersion": 0,
+    "_id": {
+      "toDoId": "guid1"
+    },
+    "_version": 1,
+    ...
+  }
+}
+```
+
+Would be transformed to the following structure:
+
+```
+{
+  "_entityVersion": 0,
+  "_id": {
+    "toDoId": "guid1"
+  },
+  "_version": 1,
+  "_lastModifiedDateTime": {
+    "$date": "2020-02-26T10:04:39.624Z"
+  },
+  "_archivedDateTime": {
+    "$date": "2020-02-26T10:04:39.623Z"
+  },
+  "timestamp": 1582711479624,
+  ...
+}
+```
+
+As explained above, there are other transforms that would edit the dates above, these would still happen but that is independant of this specific transform step.
+
+#### Transform reasoning
+
+When a record is archived, the Kafka stream receives a MONGO_DELETE record, which is the delete notification containing the record details as is before the delete has been actioned. However in the historic data, the record looks like it does _after_ the delete has happened. This means the structure is very different between the two records. Due to the UC archive process where the record is moved to a `_archived` key, it also means there is no primary key any more on the record. When Mongo exports this record it therefore assigns a new id to it as an `$oid` key.
+
+If we did not transform these records, then the historic records would appear as a completely different record in the storage because of this generated id and you would have two records stored:
+
+1. The original record with the right id and all versions up to prior to the deletion (so with no `_archivedDateTime` populated)
+2. A new record with an entirely different id and not linked to the previous versions that would hold the `_archivedDateTime` value
 
 ### Flatten `createdDateTime` objects within `_ids`
 #### Transform details

@@ -115,7 +115,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     return@forEachLine
                                 }
                                 try {
-                                    val lineAsJson = reformatRemoved(lineFromDump)
+                                    val (lineAsJsonBeforeReFormatting, recordIsRemovedRecord) = reformatRemoved(lineFromDump)
+                                    val (lineAsJson, recordIsArchivedRecord) = reformatArchived(lineAsJsonBeforeReFormatting)
+
                                     val originalId = lineAsJson.get("_id")
 
                                     val (id, idModificationType) = id(gson, originalId)
@@ -126,6 +128,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                     val (createdDateTime, createdDateTimeWasModified) = optionalDateTime(gson, CREATED_DATE_TIME_FIELD, lineAsJson)
                                     val (removedDateTime, removedDateTimeWasModified) = optionalDateTime(gson, REMOVED_DATE_TIME_FIELD, lineAsJson)
+                                    val (archivedDateTime, archivedDateTimeWasModified) = optionalDateTime(gson, ARCHIVED_DATE_TIME_FIELD, lineAsJson)
 
                                     val originalLastModifiedDateTime = lineAsJson.get(LAST_MODIFIED_DATE_TIME_FIELD)
                                     val (lastModifiedDateTime, lastModifiedDateTimeSourceField)
@@ -151,6 +154,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         updatedLineAsJson = overwriteFieldValue(gson, REMOVED_DATE_TIME_FIELD, removedDateTime, updatedLineAsJson)
                                     }
 
+                                    if (archivedDateTimeWasModified) {
+                                        updatedLineAsJson = overwriteFieldValue(gson, ARCHIVED_DATE_TIME_FIELD, archivedDateTime, updatedLineAsJson)
+                                    }
+
                                     val encryptionResult = encryptDbObject(dataKeyResult.plaintextDataKey, gson.toJson(updatedLineAsJson))
                                     val idWasModified = (idModificationType == IdModification.FlattenedMongoId  ||
                                             idModificationType == IdModification.FlattenedInnerDate)
@@ -165,6 +172,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             lastModifiedDateTimeSourceField,
                                             StringUtils.isNotBlank(createdDateTime) && createdDateTimeWasModified,
                                             StringUtils.isNotBlank(removedDateTime) && removedDateTimeWasModified,
+                                            StringUtils.isNotBlank(archivedDateTime) && archivedDateTimeWasModified,
+                                            recordIsRemovedRecord,
+                                            recordIsArchivedRecord,
                                             encryptionResult,
                                             dataKeyResult,
                                             database,
@@ -254,7 +264,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
     }
 
-    fun reformatRemoved(recordFromDump: String): JsonObject {
+    fun reformatRemoved(recordFromDump: String): Pair<JsonObject, Boolean> {
         val record = messageUtils.parseGson(recordFromDump)
 
         return if (record.has(REMOVED_RECORD_FIELD)) {
@@ -263,9 +273,22 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             copyField(REMOVED_DATE_TIME_FIELD, record, removedRecord)
             copyField(TIMESTAMP_FIELD, record, removedRecord)
             removedRecord.addProperty("@type", "MONGO_DELETE")
-            removedRecord.deepCopy()
+            Pair(removedRecord.deepCopy(), true)
         } else {
-            record
+            Pair(record, false)
+        }
+    }
+
+    fun reformatArchived(record: JsonObject): Pair<JsonObject, Boolean> {
+        return if (record.has(ARCHIVED_RECORD_FIELD)) {
+            val archivedRecord = record.getAsJsonObject(ARCHIVED_RECORD_FIELD).deepCopy()
+            copyField(LAST_MODIFIED_DATE_TIME_FIELD, record, archivedRecord)
+            copyField(ARCHIVED_DATE_TIME_FIELD, record, archivedRecord)
+            copyField(TIMESTAMP_FIELD, record, archivedRecord)
+            archivedRecord.addProperty("@type", "MONGO_DELETE")
+            Pair(archivedRecord.deepCopy(), true)
+        } else {
+            Pair(record, false)
         }
     }
 
@@ -457,8 +480,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         private const val RUN_MODE_IMPORT = "import"
         private const val EPOCH = "1980-01-01T00:00:00.000Z"
         private const val REMOVED_RECORD_FIELD = "_removed"
+        private const val ARCHIVED_RECORD_FIELD = "_archived"
         private const val CREATED_DATE_TIME_FIELD = "createdDateTime"
         private const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        private const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         private const val TIMESTAMP_FIELD = "timestamp"
 
         enum class IdModification {
