@@ -194,8 +194,8 @@ When a record is archived, the Kafka stream receives a MONGO_DELETE record, whic
 
 If we did not transform these records, then the historic records would appear as a completely different record in the storage because of this generated id and you would have two records stored:
 
-1. The original record with the right id and all versions up to prior to the deletion (so with no `_removedDateTime` populated)
-2. A new record with an entirely different id and not linked to the previous versions that would hold the `_removedDateTime` value
+1. The original record with the right id and all versions up to prior to the deletion (so with no `_archivedDateTime` populated)
+2. A new record with an entirely different id and not linked to the previous versions that would hold the `_archivedDateTime` value
 
 ### Flatten `createdDateTime` objects within `_ids`
 #### Transform details
