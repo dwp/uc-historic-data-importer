@@ -115,8 +115,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     return@forEachLine
                                 }
                                 try {
-                                    val (lineAsJson, recordIsRemovedRecord) = reformatRemoved(lineFromDump)
-                                    val (lineAsJson, recordIsArchivedRecord) = reformatArchived(lineAsJson)
+                                    val (lineAsJsonBeforeReFormatting, recordIsRemovedRecord) = reformatRemoved(lineFromDump)
+                                    val (lineAsJson, recordIsArchivedRecord) = reformatArchived(lineAsJsonBeforeReFormatting)
 
                                     val originalId = lineAsJson.get("_id")
 
