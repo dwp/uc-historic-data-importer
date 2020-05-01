@@ -117,7 +117,7 @@ class MessageProducerTest {
         val encryptionResult = EncryptionResult(initialisationVector, encrypted)
 
         val dataKeyResult = DataKeyResult(dataKeyEncryptionKeyId, plaintextDataKey, ciphertextDataKey)
-        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, "_lastModifiedDateTime", false, true, false, false, false, encryptionResult, dataKeyResult, database, collection)
+        val message = messageProducer.produceMessage(jsonObject!!, id, false, false, dateValue, "_lastModifiedDateTime", false, true, false, true, false, encryptionResult, dataKeyResult, database, collection)
         val actual = Gson().fromJson(message, JsonObject::class.java)
         val unitOfWorkId = actual["unitOfWorkId"]
         val timestamp = actual["timestamp"]
