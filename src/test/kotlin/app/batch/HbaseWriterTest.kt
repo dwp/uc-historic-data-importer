@@ -590,8 +590,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "timestamp": "OUTER_TIMESTAMP" }""".trimIndent()
         val recordWithRemovedElement = """{ "_removed": $innerRecord, "timestamp": "OUTER_TIMESTAMP" }"""
         val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithRemovedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -604,8 +603,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "timestamp": "OUTER_TIMESTAMP" }""".trimIndent()
         val recordWithRemovedElement = """{ "_removed": $innerRecord, "timestamp": "OUTER_TIMESTAMP" }"""
         val json = Gson().fromJson(recordWithRemovedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithRemovedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithRemovedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -617,8 +615,7 @@ class HbaseWriterTest {
         val innerRecord = """{ "_id": "123456789" }""".trimIndent()
         val recordWithArchivedElement = """{ "_notArchived": $innerRecord }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
         assertEquals(expected, actual)
         assertEquals(wasChanged, false)
@@ -629,8 +626,7 @@ class HbaseWriterTest {
         val innerRecord = """{ "_id": "123456789" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecord, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -642,8 +638,7 @@ class HbaseWriterTest {
         val innerRecord = """{ "_id": "123456789", "@type": "MONGO_INSERT" }"""
         val recordWithArchivedElement = """{ "_archived": $innerRecord }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson("""{ "_id": "123456789", "@type": "MONGO_DELETE" }""", com.google.gson.JsonObject::class.java)
         assertEquals(expected, actual)
         assertEquals(wasChanged, true)
@@ -653,8 +648,7 @@ class HbaseWriterTest {
     fun testReformatArchivedReturnsOuterRecordWhenArchivedElementDoesNotExist() {
         val outerRecord = """{ "_id": "123456789" }""".trimIndent()
         val json = Gson().fromJson(outerRecord, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(outerRecord)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(outerRecord)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(outerRecord, com.google.gson.JsonObject::class.java)
         assertEquals(expected, actual)
         assertEquals(wasChanged, true)
@@ -666,8 +660,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord, "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -680,8 +673,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord, "_lastModifiedDateTime": "OUTER_LAST_MODIFIED" }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -694,8 +686,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "timestamp": "OUTER_TIMESTAMP" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord, "timestamp": "OUTER_TIMESTAMP" }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -708,8 +699,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "timestamp": "OUTER_TIMESTAMP" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord, "timestamp": "OUTER_TIMESTAMP" }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -722,8 +712,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "_archivedDateTime": "OUTER_ARCHIVED_TIME" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord, "_archivedDateTime": "OUTER_ARCHIVED_TIME" }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
@@ -736,8 +725,7 @@ class HbaseWriterTest {
         val innerRecordWithTimestamp = """{ "_id": "123456789", "_archivedDateTime": "OUTER_ARCHIVED_TIME" }""".trimIndent()
         val recordWithArchivedElement = """{ "_archived": $innerRecord, "_archivedDateTime": "OUTER_ARCHIVED_TIME" }"""
         val json = Gson().fromJson(recordWithArchivedElement, com.google.gson.JsonObject::class.java)
-        whenever(messageUtils.parseGson(recordWithArchivedElement)).thenReturn(json)
-        val (actual, wasChanged) = hBaseWriter.reformatArchived(recordWithArchivedElement)
+        val (actual, wasChanged) = hBaseWriter.reformatArchived(json)
         val expected = Gson().fromJson(innerRecordWithTimestamp, com.google.gson.JsonObject::class.java)
         expected.addProperty("@type", "MONGO_DELETE")
         assertEquals(expected, actual)
