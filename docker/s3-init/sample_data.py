@@ -95,6 +95,13 @@ def main():
             removed_record = { "_removed": jso }
             contents = contents + json.dumps(removed_record) + "\n"
 
+        if args.archived_record:
+            print("Adding an archived record.")
+            record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+            jso = json.loads(record)
+            archived_record = { "_archived": jso }
+            contents = contents + json.dumps(archived_record) + "\n"
+
         if args.record_with_no_timestamp:
             print("Adding record with no timestamp.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
@@ -233,6 +240,8 @@ def command_line_args():
                         help='Add a record with a mongo native id.')
     parser.add_argument('-r', '--removed-record', action='store_true',
                         help='Add a removed record.')
+    parser.add_argument('-r', '--archived-record', action='store_true',
+                        help='Add an archived record.')
     parser.add_argument('-s', '--batch-size',
                         help='The number of records in each file.')
     parser.add_argument('-t', '--record-with-no-timestamps', action='store_true',
