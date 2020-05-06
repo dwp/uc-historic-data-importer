@@ -369,13 +369,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     return Pair(outgoingValue, LAST_MODIFIED_DATE_TIME_FIELD)
                 }
                 else -> {
-                    logger.warn("Invalid $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+                    logger.debug("Invalid $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
                     return Pair(fallBackDate, fallBackField)
                 }
             }
         }
         else {
-            logger.warn("No incoming $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
+            logger.debug("No incoming $LAST_MODIFIED_DATE_TIME_FIELD object", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
             return Pair(fallBackDate, fallBackField)
         }
     }
