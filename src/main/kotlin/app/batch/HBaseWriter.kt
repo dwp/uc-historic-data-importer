@@ -320,17 +320,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
                     Pair(obj["\$oid"].asJsonPrimitive.asString, IdModification.FlattenedMongoId)
                 }
-                else if (hasDateField(obj, CREATED_DATE_TIME_FIELD)) {
-                    flattenedDateField(obj, gson, id, CREATED_DATE_TIME_FIELD)
-                }
-                else if (hasDateField(obj, LAST_MODIFIED_DATE_TIME_FIELD)) {
-                    flattenedDateField(obj, gson, id, LAST_MODIFIED_DATE_TIME_FIELD)
-                }
-                else if (hasDateField(obj, REMOVED_DATE_TIME_FIELD)) {
-                    flattenedDateField(obj, gson, id, REMOVED_DATE_TIME_FIELD)
-                }
-                else if (hasDateField(obj, ARCHIVED_DATE_TIME_FIELD)) {
-                    flattenedDateField(obj, gson, id, ARCHIVED_DATE_TIME_FIELD)
+                else if (hasKnownDateField(obj)) {
+                    var flattened = flattenedDateField(obj, CREATED_DATE_TIME_FIELD)
+                    flattened = flattenedDateField(flattened, LAST_MODIFIED_DATE_TIME_FIELD)
+                    flattened = flattenedDateField(flattened, REMOVED_DATE_TIME_FIELD)
+                    flattened = flattenedDateField(flattened, ARCHIVED_DATE_TIME_FIELD)
+                    Pair(gson.toJson(flattened), IdModification.FlattenedInnerDate)
                 }
                 else {
                     Pair(gson.toJson(id.asJsonObject), IdModification.UnmodifiedObjectId)
@@ -348,11 +343,19 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    private fun flattenedDateField(obj: JsonObject, gson: Gson, id: JsonElement, dateField: String): Pair<String, IdModification> {
-        val dateString = obj[dateField].asJsonObject["\$date"].asString
-        obj.remove(dateField)
-        obj.addProperty(dateField, kafkaDateFormat(dateString))
-        return Pair(gson.toJson(id.asJsonObject), IdModification.FlattenedInnerDate)
+    private fun hasKnownDateField(obj: JsonObject) = hasDateField(obj, CREATED_DATE_TIME_FIELD) ||
+                hasDateField(obj, LAST_MODIFIED_DATE_TIME_FIELD) ||
+                hasDateField(obj, REMOVED_DATE_TIME_FIELD) ||
+                hasDateField(obj, ARCHIVED_DATE_TIME_FIELD)
+
+    private fun flattenedDateField(obj: JsonObject, dateField: String): JsonObject {
+        if (hasDateField(obj, dateField)) {
+            val dateString = obj[dateField].asJsonObject["\$date"].asString
+            obj.remove(dateField)
+            obj.addProperty(dateField, kafkaDateFormat(dateString))
+        }
+
+        return obj
     }
 
     fun hasDateField(obj: JsonObject, dateField: String) =
