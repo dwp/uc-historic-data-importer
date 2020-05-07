@@ -44,7 +44,6 @@ class HbaseWriterTest {
     val invalidJson2 = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"""
     val validJson = """{"_id":{"declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef"},"type":"addressDeclaration"}"""
     val validFileName = "adb.collection.0001.json.gz.enc"
-    val EPOCH = "1980-01-01T00:00:00.000Z"
 
     @MockBean
     private lateinit var keyService: KeyService
@@ -576,7 +575,7 @@ class HbaseWriterTest {
         arrayValue.add("1")
         arrayValue.add("2")
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), arrayValue, "")
-        val expected = Pair(EPOCH, "epoch")
+        val expected = Pair(HBaseWriter.EPOCH, "epoch")
         assertEquals(expected, actual)
     }
 
@@ -592,7 +591,7 @@ class HbaseWriterTest {
     fun testLastModifiedDateTimeNullReturnedAsEpochWhenCreatedBlank() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), nullValue, "")
-        val expected = Pair(EPOCH, "epoch")
+        val expected = Pair(HBaseWriter.EPOCH, "epoch")
         assertEquals(expected, actual)
     }
 
