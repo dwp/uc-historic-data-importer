@@ -119,7 +119,7 @@ class HbaseWriterTest {
                 |    "type":"addressDeclaration",
                 |    "_id": {
                 |        "declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef",
-                |        "createdDateTime": "2000-01-01T00:00:00.000Z" 
+                |        "createdDateTime": "2000-01-01T00:00:00.000+0000" 
                 |    },
                 |    "_lastModifiedDateTime": "2010-01-01T00:00:00.000Z"
                 |}""".trimMargin()
@@ -261,14 +261,14 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun testIdObjectWithInnerDateReturnedAsObjectWithFlattenedDate() {
+    fun testIdObjectWithInnerDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
         val dateField = "\$date"
 
         val id = """
             {
                 "id": "ID",
                 "createdDateTime": {
-                    $dateField: "EMBEDDED_DATE_FIELD"
+                    $dateField: "2019-08-05T02:10:19.887+0000"
                 }
             }
         """.trimIndent()
@@ -279,7 +279,34 @@ class HbaseWriterTest {
         val expectedId = """
             {
                 "id": "ID",
-                "createdDateTime": "EMBEDDED_DATE_FIELD"
+                "createdDateTime": "2019-08-05T02:10:19.887+0000"
+            }
+        """.trimIndent()
+
+        assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
+    }
+
+    @Test
+    fun testIdObjectWithInnerDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        val dateField = "\$date"
+
+        val id = """
+            {
+                "id": "ID",
+                "createdDateTime": {
+                    $dateField: "2019-08-05T02:10:19.887Z"
+                }
+            }
+        """.trimIndent()
+
+        val (actualId, actualModified) =
+                hBaseWriter.id(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+
+        val expectedId = """
+            {
+                "id": "ID",
+                "createdDateTime": "2019-08-05T02:10:19.887+0000"
             }
         """.trimIndent()
 

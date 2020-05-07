@@ -327,7 +327,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                         obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"].isJsonPrimitive) {
                     val dateString = obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"].asString
                     obj.remove(CREATED_DATE_TIME_FIELD)
-                    obj.addProperty(CREATED_DATE_TIME_FIELD, dateString)
+                    obj.addProperty(CREATED_DATE_TIME_FIELD, dateString.replace(Regex("Z$"), "+0000"))
                     Pair(gson.toJson(id.asJsonObject), IdModification.FlattenedInnerDate)
                 }
                 else {
