@@ -352,6 +352,7 @@ class HbaseWriterTest {
         assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
     }
 
+
     @Test
     fun testIdObjectWithInnerCreatedDateStringReturnedUnchanged() {
         testIdObjectWithInnerDateStringReturnedUnchanged(HBaseWriter.CREATED_DATE_TIME_FIELD)
@@ -385,6 +386,45 @@ class HbaseWriterTest {
 
         assertEquals(Gson().fromJson(id, com.google.gson.JsonObject::class.java).toString(), actualId)
         assertEquals(actualModified, HBaseWriter.Companion.IdModification.UnmodifiedObjectId)
+    }
+
+    @Test
+    fun testIdObjectWithMultipleInnerDatesInDumpFormatReturnedAsObjectWithFlattenedInnerDatesInKafkaFormat() {
+        val innerDateField = "\$date"
+
+        val id = """
+            {
+                "id": "ID",
+                "${HBaseWriter.ARCHIVED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2011-08-05T02:10:19.887Z"
+                },
+                "${HBaseWriter.CREATED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2012-08-05T02:10:19.887Z"
+                },
+                "${HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2013-08-05T02:10:19.887Z"
+                },
+                "${HBaseWriter.REMOVED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2014-08-05T02:10:19.887Z"
+                }
+            }
+        """.trimIndent()
+
+        val (actualId, actualModified) =
+                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+
+        val expectedId = """
+            {
+                "id": "ID",
+                "${HBaseWriter.CREATED_DATE_TIME_FIELD}": "2012-08-05T02:10:19.887+0000",
+                "${HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD}": "2013-08-05T02:10:19.887+0000",
+                "${HBaseWriter.REMOVED_DATE_TIME_FIELD}": "2014-08-05T02:10:19.887+0000",
+                "${HBaseWriter.ARCHIVED_DATE_TIME_FIELD}": "2011-08-05T02:10:19.887+0000"
+            }
+        """.trimIndent()
+
+        assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
     }
 
     @Test
