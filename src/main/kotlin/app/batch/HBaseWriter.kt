@@ -498,12 +498,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         const val CREATED_DATE_TIME_FIELD = "createdDateTime"
         const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
         const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
+        const val EPOCH = "1980-01-01T00:00:00.000+0000"
 
         private const val LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED = "_lastModifiedDateTimeStripped"
         private const val EPOCH_FIELD = "epoch"
         private const val RUN_MODE_MANIFEST = "manifest"
         private const val RUN_MODE_IMPORT = "import"
-        private const val EPOCH = "1980-01-01T00:00:00.000Z"
         private const val REMOVED_RECORD_FIELD = "_removed"
         private const val ARCHIVED_RECORD_FIELD = "_archived"
         private const val TIMESTAMP_FIELD = "timestamp"
