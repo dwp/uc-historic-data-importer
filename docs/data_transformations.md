@@ -25,7 +25,7 @@ Below is a table listing the transformations that are performed on the historic 
 | [Heirarchy for `_lastModifiedDateTime`](#Heirarchy-for-`_lastModifiedDateTime`) | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
 | [Re-structure `_removed` records](#Re-structure-`_removed`-records) | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
 | [Re-structure `_archived` records](#Re-structure-`_archived`-records) | `{ "_id": {"$oid": "guid1" }}, "_archived": "[entire record]"` | `{ [entire record] }` |
-| [Flatten `createdDateTime` objects within `_ids`](Flatten-`createdDateTime`-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000Z" } }` |
+| [Flatten `createdDateTime` objects within `_ids`](Flatten-`createdDateTime`-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000+0000" } }` |
 
 ## Transformation details and reasoning
 
@@ -200,7 +200,9 @@ If we did not transform these records, then the historic records would appear as
 ### Flatten `createdDateTime` objects within `_ids`
 #### Transform details
 In some collections the `_id` field is a compound object one of whose fields, `createdDateTime` is a mongo date field. 
-These date fields are flattened, i.e. the `createdDateTimeValue is set to the value of the `$date` sub-field.
+These date fields are flattened, i.e. the `createdDateTimeValue is set to the value of the `$date` sub-field. 
+Additionally the date string itself is converted from "2020-02-26T10:04:39.624Z" format (i.e. with a 'Z' at the end) to
+"2020-02-26T10:04:39.624+0000" format to match what comes across on kafka.
 For example:
 ```javascript
 {
@@ -217,7 +219,7 @@ becomes
 {
     "_id": {
         "idField": "idValue",
-        "createdDateTime": "2020-02-26T10:04:39.624Z"
+        "createdDateTime": "2020-02-26T10:04:39.624+0000"
     }
 }
 ``` 
