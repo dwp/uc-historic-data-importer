@@ -120,7 +120,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                                     val originalId = lineAsJson.get("_id")
 
-                                    val (id, idModificationType) = id(gson, originalId)
+                                    val (id, idModificationType) = normalisedId(gson, originalId)
                                     if (StringUtils.isBlank(id) || id == "null") {
                                         logger.warn("Skipping record with missing id ", "line_number", "${reader.lineNumber}", "file_name", fileName)
                                         return@forEachLine
@@ -313,22 +313,24 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         return json
     }
 
-    fun id(gson: Gson, id: JsonElement?): Pair<String, IdModification> {
+    fun normalisedId(gson: Gson, id: JsonElement?): Pair<String, IdModification> {
         if (id != null) {
             return if (id.isJsonObject) {
                 val obj = id.asJsonObject!!
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
                     Pair(obj["\$oid"].asJsonPrimitive.asString, IdModification.FlattenedMongoId)
                 }
-                else if (obj[CREATED_DATE_TIME_FIELD] != null &&
-                        obj[CREATED_DATE_TIME_FIELD].isJsonObject &&
-                        obj[CREATED_DATE_TIME_FIELD].asJsonObject.size() == 1 &&
-                        obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"] != null &&
-                        obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"].isJsonPrimitive) {
-                    val dateString = obj[CREATED_DATE_TIME_FIELD].asJsonObject["\$date"].asString
-                    obj.remove(CREATED_DATE_TIME_FIELD)
-                    obj.addProperty(CREATED_DATE_TIME_FIELD, dateString.replace(Regex("Z$"), "+0000"))
-                    Pair(gson.toJson(id.asJsonObject), IdModification.FlattenedInnerDate)
+                else if (hasDateField(obj, CREATED_DATE_TIME_FIELD)) {
+                    flattenedDateField(obj, gson, id, CREATED_DATE_TIME_FIELD)
+                }
+                else if (hasDateField(obj, LAST_MODIFIED_DATE_TIME_FIELD)) {
+                    flattenedDateField(obj, gson, id, LAST_MODIFIED_DATE_TIME_FIELD)
+                }
+                else if (hasDateField(obj, REMOVED_DATE_TIME_FIELD)) {
+                    flattenedDateField(obj, gson, id, REMOVED_DATE_TIME_FIELD)
+                }
+                else if (hasDateField(obj, ARCHIVED_DATE_TIME_FIELD)) {
+                    flattenedDateField(obj, gson, id, ARCHIVED_DATE_TIME_FIELD)
                 }
                 else {
                     Pair(gson.toJson(id.asJsonObject), IdModification.UnmodifiedObjectId)
@@ -346,6 +348,20 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
+    private fun flattenedDateField(obj: JsonObject, gson: Gson, id: JsonElement, dateField: String): Pair<String, IdModification> {
+        val dateString = obj[dateField].asJsonObject["\$date"].asString
+        obj.remove(dateField)
+        obj.addProperty(dateField, kafkaDateFormat(dateString))
+        return Pair(gson.toJson(id.asJsonObject), IdModification.FlattenedInnerDate)
+    }
+
+    fun hasDateField(obj: JsonObject, dateField: String) =
+            obj[dateField] != null &&
+            obj[dateField].isJsonObject &&
+            obj[dateField].asJsonObject.size() == 1 &&
+            obj[dateField].asJsonObject["\$date"] != null &&
+            obj[dateField].asJsonObject["\$date"].isJsonPrimitive
+
     fun lastModifiedDateTime(gson: Gson, incomingDateTime: JsonElement?, createdDateTime: String): Pair<String, String> {
 
         val fallBackDate = if (StringUtils.isNotBlank(createdDateTime)) createdDateTime else EPOCH
@@ -356,7 +372,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 incomingDateTime.isJsonObject -> {
                     val obj = incomingDateTime.asJsonObject!!
                     return if (obj.size() == 1 && obj["\$date"] != null && obj["\$date"].isJsonPrimitive) {
-                        Pair(obj["\$date"].asJsonPrimitive.asString, LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED)
+                        Pair(kafkaDateFormat(obj["\$date"].asJsonPrimitive.asString), LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED)
                     }
                     else {
                         logger.debug("_lastModifiedDateTime was an object, without a \$date field", "incoming_value", "$incomingDateTime", "outgoing_value", fallBackDate)
@@ -387,7 +403,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 incomingDateTime.isJsonObject -> {
                     val obj = incomingDateTime.asJsonObject!!
                     return if (obj.size() == 1 && obj["\$date"] != null && obj["\$date"].isJsonPrimitive) {
-                        Pair(obj["\$date"].asJsonPrimitive.asString, true)
+                        Pair(kafkaDateFormat(obj["\$date"].asJsonPrimitive.asString), true)
                     }
                     else {
                         logger.debug("$name was an object, without a \$date field", "incoming_value", "$incomingDateTime", "outgoing_value", "")
@@ -429,6 +445,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             ""
         }
     }
+
+    fun kafkaDateFormat(input: String) = input.replace(Regex("Z$"), "+0000")
 
     fun putBatch(table: String, records: List<HBaseRecord>) {
         var success = false
@@ -473,7 +491,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     companion object {
         val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HBaseWriter::class.toString())
-        private const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
+        const val LAST_MODIFIED_DATE_TIME_FIELD = "_lastModifiedDateTime"
+        const val CREATED_DATE_TIME_FIELD = "createdDateTime"
+        const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
+        const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
+
         private const val LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED = "_lastModifiedDateTimeStripped"
         private const val EPOCH_FIELD = "epoch"
         private const val RUN_MODE_MANIFEST = "manifest"
@@ -481,9 +503,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         private const val EPOCH = "1980-01-01T00:00:00.000Z"
         private const val REMOVED_RECORD_FIELD = "_removed"
         private const val ARCHIVED_RECORD_FIELD = "_archived"
-        private const val CREATED_DATE_TIME_FIELD = "createdDateTime"
-        private const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
-        private const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         private const val TIMESTAMP_FIELD = "timestamp"
 
         enum class IdModification {
