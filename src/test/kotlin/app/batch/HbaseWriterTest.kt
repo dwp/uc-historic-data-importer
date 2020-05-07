@@ -119,9 +119,9 @@ class HbaseWriterTest {
                 |    "type":"addressDeclaration",
                 |    "_id": {
                 |        "declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef",
-                |        "createdDateTime": "2000-01-01T00:00:00.000Z" 
+                |        "createdDateTime": "2000-01-01T00:00:00.000+0000" 
                 |    },
-                |    "_lastModifiedDateTime": "2010-01-01T00:00:00.000Z"
+                |    "_lastModifiedDateTime": "2010-01-01T00:00:00.000+0000"
                 |}""".trimMargin()
 
         assertEquals(Gson().fromJson(expectedArgumentJson, com.google.gson.JsonObject::class.java),
@@ -255,31 +255,50 @@ class HbaseWriterTest {
         val id = com.google.gson.JsonObject()
         id.addProperty("key", "value")
         val expectedId = Gson().toJson(id)
-        val (actualId, actualModified) = hBaseWriter.id(Gson(), id)
+        val (actualId, actualModified) = hBaseWriter.normalisedId(Gson(), id)
         assertEquals(expectedId, actualId)
         assertEquals(actualModified, HBaseWriter.Companion.IdModification.UnmodifiedObjectId)
     }
 
     @Test
-    fun testIdObjectWithInnerDateReturnedAsObjectWithFlattenedDate() {
-        val dateField = "\$date"
+    fun testIdObjectWithInnerCreatedDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.CREATED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerModifiedDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerRemovedDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.REMOVED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerArchivedDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.ARCHIVED_DATE_TIME_FIELD)
+    }
+
+    fun testIdObjectWithInnerDateInKafkaFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(dateField: String) {
+        val dateInnerField = "\$date"
 
         val id = """
             {
                 "id": "ID",
-                "createdDateTime": {
-                    $dateField: "EMBEDDED_DATE_FIELD"
+                "$dateField": {
+                    $dateInnerField: "2019-08-05T02:10:19.887+0000"
                 }
             }
         """.trimIndent()
 
         val (actualId, actualModified) =
-                hBaseWriter.id(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
 
         val expectedId = """
             {
                 "id": "ID",
-                "createdDateTime": "EMBEDDED_DATE_FIELD"
+                "$dateField": "2019-08-05T02:10:19.887+0000"
             }
         """.trimIndent()
 
@@ -288,25 +307,193 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun testIdObjectWithInnerDateStringReturnedUnchanged() {
+    fun testIdObjectWithInnerCreatedDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.CREATED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerModifiedDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerRemovedDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.REMOVED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerArchivedDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat() {
+        testIdObjectWithInnerDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(HBaseWriter.ARCHIVED_DATE_TIME_FIELD)
+    }
+
+    fun testIdObjectWithInnerDateInDumpFormatReturnedAsObjectWithFlattenedDateInKafkaFormat(dateField: String) {
+        val innerDateField = "\$date"
+
         val id = """
             {
                 "id": "ID",
-                "createdDateTime": "EMBEDDED_DATE_FIELD"
+                "$dateField": {
+                    $innerDateField: "2019-08-05T02:10:19.887Z"
+                }
             }
         """.trimIndent()
 
         val (actualId, actualModified) =
-                hBaseWriter.id(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+
+        val expectedId = """
+            {
+                "id": "ID",
+                "$dateField": "2019-08-05T02:10:19.887+0000"
+            }
+        """.trimIndent()
+
+        assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
+    }
+
+
+    @Test
+    fun testIdObjectWithInnerCreatedDateStringReturnedUnchanged() {
+        testIdObjectWithInnerDateStringReturnedUnchanged(HBaseWriter.CREATED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerModifiedDateStringReturnedUnchanged() {
+        testIdObjectWithInnerDateStringReturnedUnchanged(HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerRemovedDateStringReturnedUnchanged() {
+        testIdObjectWithInnerDateStringReturnedUnchanged(HBaseWriter.REMOVED_DATE_TIME_FIELD)
+    }
+
+    @Test
+    fun testIdObjectWithInnerArchivedDateStringReturnedUnchanged() {
+        testIdObjectWithInnerDateStringReturnedUnchanged(HBaseWriter.ARCHIVED_DATE_TIME_FIELD)
+    }
+
+    fun testIdObjectWithInnerDateStringReturnedUnchanged(dateField: String) {
+        val id = """
+            {
+                "id": "ID",
+                "$dateField": "EMBEDDED_DATE_FIELD"
+            }
+        """.trimIndent()
+
+        val (actualId, actualModified) =
+                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
 
         assertEquals(Gson().fromJson(id, com.google.gson.JsonObject::class.java).toString(), actualId)
         assertEquals(actualModified, HBaseWriter.Companion.IdModification.UnmodifiedObjectId)
     }
 
     @Test
+    fun testIdObjectWithMultipleInnerDatesInDumpFormatReturnedAsObjectWithFlattenedInnerDatesInKafkaFormat() {
+        val innerDateField = "\$date"
+
+        val id = """
+            {
+                "id": "ID",
+                "${HBaseWriter.ARCHIVED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2011-08-05T02:10:19.887Z"
+                },
+                "${HBaseWriter.CREATED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2012-08-05T02:10:19.887Z"
+                },
+                "${HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2013-08-05T02:10:19.887Z"
+                },
+                "${HBaseWriter.REMOVED_DATE_TIME_FIELD}": {
+                    $innerDateField: "2014-08-05T02:10:19.887Z"
+                }
+            }
+        """.trimIndent()
+
+        val (actualId, actualModified) =
+                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+
+        val expectedId = """
+            {
+                "id": "ID",
+                "${HBaseWriter.CREATED_DATE_TIME_FIELD}": "2012-08-05T02:10:19.887+0000",
+                "${HBaseWriter.LAST_MODIFIED_DATE_TIME_FIELD}": "2013-08-05T02:10:19.887+0000",
+                "${HBaseWriter.REMOVED_DATE_TIME_FIELD}": "2014-08-05T02:10:19.887+0000",
+                "${HBaseWriter.ARCHIVED_DATE_TIME_FIELD}": "2011-08-05T02:10:19.887+0000"
+            }
+        """.trimIndent()
+
+        assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
+        assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
+    }
+
+    @Test
+    fun testHasDateFieldOnPresenceOfMongoStyleDateField() {
+        val dateField = "\$date"
+        val id = Gson().fromJson("""
+            {
+                "id": "ID",
+                "createdDateTime": {
+                    $dateField: "2019-08-05T02:10:19.887+0000"
+                }
+            }
+        """.trimIndent(), com.google.gson.JsonObject::class.java)
+        assertTrue(hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
+    fun testHasDateFieldReturnsFalseOnPresenceOfNonMongoStyleDateFieldWithExtraField() {
+        val dateField = "\$date"
+        val id = Gson().fromJson("""
+            {
+                "id": "ID",
+                "createdDateTime": {
+                    $dateField: "2019-08-05T02:10:19.887+0000",
+                    "additionalField": "ABC"
+                }
+            }
+        """.trimIndent(), com.google.gson.JsonObject::class.java)
+        assertTrue(!hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
+    fun testHasDateFieldReturnsFalseOnPresenceOfNonMongoStyleDateObjectField() {
+        val id = Gson().fromJson("""
+            {
+                "id": "ID",
+                "createdDateTime": {
+                    "additionalField": "ABC"
+                }
+            }
+        """.trimIndent(), com.google.gson.JsonObject::class.java)
+        assertTrue(!hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
+    fun testHasDateFieldReturnsFalseOnPresenceOfStringStyleDateField() {
+        val id = Gson().fromJson("""
+            {
+                "id": "ID",
+                "createdDateTime": "2019-08-05T02:10:19.887+0000"
+            }
+        """.trimIndent(), com.google.gson.JsonObject::class.java)
+        assertTrue(!hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
+    fun testHasDateFieldReturnsFalseOnAbsenceOfDateField() {
+        val id = Gson().fromJson("""
+            {
+                "id": "ID"
+            }
+        """.trimIndent(), com.google.gson.JsonObject::class.java)
+        assertTrue(!hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
     fun testIdStringReturnedAsString() {
         val id = JsonPrimitive("id")
-        val actual = hBaseWriter.id(Gson(), id)
+        val actual = hBaseWriter.normalisedId(Gson(), id)
         assertEquals(Pair("id", HBaseWriter.Companion.IdModification.UnmodifiedStringId), actual)
     }
 
@@ -315,14 +502,14 @@ class HbaseWriterTest {
         val oid = com.google.gson.JsonObject()
         val oidValue = "OID_VALUE"
         oid.addProperty("\$oid", oidValue)
-        val actual = hBaseWriter.id(Gson(), oid)
+        val actual = hBaseWriter.normalisedId(Gson(), oid)
         assertEquals(Pair(oidValue, HBaseWriter.Companion.IdModification.FlattenedMongoId), actual)
     }
 
     @Test
     fun testIdNumberReturnedAsObject() {
         val id = JsonPrimitive( 12345)
-        val actual = hBaseWriter.id(Gson(), id)
+        val actual = hBaseWriter.normalisedId(Gson(), id)
         val expectedId = "12345"
         assertEquals(Pair(expectedId, HBaseWriter.Companion.IdModification.UnmodifiedStringId), actual)
     }
@@ -332,7 +519,7 @@ class HbaseWriterTest {
         val arrayValue = com.google.gson.JsonArray()
         arrayValue.add("1")
         arrayValue.add("2")
-        val actual = hBaseWriter.id(Gson(), arrayValue)
+        val actual = hBaseWriter.normalisedId(Gson(), arrayValue)
         val expected = Pair("", HBaseWriter.Companion.IdModification.InvalidId)
         assertEquals(expected, actual)
     }
@@ -340,7 +527,7 @@ class HbaseWriterTest {
     @Test
     fun testIdNullReturnedAsEmpty() {
         val nullValue = com.google.gson.JsonNull.INSTANCE
-        val actual = hBaseWriter.id(Gson(), nullValue)
+        val actual = hBaseWriter.normalisedId(Gson(), nullValue)
         val expected = Pair("", HBaseWriter.Companion.IdModification.InvalidId)
         assertEquals(expected, actual)
     }
@@ -356,12 +543,22 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun testLastModifiedDateTimeAsDateObjectReturnedAsDateFieldValue() {
+    fun testLastModifiedDateTimeAsDateObjectInDumpFormatReturnedAsDateFieldValueInKafkaFormat() {
         val lastModified = com.google.gson.JsonObject()
-        val lastModifiedValue = "testDateField"
+        val lastModifiedValue = "2019-08-05T02:10:19.887Z"
         lastModified.addProperty("\$date", lastModifiedValue)
         val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified, "CREATED_TIMESTAMP")
-        val expected = Pair(lastModifiedValue, "_lastModifiedDateTimeStripped")
+        val expected = Pair("2019-08-05T02:10:19.887+0000", "_lastModifiedDateTimeStripped")
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testLastModifiedDateTimeAsDateObjectInKafkaFormatReturnedAsDateFieldValueInKafkaFormat() {
+        val lastModified = com.google.gson.JsonObject()
+        val lastModifiedValue = "2019-08-05T02:10:19.887+0000"
+        lastModified.addProperty("\$date", lastModifiedValue)
+        val actual = hBaseWriter.lastModifiedDateTime(Gson(), lastModified, "CREATED_TIMESTAMP")
+        val expected = Pair("2019-08-05T02:10:19.887+0000", "_lastModifiedDateTimeStripped")
         assertEquals(expected, actual)
     }
 
@@ -444,9 +641,22 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun testOptionalDateTimeAsObjectReturnedAsString() {
+    fun testOptionalDateTimeInDumpFormatReturnedAsStringInKafkaFormat() {
         val optionalDateTimeField = com.google.gson.JsonObject()
-        val optionalDateTimeValue = "DATE_FIELD_VALUE"
+        val optionalDateTimeValue = "2019-08-05T02:10:19.887Z"
+        optionalDateTimeField.addProperty("\$date", optionalDateTimeValue)
+        val message = com.google.gson.JsonObject()
+        val fieldName = "_optionalDateTime"
+        message.add(fieldName, optionalDateTimeField)
+        val actual = hBaseWriter.optionalDateTime(Gson(), fieldName, message)
+        val expected = Pair("2019-08-05T02:10:19.887+0000", true)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun testOptionalDateTimeInKafkaFormatReturnedAsStringInKafkaFormat() {
+        val optionalDateTimeField = com.google.gson.JsonObject()
+        val optionalDateTimeValue = "2019-08-05T02:10:19.887+0000"
         optionalDateTimeField.addProperty("\$date", optionalDateTimeValue)
         val message = com.google.gson.JsonObject()
         val fieldName = "_optionalDateTime"

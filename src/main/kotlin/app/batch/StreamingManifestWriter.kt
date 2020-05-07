@@ -6,7 +6,6 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import org.apache.commons.text.StringEscapeUtils
-import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 
@@ -22,7 +21,7 @@ open class StreamingManifestWriter {
                 if (manifestSize > 0) {
                     val manifestFileMetadata = manifestMetadata(manifestFileName, manifestSize)
                     val prefix = "$manifestPrefix/$manifestFileName"
-                    BufferedInputStream(FileInputStream(manifestFile)).use { inputStream ->
+                    FileInputStream(manifestFile).use { inputStream ->
                         val request = PutObjectRequest(manifestBucket, prefix, inputStream, manifestFileMetadata)
                         s3.putObject(request)
                         logger.info("Written manifest", "attempt_number", "${attempts + 1}", "manifest_size", "$manifestSize", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName")

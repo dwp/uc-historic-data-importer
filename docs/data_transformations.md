@@ -20,12 +20,12 @@ Below is a table listing the transformations that are performed on the historic 
 
 | Transformation Type | Pre-Transform Example | Post-Transform Example |
 | ------------------- | --------------------- | ---------------------- |
-| [Strip dates with `$date` fields](#Strip-dates-with-`$date`-fields) | `{ "_lastModifiedDateTime": {"$date": "2019-01-01T01:01:01.000Z" }}` | `{ "_lastModifiedDateTime": "2019-01-01T01:01:01.000Z" }` |
+| [Strip dates with `$date` fields](#Strip-dates-with-`$date`-fields) | `{ "_lastModifiedDateTime": {"$date": "2019-01-01T01:01:01.000Z" }}` | `{ "_lastModifiedDateTime": "2019-01-01T01:01:01.000+0000" }` |
 | [Strip ids with `$oid` fields](#Strip-ids-with-`$oid`-fields) | `{ "_id": {"$oid": "guid1" }}` | `{ "_id": "guid1" }` |
 | [Heirarchy for `_lastModifiedDateTime`](#Heirarchy-for-`_lastModifiedDateTime`) | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
 | [Re-structure `_removed` records](#Re-structure-`_removed`-records) | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
 | [Re-structure `_archived` records](#Re-structure-`_archived`-records) | `{ "_id": {"$oid": "guid1" }}, "_archived": "[entire record]"` | `{ [entire record] }` |
-| [Flatten `createdDateTime` objects within `_ids`](Flatten-`createdDateTime`-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000Z" } }` |
+| [Flatten date objects within `_ids`](Flatten-date-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000+0000" } }` |
 
 ## Transformation details and reasoning
 
@@ -36,6 +36,7 @@ Below is a detailed explanation of the change made for each transform. Each tran
 #### Transform details
 
 The following keys are checked to see if they are strings or objects: `_lastModifiedDateTime`, `createdDateTime`, `_removedDateTime` and `_archivedDateTime`. If they are present and strings no transformation is performed. If they are objects with a `$date` sub key, the value of the sub key is used as the parent key field value.
+Additionally the string has its final 'Z' replaced with '+0000' to match the kafka style.
 
 #### Transform reasoning
 
@@ -197,10 +198,13 @@ If we did not transform these records, then the historic records would appear as
 1. The original record with the right id and all versions up to prior to the deletion (so with no `_archivedDateTime` populated)
 2. A new record with an entirely different id and not linked to the previous versions that would hold the `_archivedDateTime` value
 
-### Flatten `createdDateTime` objects within `_ids`
+### Flatten date objects within `_ids`
 #### Transform details
-In some collections the `_id` field is a compound object one of whose fields, `createdDateTime` is a mongo date field. 
-These date fields are flattened, i.e. the `createdDateTimeValue is set to the value of the `$date` sub-field.
+In some collections the `_id` field is a compound object one of whose fields, which could be `_lastModifiedDateTime`, 
+`createdDateTime`, `_removedDateTime` and `_archivedDateTime` is a mongo date field. 
+These date fields are flattened, i.e. the `createdDateTimeValue is set to the value of the `$date` sub-field. 
+Additionally the date string itself is converted from "2020-02-26T10:04:39.624Z" format (i.e. with a 'Z' at the end) to
+"2020-02-26T10:04:39.624+0000" format to match what comes across on kafka.
 For example:
 ```javascript
 {
@@ -217,7 +221,7 @@ becomes
 {
     "_id": {
         "idField": "idValue",
-        "createdDateTime": "2020-02-26T10:04:39.624Z"
+        "createdDateTime": "2020-02-26T10:04:39.624+0000"
     }
 }
 ``` 
