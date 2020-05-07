@@ -37,7 +37,6 @@ open class StreamingManifestWriter {
                 }
             }
             catch (e: Exception) {
-                e.printStackTrace(System.err)
                 ++attempts
                 logger.warn("Failed to write manifest", "attempt_number", "$attempts", "max_attempts", "$maxManifestAttempts", "error_message", "${e.message}")
             }
