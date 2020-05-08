@@ -26,6 +26,7 @@ open class StreamingManifestWriter {
                         s3.putObject(request)
                         logger.info("Written manifest", "attempt_number", "${attempts + 1}", "manifest_size", "$manifestSize", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName")
                         success = true
+                        manifestFile.delete()
                         return
                     }
                 }
