@@ -27,7 +27,7 @@ open class StreamingManifestWriter {
                         logger.info("Written manifest", "attempt_number", "${attempts + 1}", "manifest_size", "$manifestSize", "s3_location", "s3://$manifestBucket/$manifestPrefix/$manifestFileName")
                         success = true
                         val deleted = manifestFile.delete()
-                        logger.info("Deleted manifest", "succeeded", "${deleted}")
+                        logger.info("Deleted manifest", "succeeded", "${deleted}", "manifest_file", "$manifestFile")
                         return
                     }
                 }
