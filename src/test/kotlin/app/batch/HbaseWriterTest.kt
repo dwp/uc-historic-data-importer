@@ -254,6 +254,7 @@ class HbaseWriterTest {
         val actualObject = com.google.gson.JsonObject()
         actualObject.addProperty("keyB", "valueB")
         actualObject.addProperty("keyA", "valueA")
+        whenever(messageUtils.sortJsonStringByKey(actualObject.toString())).thenReturn(expectedJson)
         val actualJson = hBaseWriter.getSortedJsonString(actualObject)
         assertEquals(expectedJson, actualJson)
     }
@@ -263,6 +264,7 @@ class HbaseWriterTest {
         val expectedJson = """{"keyA":"valueA"}"""
         val actualObject = com.google.gson.JsonObject()
         actualObject.addProperty("keyA", "valueA")
+        whenever(messageUtils.sortJsonStringByKey(actualObject.toString())).thenReturn(expectedJson)
         val actualJson = hBaseWriter.getSortedJsonString(actualObject)
         assertEquals(expectedJson, actualJson)
     }

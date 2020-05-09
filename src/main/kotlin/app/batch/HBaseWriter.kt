@@ -346,19 +346,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     fun getSortedJsonString(elementToSort: JsonElement?): String {
         if (elementToSort != null) {
-            return if (elementToSort.isJsonObject) {
-                messageUtils.sortJsonStringByKey(elementToSort.asJsonObject.toString())
+            if (elementToSort.isJsonObject) {
+                return messageUtils.sortJsonStringByKey(elementToSort.asJsonObject.toString())
             }
             else if (elementToSort.isJsonPrimitive) {
-                elementToSort.asJsonPrimitive.asString
-            }
-            else {
-                ""
+                return elementToSort.asJsonPrimitive.asString
             }
         }
-        else {
-            return ""
-        }
+        return ""
     }
 
     private fun hasKnownDateField(obj: JsonObject) = hasDateField(obj, CREATED_DATE_TIME_FIELD) ||
