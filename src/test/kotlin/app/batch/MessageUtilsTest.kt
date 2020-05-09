@@ -386,8 +386,8 @@ class MessageUtilsTest {
 
     @Test
     fun should_sort_json_by_key_name_for_single_key() {
-        val jsonStringUnsorted = "{\"$oid\":\"test1\"}"
-        val jsonStringSorted = "{\"$oid\":\"test1\"}"
+        val jsonStringUnsorted = "{\"\$oid\":\"test1\"}"
+        val jsonStringSorted = "{\"\$oid\":\"test1\"}"
 
         val sortedJson = messageUtils.sortJsonStringByKey(jsonStringUnsorted)
 
