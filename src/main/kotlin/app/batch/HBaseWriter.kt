@@ -203,10 +203,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         batchSizeBytes += messageWrapper.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
-                                        val incomingId = if (idWasModified) incomingId(gson, originalId) else id
+                                        val idForManifest = getSortedJsonString(id)
+                                        val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
-                                        val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
+                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 }
@@ -343,6 +344,29 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
+    fun getSortedJsonString(elementToSort: JsonElement?): String {
+        if (elementToSort != null) {
+            return if (elementToSort.isJsonObject) {
+                val obj = elementToSort.asJsonObject!!
+                if (obj.size() > 1) {
+                    messageUtils.sortJsonByKey(obj)
+                }
+                else {
+                    obj.toString()
+                }
+            }
+            else if (elementToSort.isJsonPrimitive) {
+                elementToSort.asJsonPrimitive.asString
+            }
+            else {
+                ""
+            }
+        }
+        else {
+            return ""
+        }
+    }
+
     private fun hasKnownDateField(obj: JsonObject) = hasDateField(obj, CREATED_DATE_TIME_FIELD) ||
                 hasDateField(obj, LAST_MODIFIED_DATE_TIME_FIELD) ||
                 hasDateField(obj, REMOVED_DATE_TIME_FIELD) ||
@@ -434,7 +458,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         return if (id != null) {
             when {
                 id.isJsonObject -> {
-                    gson.toJson(id.asJsonObject)
+                    messageUtils.sortJsonByKey(id.asJsonObject)
                 }
                 id.isJsonPrimitive -> {
                     id.asJsonPrimitive.asString
