@@ -379,7 +379,7 @@ class MessageUtilsTest {
         val jsonStringUnsorted = "{\"testA\":\"test1\", \"testC\":2, \"testB\":true}"
         val jsonStringSorted = "{\"testA\":\"test1\",\"testB\":true,\"testC\":2}"
 
-        val sortedJson = JsonUtils().sortJsonByKey(jsonStringUnsorted)
+        val sortedJson = messageUtils.sortJsonStringByKey(jsonStringUnsorted)
 
         sortedJson shouldBe jsonStringSorted
     }
@@ -389,7 +389,7 @@ class MessageUtilsTest {
         val jsonStringUnsorted = "{\"testb\":true, \"testA\":\"test1\", \"testC\":2}"
         val jsonStringSorted = "{\"testA\":\"test1\",\"testC\":2,\"testb\":true}"
 
-        val sortedJson = JsonUtils().sortJsonByKey(jsonStringUnsorted)
+        val sortedJson = messageUtils.sortJsonStringByKey(jsonStringUnsorted)
 
         sortedJson shouldBe jsonStringSorted
     }
