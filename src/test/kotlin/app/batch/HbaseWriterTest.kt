@@ -248,7 +248,6 @@ class HbaseWriterTest {
         }
     }
 
-
     @Test
     fun testIdObjectReturnedAsObject() {
         val id = com.google.gson.JsonObject()

@@ -203,10 +203,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         batchSizeBytes += messageWrapper.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
-                                        val incomingId = if (idWasModified) incomingId(gson, originalId) else id
+                                        val idForManifest = if (idIsString) id else messageUtils.sortJsonStringByKey(id)
+                                        val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
-                                        val manifestRecord = ManifestRecord(id, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
+                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 }
@@ -434,7 +435,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         return if (id != null) {
             when {
                 id.isJsonObject -> {
-                    gson.toJson(id.asJsonObject)
+                    messageUtils.sortJsonStringByKey(id.asJsonObject.toString())
                 }
                 id.isJsonPrimitive -> {
                     id.asJsonPrimitive.asString

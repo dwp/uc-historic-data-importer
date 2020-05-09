@@ -373,4 +373,34 @@ class MessageUtilsTest {
         val json: JsonObject = messageUtils.parseJson(jsonString)
         messageUtils.getType(json) shouldBe messageUtils.typeDefault
     }
+
+    @Test
+    fun should_sort_json_by_key_name() {
+        val jsonStringUnsorted = "{\"testA\":\"test1\", \"testC\":2, \"testB\":true}"
+        val jsonStringSorted = "{\"testA\":\"test1\",\"testB\":true,\"testC\":2}"
+
+        val sortedJson = messageUtils.sortJsonStringByKey(jsonStringUnsorted)
+
+        sortedJson shouldBe jsonStringSorted
+    }
+
+    @Test
+    fun should_sort_json_by_key_name_for_single_key() {
+        val jsonStringUnsorted = "{\"\$oid\":\"test1\"}"
+        val jsonStringSorted = "{\"\$oid\":\"test1\"}"
+
+        val sortedJson = messageUtils.sortJsonStringByKey(jsonStringUnsorted)
+
+        sortedJson shouldBe jsonStringSorted
+    }
+
+    @Test
+    fun should_sort_json_by_key_name_case_sensitively() {
+        val jsonStringUnsorted = "{\"testb\":true, \"testA\":\"test1\", \"testC\":2}"
+        val jsonStringSorted = "{\"testA\":\"test1\",\"testC\":2,\"testb\":true}"
+
+        val sortedJson = messageUtils.sortJsonStringByKey(jsonStringUnsorted)
+
+        sortedJson shouldBe jsonStringSorted
+    }
 }
