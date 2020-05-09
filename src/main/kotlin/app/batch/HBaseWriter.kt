@@ -203,7 +203,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         batchSizeBytes += messageWrapper.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
-                                        val idForManifest = getSortedJsonString(originalId)
+                                        val idForManifest = if (idIsString) id else messageUtils.sortJsonStringByKey(id)
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
@@ -342,18 +342,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         else {
             return Pair("", IdModification.InvalidId)
         }
-    }
-
-    fun getSortedJsonString(elementToSort: JsonElement?): String {
-        if (elementToSort != null) {
-            if (elementToSort.isJsonObject) {
-                return messageUtils.sortJsonStringByKey(elementToSort.asJsonObject.toString())
-            }
-            else if (elementToSort.isJsonPrimitive) {
-                return elementToSort.asJsonPrimitive.asString
-            }
-        }
-        return ""
     }
 
     private fun hasKnownDateField(obj: JsonObject) = hasDateField(obj, CREATED_DATE_TIME_FIELD) ||
