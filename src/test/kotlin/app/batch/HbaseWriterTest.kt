@@ -250,20 +250,20 @@ class HbaseWriterTest {
 
     @Test
     fun testJsonObjectWithMultipleKeysSortedCorrectly() {
-        val expectedJson = """{ "keyA": "valueA", "keyB": "valueB" }"""
+        val expectedJson = """{"keyA":"valueA","keyB":"valueB"}"""
         val actualObject = com.google.gson.JsonObject()
         actualObject.addProperty("keyB", "valueB")
         actualObject.addProperty("keyA", "valueA")
-        val actualJson = hBaseWriter.getSortedJsonString(actualObject)
+        val actualJson = hBaseWriter.getSortedJsonString(Gson(), actualObject)
         assertEquals(expectedJson, actualJson)
     }
 
     @Test
     fun testJsonObjectWithSingleKeySortedCorrectly() {
-        val expectedJson = """{ "keyA": "valueA" }"""
+        val expectedJson = """{"keyA":"valueA"}"""
         val actualObject = com.google.gson.JsonObject()
         actualObject.addProperty("keyA", "valueA")
-        val actualJson = hBaseWriter.getSortedJsonString(actualObject)
+        val actualJson = hBaseWriter.getSortedJsonString(Gson(), actualObject)
         assertEquals(expectedJson, actualJson)
     }
 
@@ -271,14 +271,14 @@ class HbaseWriterTest {
     fun testJsonPrimitiveSortedCorrectly() {
         val expectedJson = "valueA"
         val actualObject = JsonPrimitive("valueA")
-        val actualJson = hBaseWriter.getSortedJsonString(actualObject)
+        val actualJson = hBaseWriter.getSortedJsonString(Gson(), actualObject)
         assertEquals(expectedJson, actualJson)
     }
 
     @Test
     fun testNullObjectSortedCorrectly() {
         val expectedJson = ""
-        val actualJson = hBaseWriter.getSortedJsonString(null)
+        val actualJson = hBaseWriter.getSortedJsonString(Gson(), null)
         assertEquals(expectedJson, actualJson)
     }
 

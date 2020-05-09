@@ -203,7 +203,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         batchSizeBytes += messageWrapper.length
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
-                                        val idForManifest = getSortedJsonString(originalId)
+                                        val idForManifest = getSortedJsonString(gson, originalId)
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
@@ -344,12 +344,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    fun getSortedJsonString(elementToSort: JsonElement?): String {
+    fun getSortedJsonString(gson: Gson, elementToSort: JsonElement?): String {
         if (elementToSort != null) {
             return if (elementToSort.isJsonObject) {
                 val obj = elementToSort.asJsonObject!!
                 if (obj.size() > 1) {
-                    messageUtils.sortJsonStringByKey(obj.toString())
+                    messageUtils.sortJsonStringByKey(gson.toJson(elementToSort.asJsonObject))
                 }
                 else {
                     obj.toString()
