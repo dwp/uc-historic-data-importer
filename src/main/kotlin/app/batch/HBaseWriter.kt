@@ -207,7 +207,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
-                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
+                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong,
+                                                database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 }
@@ -317,7 +318,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun normalisedId(gson: Gson, id: JsonElement?): Pair<String, IdModification> {
         if (id != null) {
             return if (id.isJsonObject) {
-                val obj = id.asJsonObject!!
+                val obj = id.asJsonObject!!.deepCopy()
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
                     Pair(obj["\$oid"].asJsonPrimitive.asString, IdModification.FlattenedMongoId)
                 }

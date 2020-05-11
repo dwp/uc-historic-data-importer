@@ -290,8 +290,10 @@ class HbaseWriterTest {
             }
         """.trimIndent()
 
+        val originalId = Gson().fromJson(id, com.google.gson.JsonObject::class.java)
+        val copyOfOriginalId = originalId.deepCopy()
         val (actualId, actualModified) =
-                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+                hBaseWriter.normalisedId(Gson(), originalId)
 
         val expectedId = """
             {
@@ -302,6 +304,7 @@ class HbaseWriterTest {
 
         assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
         assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
+        assertEquals(copyOfOriginalId, originalId)
     }
 
     @Test
