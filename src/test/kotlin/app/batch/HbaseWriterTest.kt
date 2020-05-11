@@ -15,6 +15,8 @@ import com.beust.klaxon.JsonObject
 import com.google.gson.Gson
 import com.google.gson.JsonPrimitive
 import com.nhaarman.mockitokotlin2.*
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,6 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.security.Key
+import java.text.SimpleDateFormat
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
@@ -290,8 +293,10 @@ class HbaseWriterTest {
             }
         """.trimIndent()
 
+        val originalId = Gson().fromJson(id, com.google.gson.JsonObject::class.java)
+        val copyOfOriginalId = originalId.deepCopy()
         val (actualId, actualModified) =
-                hBaseWriter.normalisedId(Gson(), Gson().fromJson(id, com.google.gson.JsonObject::class.java))
+                hBaseWriter.normalisedId(Gson(), originalId)
 
         val expectedId = """
             {
@@ -302,6 +307,7 @@ class HbaseWriterTest {
 
         assertEquals(Gson().fromJson(expectedId, com.google.gson.JsonObject::class.java).toString(), actualId)
         assertEquals(actualModified, HBaseWriter.Companion.IdModification.FlattenedInnerDate)
+        assertEquals(copyOfOriginalId, originalId)
     }
 
     @Test
@@ -437,6 +443,35 @@ class HbaseWriterTest {
             }
         """.trimIndent(), com.google.gson.JsonObject::class.java)
         assertTrue(hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
+    fun Should_Parse_Valid_Incoming_Date_Format() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
+        val expected = df.parse(dateOne)
+        val actual = hBaseWriter.getValidParsedDateTime(dateOne)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Parse_Valid_Outgoing_Date_Format() {
+        val dateOne = "2019-12-14T15:01:02.000Z"
+        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        val expected = df.parse(dateOne)
+        val actual = hBaseWriter.getValidParsedDateTime(dateOne)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Throw_Error_With_Invalid_Date_Format() {
+        val exception = shouldThrow<Exception> {
+            hBaseWriter.getValidParsedDateTime("2019-12-14T15:01:02")
+        }
+
+        exception.message shouldBe "Unparseable date found: '2019-12-14T15:01:02', did not match any supported date formats"
     }
 
     @Test
@@ -1021,6 +1056,7 @@ class HbaseWriterTest {
         hBaseWriter.write(items)
         verify(hBaseWriter, times(100)).putBatch(any(), any())
     }
+
 
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()

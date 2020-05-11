@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Component
 @Profile("hbaseWriter")
@@ -207,7 +209,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
-                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong, database, collection, "IMPORT", outerType, innerType, incomingId)
+                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong,
+                                                database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
                                 }
@@ -317,7 +320,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun normalisedId(gson: Gson, id: JsonElement?): Pair<String, IdModification> {
         if (id != null) {
             return if (id.isJsonObject) {
-                val obj = id.asJsonObject!!
+                val obj = id.asJsonObject!!.deepCopy()
                 if (obj.size() == 1 && obj["\$oid"] != null && obj["\$oid"].isJsonPrimitive) {
                     Pair(obj["\$oid"].asJsonPrimitive.asString, IdModification.FlattenedMongoId)
                 }
@@ -450,7 +453,25 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
     }
 
-    fun kafkaDateFormat(input: String) = input.replace(Regex("Z$"), "+0000")
+    fun kafkaDateFormat(input: String): String {
+        val parsedDateTime = getValidParsedDateTime(input)
+        val df = SimpleDateFormat(VALID_OUTGOING_DATE_FORMAT)
+        df.timeZone = TimeZone.getTimeZone("UTC")
+        return df.format(parsedDateTime)
+    }
+
+    fun getValidParsedDateTime(timestampAsString: String): Date {
+        VALID_DATE_FORMATS.forEach {
+            try {
+                val df = SimpleDateFormat(it)
+                df.timeZone = TimeZone.getTimeZone("UTC")
+                return df.parse(timestampAsString)
+            } catch (e: Exception) {
+                logger.debug("timestampAsString did not match valid formats", "date_time_string", timestampAsString, "failed_format", it)
+            }
+        }
+        throw Exception("Unparseable date found: '$timestampAsString', did not match any supported date formats")
+    }
 
     fun putBatch(table: String, records: List<HBaseRecord>) {
         var success = false
@@ -500,6 +521,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
         const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         const val EPOCH = "1980-01-01T00:00:00.000+0000"
+
+        const val VALID_INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        const val VALID_OUTGOING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
+        val VALID_DATE_FORMATS = listOf(VALID_INCOMING_DATE_FORMAT, VALID_OUTGOING_DATE_FORMAT)
 
         private const val LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED = "_lastModifiedDateTimeStripped"
         private const val EPOCH_FIELD = "epoch"
