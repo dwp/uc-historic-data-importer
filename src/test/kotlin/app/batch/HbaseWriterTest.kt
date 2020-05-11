@@ -15,6 +15,8 @@ import com.beust.klaxon.JsonObject
 import com.google.gson.Gson
 import com.google.gson.JsonPrimitive
 import com.nhaarman.mockitokotlin2.*
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,6 +30,7 @@ import org.springframework.test.context.junit4.SpringRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.security.Key
+import java.text.SimpleDateFormat
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(classes = [HBaseWriter::class])
@@ -440,6 +443,35 @@ class HbaseWriterTest {
             }
         """.trimIndent(), com.google.gson.JsonObject::class.java)
         assertTrue(hBaseWriter.hasDateField(id, "createdDateTime"))
+    }
+
+    @Test
+    fun Should_Parse_Valid_Incoming_Date_Format() {
+        val dateOne = "2019-12-14T15:01:02.000+0000"
+        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
+        val expected = df.parse(dateOne)
+        val actual = hBaseWriter.getValidParsedDateTime(dateOne)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Parse_Valid_Outgoing_Date_Format() {
+        val dateOne = "2019-12-14T15:01:02.000Z"
+        val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        val expected = df.parse(dateOne)
+        val actual = hBaseWriter.getValidParsedDateTime(dateOne)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun Should_Throw_Error_With_Invalid_Date_Format() {
+        val exception = shouldThrow<Exception> {
+            hBaseWriter.getValidParsedDateTime("2019-12-14T15:01:02")
+        }
+
+        exception.message shouldBe "Unparseable date found: '2019-12-14T15:01:02', did not match any supported date formats"
     }
 
     @Test
