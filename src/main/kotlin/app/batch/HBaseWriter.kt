@@ -456,15 +456,15 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     fun kafkaDateFormat(input: String): String {
         val parsedDateTime = getValidParsedDateTime(input)
         val df = SimpleDateFormat(VALID_OUTGOING_DATE_FORMAT)
-        df.timeZone = TimeZone.getTimeZone("UTC");
+        df.timeZone = TimeZone.getTimeZone("UTC")
         return df.format(parsedDateTime)
     }
 
     fun getValidParsedDateTime(timestampAsString: String): Date {
-        VALID_DATE_FORMAT.forEach {
+        VALID_DATE_FORMATS.forEach {
             try {
                 val df = SimpleDateFormat(it)
-                df.timeZone = TimeZone.getTimeZone("UTC");
+                df.timeZone = TimeZone.getTimeZone("UTC")
                 return df.parse(timestampAsString)
             } catch (e: Exception) {
                 logger.debug("timestampAsString did not match valid formats", "date_time_string", timestampAsString, "failed_format", it)
@@ -524,7 +524,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
         const val VALID_INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         const val VALID_OUTGOING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
-        val VALID_DATE_FORMAT = listOf(VALID_INCOMING_DATE_FORMAT, VALID_OUTGOING_DATE_FORMAT)
+        val VALID_DATE_FORMATS = listOf(VALID_INCOMING_DATE_FORMAT, VALID_OUTGOING_DATE_FORMAT)
 
         private const val LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED = "_lastModifiedDateTimeStripped"
         private const val EPOCH_FIELD = "epoch"
