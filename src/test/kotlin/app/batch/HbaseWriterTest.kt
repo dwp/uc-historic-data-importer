@@ -1025,6 +1025,7 @@ class HbaseWriterTest {
         verify(hBaseWriter, times(100)).putBatch(any(), any())
     }
 
+
     private fun getInputStream(data1: List<String>, fileName: String): DecompressedStream {
         val baos = ByteArrayOutputStream()
         data1.forEach {
