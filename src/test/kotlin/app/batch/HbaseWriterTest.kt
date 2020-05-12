@@ -466,6 +466,38 @@ class HbaseWriterTest {
     }
 
     @Test
+    fun shouldAcceptNonUtcPositiveOffsetTimeAndReturnAsUtc() {
+        val date = "2020-05-12T10:01:02.000+0100"
+        val actual = hBaseWriter.kafkaDateFormat(date)
+        val expected = "2020-05-12T09:01:02.000+0000"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldAcceptNonUtcNegativeOffsetTimeAndReturnAsUtc() {
+        val date = "2020-05-12T10:01:02.000-0100"
+        val actual = hBaseWriter.kafkaDateFormat(date)
+        val expected = "2020-05-12T11:01:02.000+0000"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldAcceptUtcTimeAndReturnAsUtc() {
+        val date = "2020-05-12T10:01:02.000+0000"
+        val actual = hBaseWriter.kafkaDateFormat(date)
+        val expected = "2020-05-12T10:01:02.000+0000"
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun shouldAcceptNonUtcTimeAndReturnAsUtc() {
+        val date = "2020-05-12T10:01:02.000+0100"
+        val actual = hBaseWriter.kafkaDateFormat(date)
+        val expected = "2020-05-12T09:01:02.000+0000"
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun Should_Throw_Error_With_Invalid_Date_Format() {
         val exception = shouldThrow<Exception> {
             hBaseWriter.getValidParsedDateTime("2019-12-14T15:01:02")
