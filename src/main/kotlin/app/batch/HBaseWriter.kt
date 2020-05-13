@@ -211,7 +211,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
 
-                                        val timestampForManifest = manifestTimestamp(innerType, lastModifiedTimestampLong, removedDateTime, createdDateTime)
+                                        val timestampForManifest =
+                                                manifestTimestamp(innerType, lastModifiedTimestampLong,
+                                                        removedDateTime = removedDateTime,
+                                                        archivedDateTime = archivedDateTime,
+                                                        createdDateTime = createdDateTime)
 
                                         val manifestRecord = ManifestRecord(idForManifest, timestampForManifest,
                                                 database, collection, "IMPORT", outerType, innerType, incomingId)
@@ -272,12 +276,18 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
     }
 
-    fun manifestTimestamp(innerType: String, lastModifiedTimestampLong: Long, removedDateTime: String, createdDateTime: String) =
-        try {
+    fun manifestTimestamp(innerType: String, lastModifiedTimestampLong: Long,
+                          removedDateTime: String,
+                          archivedDateTime: String,
+                          createdDateTime: String)
+        = try {
             when (innerType) {
                 MONGO_DELETE -> {
                     if (StringUtils.isNotBlank(removedDateTime)) {
                         messageUtils.getTimestampAsLong(removedDateTime)
+                    }
+                    else if (StringUtils.isNotBlank(archivedDateTime)) {
+                        messageUtils.getTimestampAsLong(archivedDateTime)
                     }
                     else {
                         lastModifiedTimestampLong

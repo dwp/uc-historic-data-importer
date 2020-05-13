@@ -1052,8 +1052,10 @@ class HbaseWriterTest {
         val lastModifiedTimestamp = 10L
         val innerType = "MONGO_IMPORT"
         val removedDate = "2000-01-01T00:00:00.000Z"
+        val archivedDate = "2005-01-01T00:00:00.000Z"
         val createdDate = "2010-01-01T00:00:00.000Z"
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate,
+                archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
         verify(messageUtils, times(0)).getTimestampAsLong(any())
     }
@@ -1062,9 +1064,11 @@ class HbaseWriterTest {
     fun testManifestTimestampToleratesGarbageWhenNotDeleteOrInsert() {
         val lastModifiedTimestamp = 10L
         val innerType = "MONGO_IMPORT"
-        val removedDate = "NOT A PARSEABLE DATE"
-        val createdDate = "ANOTHER NON PARSEABLE DATE"
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val removedDate = "NON PARSEABLE REMOVED DATE"
+        val archivedDate = "NON PARSEABLE ARCHIVED DATE"
+        val createdDate = "NON PARSEABLE CREATED DATE"
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
         verify(messageUtils, times(0)).getTimestampAsLong(any())
     }
@@ -1074,25 +1078,45 @@ class HbaseWriterTest {
         val lastModifiedTimestamp = 10L
         val innerType = HBaseWriter.MONGO_DELETE
         val removedDate = "2000-01-01T00:00:00.000Z"
+        val archivedDate = "2005-01-01T00:00:00.000Z"
         val createdDate = "2010-01-01T00:00:00.000Z"
 
         val expected = 100L
         given(messageUtils.getTimestampAsLong(removedDate)).willReturn(expected)
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate,
+                archivedDate, createdDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
     }
 
     @Test
-    fun testManifestTimestampUsesLastModifiedWhenMongoDeleteButEmptyRemovedDate() {
+    fun testManifestTimestampUsesArchivedDateWhenMongoDeleteButEmptyRemovedDate() {
         val lastModifiedTimestamp = 10L
         val innerType = HBaseWriter.MONGO_DELETE
         val removedDate = ""
+        val archivedDate = "2005-01-01T00:00:00.000Z"
+        val createdDate = "2010-01-01T00:00:00.000Z"
+        val expected = 200L
+        given(messageUtils.getTimestampAsLong(archivedDate)).willReturn(expected)
+
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
+        assertEquals(expected, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
+    }
+
+    @Test
+    fun testManifestTimestampUsesLastModifiedWhenMongoDeleteButEmptyRemovedDateAndArchivedDate() {
+        val lastModifiedTimestamp = 10L
+        val innerType = HBaseWriter.MONGO_DELETE
+        val removedDate = ""
+        val archivedDate = ""
         val createdDate = "2010-01-01T00:00:00.000Z"
 
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
-        verify(messageUtils, times(0)).getTimestampAsLong(removedDate)
+        verify(messageUtils, times(0)).getTimestampAsLong(any())
     }
 
     @Test
@@ -1100,12 +1124,30 @@ class HbaseWriterTest {
         val lastModifiedTimestamp = 10L
         val innerType = HBaseWriter.MONGO_DELETE
         val removedDate = "BADLY_FORMATTED_DATE"
+        val archivedDate = "2005-01-01T00:00:00.000Z"
         val createdDate = "2010-01-01T00:00:00.000Z"
         given(messageUtils.getTimestampAsLong(removedDate)).willThrow(ParseException("BAD DATE", 10))
 
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
+    }
+
+    @Test
+    fun testManifestTimestampUsesLastModifiedWhenMongoDeleteAndEmptyRemovedDateAndUnparseableArchivedDate() {
+        val lastModifiedTimestamp = 10L
+        val innerType = HBaseWriter.MONGO_DELETE
+        val removedDate = ""
+        val archivedDate = "BADLY_FORMATTED_DATE"
+        val createdDate = "2010-01-01T00:00:00.000Z"
+        given(messageUtils.getTimestampAsLong(archivedDate)).willThrow(ParseException("BAD ARCHIVE DATE", 10))
+
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
+        assertEquals(lastModifiedTimestamp, actual)
+        verify(messageUtils, times(0)).getTimestampAsLong(removedDate)
+        verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
     }
 
     @Test
@@ -1113,11 +1155,13 @@ class HbaseWriterTest {
         val lastModifiedTimestamp = 10L
         val innerType = HBaseWriter.MONGO_INSERT
         val removedDate = "2000-01-01T00:00:00.000Z"
+        val archivedDate = "2005-01-01T00:00:00.000Z"
         val createdDate = "2010-01-01T00:00:00.000Z"
 
         val expected = 100L
         given(messageUtils.getTimestampAsLong(createdDate)).willReturn(expected)
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(createdDate)
     }
@@ -1127,11 +1171,28 @@ class HbaseWriterTest {
         val lastModifiedTimestamp = 10L
         val innerType = HBaseWriter.MONGO_INSERT
         val removedDate = "2010-01-01T00:00:00.000Z"
+        val archivedDate = "2005-01-01T00:00:00.000Z"
         val createdDate = ""
 
-        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate, createdDate)
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
         verify(messageUtils, times(0)).getTimestampAsLong(any())
+    }
+
+    @Test
+    fun testManifestTimestampUsesLastModifiedWhenMongoInsertButUnparseableCreatedDate() {
+        val lastModifiedTimestamp = 10L
+        val innerType = HBaseWriter.MONGO_INSERT
+        val removedDate = "2010-01-01T00:00:00.000Z"
+        val archivedDate = "2005-01-01T00:00:00.000Z"
+        val createdDate = "BADLY FORMATTED DATE"
+        given(messageUtils.getTimestampAsLong(createdDate)).willThrow(ParseException("BAD DATE", 10))
+
+        val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
+                removedDate, archivedDate, createdDate)
+        assertEquals(lastModifiedTimestamp, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(createdDate)
     }
 
     @Test
