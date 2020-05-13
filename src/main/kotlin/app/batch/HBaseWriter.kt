@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.*
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -209,7 +210,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
                                         val innerType = messageUtils.getType(messageJsonObject)
-                                        val manifestRecord = ManifestRecord(idForManifest, lastModifiedTimestampLong,
+
+                                        val timestampForManifest = manifestTimestamp(innerType, lastModifiedTimestampLong, removedDateTime, createdDateTime)
+
+                                        val manifestRecord = ManifestRecord(idForManifest, timestampForManifest,
                                                 database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
@@ -268,6 +272,34 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
     }
 
+    fun manifestTimestamp(innerType: String, lastModifiedTimestampLong: Long, removedDateTime: String, createdDateTime: String) =
+        try {
+            when (innerType) {
+                MONGO_DELETE -> {
+                    if (StringUtils.isNotBlank(removedDateTime)) {
+                        messageUtils.getTimestampAsLong(removedDateTime)
+                    }
+                    else {
+                        lastModifiedTimestampLong
+                    }
+                }
+                MONGO_INSERT -> {
+                    if (StringUtils.isNotBlank(createdDateTime)) {
+                        messageUtils.getTimestampAsLong(createdDateTime)
+                    }
+                    else {
+                        lastModifiedTimestampLong
+                    }
+                }
+                else -> {
+                    lastModifiedTimestampLong
+                }
+            }
+        }
+        catch (e: ParseException) {
+            lastModifiedTimestampLong
+        }
+
     fun reformatRemoved(recordFromDump: String): Pair<JsonObject, Boolean> {
         val record = messageUtils.parseGson(recordFromDump)
 
@@ -276,7 +308,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             copyField(LAST_MODIFIED_DATE_TIME_FIELD, record, removedRecord)
             copyField(REMOVED_DATE_TIME_FIELD, record, removedRecord)
             copyField(TIMESTAMP_FIELD, record, removedRecord)
-            removedRecord.addProperty("@type", "MONGO_DELETE")
+            removedRecord.addProperty("@type", MONGO_DELETE)
             Pair(removedRecord.deepCopy(), true)
         } else {
             Pair(record, false)
@@ -289,7 +321,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             copyField(LAST_MODIFIED_DATE_TIME_FIELD, record, archivedRecord)
             copyField(ARCHIVED_DATE_TIME_FIELD, record, archivedRecord)
             copyField(TIMESTAMP_FIELD, record, archivedRecord)
-            archivedRecord.addProperty("@type", "MONGO_DELETE")
+            archivedRecord.addProperty("@type", MONGO_DELETE)
             Pair(archivedRecord.deepCopy(), true)
         } else {
             Pair(record, false)
@@ -521,6 +553,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         const val REMOVED_DATE_TIME_FIELD = "_removedDateTime"
         const val ARCHIVED_DATE_TIME_FIELD = "_archivedDateTime"
         const val EPOCH = "1980-01-01T00:00:00.000+0000"
+
+        const val MONGO_DELETE = "MONGO_DELETE"
+        const val MONGO_INSERT = "MONGO_INSERT"
 
         const val VALID_INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         const val VALID_OUTGOING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"

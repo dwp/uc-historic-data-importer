@@ -19,6 +19,7 @@ class MessageUtils {
     fun parseGson(line: String): com.google.gson.JsonObject =
         Gson().fromJson(line, com.google.gson.JsonObject::class.java)
 
+    @Throws(ParseException::class)
     fun getTimestampAsLong(timeStampAsStr: String?): Long {
         val validTimestamps = listOf(
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
