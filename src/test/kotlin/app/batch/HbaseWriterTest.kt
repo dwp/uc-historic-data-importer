@@ -1086,6 +1086,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp, removedDate,
                 archivedDate, createdDate)
         assertEquals(expected, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(any())
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
     }
 
@@ -1102,6 +1103,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
                 removedDate, archivedDate, createdDate)
         assertEquals(expected, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(any())
         verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
     }
 
@@ -1131,6 +1133,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
                 removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(any())
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
     }
 
@@ -1146,7 +1149,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
                 removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
-        verify(messageUtils, times(0)).getTimestampAsLong(removedDate)
+        verify(messageUtils, times(1)).getTimestampAsLong(any())
         verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
     }
 
@@ -1163,6 +1166,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
                 removedDate, archivedDate, createdDate)
         assertEquals(expected, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(any())
         verify(messageUtils, times(1)).getTimestampAsLong(createdDate)
     }
 
@@ -1192,6 +1196,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.manifestTimestamp(innerType, lastModifiedTimestamp,
                 removedDate, archivedDate, createdDate)
         assertEquals(lastModifiedTimestamp, actual)
+        verify(messageUtils, times(1)).getTimestampAsLong(any())
         verify(messageUtils, times(1)).getTimestampAsLong(createdDate)
     }
 
