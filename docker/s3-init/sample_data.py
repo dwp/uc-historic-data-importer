@@ -28,6 +28,7 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
 
+
 def main():
     """Main entry point."""
     args = command_line_args()
@@ -49,8 +50,8 @@ def main():
         }
         contents = ""
 
-        database = f'database-{(i//4) + 1}'
-        collection = f'collection-{(i//2) + 1}'
+        database = f'database-{(i // 4) + 1}'
+        collection = f'collection-{(i // 2) + 1}'
         batch = f'{database}.{collection}'
         batch_nos[batch] = batch_nos.get(batch, 0) + 1
 
@@ -59,12 +60,12 @@ def main():
         for j in range(record_count):
             print(f"Making record {j}/{record_count}.")
             contents = contents + \
-                db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
+                       db_object_json(f'{batch}.{batch_nos[batch]:04d}', j) + "\n"
 
         if args.malformed_input:
             print("Adding corrupted line.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
-            corrupted = record[0:int(len(record)/2)]
+            corrupted = record[0:int(len(record) / 2)]
             contents = contents + corrupted + "\n"
 
         if args.mongo_id:
@@ -84,7 +85,7 @@ def main():
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
             jso = json.loads(record)
             id = jso['_id']
-            id['createdDateTime'] = { "$date": "2010-01-01T00:00:00.000Z" }
+            id['createdDateTime'] = {"$date": "2010-01-01T00:00:00.000Z"}
             print(jso)
             contents = contents + json.dumps(jso) + "\n"
 
@@ -92,14 +93,17 @@ def main():
             print("Adding a removed record.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
             jso = json.loads(record)
-            removed_record = { "_removed": jso }
+            jso['_removedDateTime'] = {"$date": "2012-03-04T21:43:56.000Z"}
+            print(jso)
+            removed_record = {"_removed": jso}
             contents = contents + json.dumps(removed_record) + "\n"
 
         if args.archived_record:
             print("Adding an archived record.")
             record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
             jso = json.loads(record)
-            archived_record = { "_archived": jso }
+            jso['_archivedDateTime'] = {"$date": "2014-03-02T12:34:56.000Z"}
+            archived_record = {"_archived": jso}
             contents = contents + json.dumps(archived_record) + "\n"
 
         if args.record_with_no_timestamp:
@@ -139,6 +143,7 @@ def main():
             print(f'Writing data file {data_file}')
             data.write(encrypted_contents)
 
+
 def encrypt(datakey, unencrypted_bytes, do_encryption):
     """Encrypts the supplied bytes with the supplied key.
     Returns the initialisation vector and the encrypted data as a tuple.
@@ -147,7 +152,6 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
     iv_int = int(binascii.hexlify(initialisation_vector), 16)
     counter = Counter.new(AES.block_size * 8, initial_value=iv_int)
     aes = AES.new(base64.b64decode(datakey), AES.MODE_CTR, counter=counter)
-
 
     if do_encryption:
         print("Encrypting.")
@@ -159,14 +163,15 @@ def encrypt(datakey, unencrypted_bytes, do_encryption):
         return (base64.b64encode(initialisation_vector).decode('ascii'),
                 unencrypted_bytes)
 
+
 def db_object_json(batch, i, native_id=False):
     """Returns a sample dbRecord object with unique ids."""
     record = db_object(i)
 
     if native_id:
-        record['_id'] = {'$oid': f'{batch}-{(i//20) + 1}'}
+        record['_id'] = {'$oid': f'{batch}-{(i // 20) + 1}'}
     else:
-        record['_id']['declarationId'] = f'{batch}-{(i//20) + 1}'
+        record['_id']['declarationId'] = f'{batch}-{(i // 20) + 1}'
 
     record['contractId'] = guid()
     record['addressNumber']['cryptoId'] = guid()
@@ -174,9 +179,11 @@ def db_object_json(batch, i, native_id=False):
     record['processId'] = guid()
     return json.dumps(record)
 
+
 def guid():
     """Generates, returns a guid."""
     return str(uuid.uuid4())
+
 
 def db_object(i):
     """Returns a dbObject template to which unique ids can be applied."""
@@ -207,14 +214,13 @@ def db_object(i):
             "knownDate": 20150320
         },
         "createdDateTime": {
-            "$date":"2015-03-20T12:23:25.183Z"
+            "$date": "2015-03-20T12:23:25.183Z"
         },
         "_version": 2,
         "_lastModifiedDateTime": {
             "$date": f'2018-12-01T15:01:02.{i:03d}Z'
         }
     }
-
 
 
 def command_line_args():
