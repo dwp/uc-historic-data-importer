@@ -5,6 +5,7 @@ import app.utils.logging.JsonLoggerWrapper
 import org.apache.hadoop.hbase.*
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.ConnectionFactory
+import org.apache.hadoop.hbase.client.Durability
 import org.apache.hadoop.hbase.client.Put
 
 open class HbaseClient(
@@ -28,6 +29,7 @@ open class HbaseClient(
                 it.put(inserts.map { record ->
                     Put(record.key).apply {
                         this.addColumn(dataFamily, dataQualifier, record.version, record.body)
+                        this.durability = Durability.SKIP_WAL
                     }
                 })
             }
