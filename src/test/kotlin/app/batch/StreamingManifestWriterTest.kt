@@ -22,15 +22,6 @@ class StreamingManifestWriterTest {
         assertEquals(expected, actual)
     }
 
-    @Test
-    fun testManifestFileMetadataGeneration() {
-        val manifestWriter = StreamingManifestWriter()
-        val manifestFileName = "test-manifest-exporter/db.core.addressDeclaration.csv"
-        val actual = manifestWriter.manifestMetadata(manifestFileName, 1024)
-        assertEquals("text/plain", actual.contentType)
-        assertEquals(manifestFileName, actual.userMetadata["x-amz-meta-title"])
-        assertEquals(1024, actual.contentLength)
-    }
 
     @Test
     fun testManifestLogsException() {
