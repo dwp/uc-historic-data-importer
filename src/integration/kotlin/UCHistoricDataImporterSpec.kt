@@ -168,6 +168,22 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""database-1.collection-2.0002-1"",""someId"":""RANDOM_GUID""}"|$archivedTimestamp|database-1|collection-2|IMPORT|HDI|"{""declarationId"":""database-1.collection-2.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-2.0002-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection-2|IMPORT|HDI|"{""declarationId"":""database-1.collection-2.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-2.0002-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection-2|IMPORT|HDI|"{""declarationId"":""database-1.collection-2.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462002|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462003|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462004|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462005|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462006|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462007|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462008|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462009|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |database-2.collection-thirtyone.0001-1|1543676462009|database-2|collection|IMPORT|HDI|"{""$oid"":""database-2.collection-thirtyone.0001-1""}"|MONGO_IMPORT
+            |"{""createdDateTime"":""2010-01-01T00:00:00.000+0000"",""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462009|database-2|collection|IMPORT|HDI|"{""createdDateTime"":{""$date"":""2010-01-01T00:00:00.000Z""},""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1330897436000|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-2|collection|IMPORT|HDI|"{""declarationId"":""database-2.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-2.collection-3.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-2|collection-3|IMPORT|HDI|"{""declarationId"":""database-2.collection-3.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-2.collection-3.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-2|collection-3|IMPORT|HDI|"{""declarationId"":""database-2.collection-3.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-2.collection-3.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462002|database-2|collection-3|IMPORT|HDI|"{""declarationId"":""database-2.collection-3.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
@@ -196,7 +212,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
-            assertEquals(4, fileCount)
+            assertEquals(5, fileCount)
             assertEquals(expected, joinedContent)
 
         }
