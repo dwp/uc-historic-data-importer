@@ -6,6 +6,7 @@ import app.services.KeyService
 import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import org.apache.commons.lang3.StringUtils
@@ -18,6 +19,7 @@ import java.io.*
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+
 
 @Component
 @Profile("hbaseWriter")
@@ -101,7 +103,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
                 var fileProcessedRecords = 0
-                val gson = Gson()
+                val gson = GsonBuilder().serializeNulls().create()
                 val manifestWriter = StreamingManifestWriter()
                 val manifestOutputFile = "${manifestOutputDirectory}/${manifestWriter.topicName(database, collection)}-%06d.csv".format(fileNumber.toInt())
                 BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { writer ->

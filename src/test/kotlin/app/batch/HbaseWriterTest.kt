@@ -80,6 +80,7 @@ class HbaseWriterTest {
                 |           "$date": "2000-01-01T00:00:00.000Z" 
                 |        }
                 |    },
+                |    "nullfield": null,
                 |    "type":"addressDeclaration",
                 |    "_lastModifiedDateTime": {
                 |           "$date": "2010-01-01T00:00:00.000Z" 
@@ -124,6 +125,7 @@ class HbaseWriterTest {
                 |        "declarationId":"87a4fad9-49af-4cb2-91b0-0056e2ac0eef",
                 |        "createdDateTime": "2000-01-01T00:00:00.000+0000" 
                 |    },
+                |    "nullfield": null,
                 |    "_lastModifiedDateTime": "2010-01-01T00:00:00.000+0000"
                 |}""".trimMargin()
 
