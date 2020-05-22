@@ -94,7 +94,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val maxBatchVolume = maxBatchSizeBytes.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
-                val collection = groups[2]!!.value // ditto
+                val collection = coalesced(groups[2]!!.value)
                 val fileNumber = groups[3]!!.value // ditto
                 val tableName = "$database:$collection".replace("-", "_")
                 ensureTable(tableName)
@@ -276,35 +276,42 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
     }
 
+    fun coalesced(collection: String): String {
+        val coalescedName = COALESCED_COLLECTION.replace(collection, "")
+        if (collection != coalescedName) {
+            logger.info("Using coalesced collection", "original_name", collection, "coalesced_name", coalescedName)
+        }
+        return coalescedName
+    }
+
     fun manifestTimestamp(innerType: String, lastModifiedTimestampLong: Long,
                           removedDateTime: String,
                           archivedDateTime: String,
-                          createdDateTime: String)
-        = try {
-            when (innerType) {
-                MONGO_DELETE -> {
-                    if (StringUtils.isNotBlank(removedDateTime)) {
-                        messageUtils.getTimestampAsLong(removedDateTime)
-                    }
-                    else if (StringUtils.isNotBlank(archivedDateTime)) {
-                        messageUtils.getTimestampAsLong(archivedDateTime)
-                    }
-                    else {
-                        lastModifiedTimestampLong
-                    }
+                          createdDateTime: String) = try {
+        when (innerType) {
+            MONGO_DELETE -> {
+                if (StringUtils.isNotBlank(removedDateTime)) {
+                    messageUtils.getTimestampAsLong(removedDateTime)
                 }
-                MONGO_INSERT -> {
-                    if (StringUtils.isNotBlank(createdDateTime)) {
-                        messageUtils.getTimestampAsLong(createdDateTime)
-                    }
-                    else {
-                        lastModifiedTimestampLong
-                    }
+                else if (StringUtils.isNotBlank(archivedDateTime)) {
+                    messageUtils.getTimestampAsLong(archivedDateTime)
                 }
-                else -> {
+                else {
                     lastModifiedTimestampLong
                 }
             }
+            MONGO_INSERT -> {
+                if (StringUtils.isNotBlank(createdDateTime)) {
+                    messageUtils.getTimestampAsLong(createdDateTime)
+                }
+                else {
+                    lastModifiedTimestampLong
+                }
+            }
+            else -> {
+                lastModifiedTimestampLong
+            }
+        }
         }
         catch (e: ParseException) {
             lastModifiedTimestampLong
@@ -570,6 +577,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         const val VALID_INCOMING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         const val VALID_OUTGOING_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ"
         val VALID_DATE_FORMATS = listOf(VALID_INCOMING_DATE_FORMAT, VALID_OUTGOING_DATE_FORMAT)
+        val COALESCED_COLLECTION = Regex("-(archived|eight|eighteen|eleven|fifteen|five|four|fourteen|nine|nineteen|one|seven|seventeen|six|sixteen|ten|thirteen|thirty|thirtyone|thirtytwo|three|twelve|twenty|twentyeight|twentyfive|twentyfour|twentynine|twentyone|twentyseven|twentysix|twentythree|twentytwo|two)$")
 
         private const val LAST_MODIFIED_DATE_TIME_FIELD_STRIPPED = "_lastModifiedDateTimeStripped"
         private const val EPOCH_FIELD = "epoch"
