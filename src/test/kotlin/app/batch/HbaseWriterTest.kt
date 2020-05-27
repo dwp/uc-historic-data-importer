@@ -2224,6 +2224,25 @@ class HbaseWriterTest {
     }
 
     @Test
+    fun agentCoreAgentToDoArchiveIsCoalesced() {
+        val actual = hBaseWriter.coalescedArchive("agent_core:agentToDoArchive")
+        assertEquals("agent_core:agentToDo", actual)
+    }
+
+    @Test
+    fun otherDbAgentToDoArchiveIsNotCoalesced() {
+        val actual = hBaseWriter.coalescedArchive("other_db:agentToDoArchive")
+        assertEquals("other_db:agentToDoArchive", actual)
+    }
+
+
+    @Test
+    fun otherCollectionIsNotCoalesced() {
+        val actual = hBaseWriter.coalescedArchive("core:calculationParts")
+        assertEquals("core:calculationParts", actual)
+    }
+
+    @Test
     fun testPutBatchRetries() {
         try {
             given(hbaseClient.putBatch(any(), any())).willThrow(java.lang.RuntimeException("Failed to put batch"))

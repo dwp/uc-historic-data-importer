@@ -31,14 +31,10 @@ else
     stderr creating sample data
 
     if create_sample_data; then
-
-        dd if=/dev/zero of=a-spurious.file bs=10M count=1
-        aws_s3 cp a-spurious.file s3://${S3_BUCKET}/${S3_PREFIX}
-        ls *.json.gz.enc | head -n1 | xargs rm -v
-
         for file in *.json.gz.enc *.json.encryption.json; do
             aws_s3 cp $file s3://${S3_BUCKET}/${S3_PREFIX}
         done
         aws_s3 ls $S3_BUCKET/$S3_PREFIX
+        ls -l
     fi
 fi

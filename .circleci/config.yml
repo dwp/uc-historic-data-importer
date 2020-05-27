@@ -90,9 +90,12 @@ jobs:
                 echo Waiting for s3.
                 sleep 2
             done
-            docker-compose up s3-init
-            docker-compose up uc-historic-data-importer
-            docker-compose up integration-test
+
+            docker-compose run s3-init
+
+            if docker-compose run uc-historic-data-importer; then
+              docker-compose run integration-test
+            fi
 
   snyk-pr:
     docker:

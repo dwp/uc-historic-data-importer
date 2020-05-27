@@ -96,9 +96,14 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val maxBatchVolume = maxBatchSizeBytes.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
-                val collection = coalesced(groups[2]!!.value)
+                var collection = coalesced(groups[2]!!.value)
                 val fileNumber = groups[3]!!.value // ditto
-                val tableName = "$database:$collection".replace("-", "_")
+                val originalTableName = "$database:$collection".replace("-", "_")
+                val tableName = coalescedArchive(originalTableName)
+                if (originalTableName != tableName) {
+                    collection = tableName.replace(Regex("""^[^:]+:"""), "")
+                }
+
                 ensureTable(tableName)
 
                 val dataKeyResult: DataKeyResult = getDataKey(fileName)
@@ -285,6 +290,11 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
         return coalescedName
     }
+
+    fun coalescedArchive(tableName: String) =
+            if (coalescedNames[tableName] != null) coalescedNames[tableName] ?: "" else tableName
+
+    private val coalescedNames = mapOf("agent_core:agentToDoArchive" to "agent_core:agentToDo")
 
     fun manifestTimestamp(innerType: String, lastModifiedTimestampLong: Long,
                           removedDateTime: String,

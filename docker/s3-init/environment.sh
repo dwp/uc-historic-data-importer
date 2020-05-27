@@ -29,7 +29,7 @@ aws_cmd() {
 }
 
 create_sample_data() {
-  ./sample_data.py -n5 -s10 -vbarcedimotk http://dks-standalone-http:8080/datakey
+  ./sample_data.py -n2 -s10 -fvbarcedimotk http://dks-standalone-http:8080/datakey
 }
 
 create_paginated_data() {

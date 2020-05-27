@@ -45,8 +45,10 @@ def main():
     if args.coalesced:
         generate_dump_file(args, batch_nos, data_key_service, file_count + 1, "collection-thirtyone")
 
+    if args.coalesced_archive:
+        generate_dump_file(args, batch_nos, data_key_service, file_count + 2, "agentToDoArchive", "agent_core")
 
-def generate_dump_file(args, batch_nos, data_key_service, i, collectionOverride=""):
+def generate_dump_file(args, batch_nos, data_key_service, i, collection_override="", database_override =""):
     dks_response = requests.get(data_key_service).json()
     encryption_metadata = {
         'keyEncryptionKeyId': dks_response['dataKeyEncryptionKeyId'],
@@ -54,8 +56,8 @@ def generate_dump_file(args, batch_nos, data_key_service, i, collectionOverride=
         'plaintextDatakey': dks_response['plaintextDataKey']
     }
     contents = ""
-    database = f'database-{(i // 4) + 1}'
-    collection = collectionOverride if collectionOverride != "" else f'collection-{(i // 2) + 1}'
+    database = database_override if database_override != "" else f'database-{(i // 4) + 1}'
+    collection = collection_override if collection_override != "" else f'collection-{(i // 2) + 1}'
     batch = f'{database}.{collection}'
     batch_nos[batch] = batch_nos.get(batch, 0) + 1
     record_count = int(args.batch_size if args.batch_size else 10)
@@ -227,6 +229,8 @@ def command_line_args():
                         help='Add a record with no timestamp to each file.')
     parser.add_argument('-e', '--encrypt', action='store_true',
                         help='Encrypt the data.')
+    parser.add_argument('-f', '--coalesced-archive', action='store_true',
+                        help='Add a file from a collection with a coalesced archive.')
     parser.add_argument('-i', '--record-with-no-id', action='store_true',
                         help='Add a record with no id to each file.')
     parser.add_argument('-k', '--data-key-service',
