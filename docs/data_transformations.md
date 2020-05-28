@@ -26,7 +26,8 @@ Below is a table listing the transformations that are performed on the historic 
 | [Re-structure `_removed` records](#Re-structure-`_removed`-records) | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
 | [Re-structure `_archived` records](#Re-structure-`_archived`-records) | `{ "_id": {"$oid": "guid1" }}, "_archived": "[entire record]"` | `{ [entire record] }` |
 | [Flatten date objects within `_ids`](Flatten-date-objects-within-`_ids`)| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000+0000" } }` |
-
+| [Coalesce split collections](#Coalesce-split-collections) | N/A | N/A |
+| [Coalesce agentToDoArchive into agentToDo](#Coalesce-agentToDoArchive-into-agentToDo) | N/A | N/A |
 ## Transformation details and reasoning
 
 Below is a detailed explanation of the change made for each transform. Each transform is independant of other transforms and multiple transforms might happen to the same record.
@@ -230,3 +231,27 @@ becomes
 If these records come over kafka following a modification they will be in the transformed format, and so to ensure that
 we add a new version to the correct record the ids must match and so we make id of the record imported from the dump
 look like it's kafka equivalent before persisting it to hbase.
+
+### Coalesce split collections
+#### Transform details
+UC split some collections on export into 33 separate sets of files that look like they come from different collections.
+For example calculator.calculationParts is exported into sets of files called
+
+ calculator.calculationParts-one. ...
+ calculator.calculationParts-two. ...
+ ...
+ calculator.calculationParts-thirtytwo. ...
+ calculator.calculationParts-archive. ...
+
+HDI needs to ensure that these files are imported into calculator.calculationParts and so when the table name is derived
+from the filename the trailing 'one', 'two' etc is stripped off meaning that the derived table name for all these files
+is calculator:calculationParts.
+
+### Coalesce agentToDoArchive into agentToDo
+#### Transform details
+In the UC system record from agentToDo are moved into agentToDoArchive by a batch process and these inserts into 
+agentToDoArchive are not published to the kafka stream. In crown these two collections are merged back together.
+We are going to do this merge on import so that we have one table agentToDo that contains all records from agentToDo
+and agentToDoArchive.
+
+#### Transform reasoning
