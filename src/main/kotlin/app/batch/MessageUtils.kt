@@ -32,7 +32,7 @@ class MessageUtils {
                 return df.parse(timeStampAsStr).time
             }
             catch (e: Exception) {
-                logger.debug("Found invalid timestamp format", "bad_candidate", "$timeStampAsStr", "valid_format", it)
+
             }
         }
         throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
