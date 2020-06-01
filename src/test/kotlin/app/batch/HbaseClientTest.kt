@@ -32,7 +32,7 @@ class HbaseClientTest {
             on { admin } doReturn adm
         }
 
-        val hbaseClient = HbaseClient(connection, "cf".toByteArray(), "record".toByteArray())
+        val hbaseClient = HbaseClient(connection, "cf".toByteArray(), "record".toByteArray(), 2)
         hbaseClient.ensureTable("$namespace:$tableQualifier")
         verify(adm, times(0)).createNamespace(any())
         verify(adm, times(0)).createTable(any())
@@ -102,7 +102,7 @@ class HbaseClientTest {
         val dataFamily = "cf".toByteArray()
         val dataQualifier = "record".toByteArray()
         val regionReplication = 3
-        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier), regionReplication
+        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier, regionReplication)
         val newTableQualifier = "table2"
         val qualifiedTableName = "$namespace:$newTableQualifier"
         hbaseClient.ensureTable(qualifiedTableName)
