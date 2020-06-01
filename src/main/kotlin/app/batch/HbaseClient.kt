@@ -12,7 +12,7 @@ open class HbaseClient(
         val connection: Connection,
         private val dataFamily: ByteArray,
         private val dataQualifier: ByteArray,
-        private val regionReplication: Int
+        private val hbaseRegionReplication: Int
 ) {
     companion object {
         fun connect() = HbaseClient(
@@ -65,7 +65,7 @@ open class HbaseClient(
                             maxVersions = Int.MAX_VALUE
                             minVersions = 1
                         })
-                    setRegionReplication(regionReplication)
+                    setRegionReplication(hbaseRegionReplication)
                 })
             }
             catch (e: Exception) {
