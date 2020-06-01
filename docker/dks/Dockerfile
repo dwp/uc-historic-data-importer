@@ -13,7 +13,7 @@ WORKDIR ${INSTALL_DIR}
 RUN curl --silent --insecure "https://api.github.com/repos/dwp/data-key-service/releases/latest" \
              | jq -r '.assets[0].browser_download_url' >> dks_version
 RUN cat dks_version
-RUN wget $(cat dks_version) --no-check-certificate --output-document dks-latest.jar
+RUN wget https://github.com/dwp/data-key-service/releases/download/0.0.74/data-key-service-0.0.74.jar --no-check-certificate --output-document dks-latest.jar
 RUN ls -la *.jar
 
 RUN chmod a+rwx -R /opt/data-key-service
