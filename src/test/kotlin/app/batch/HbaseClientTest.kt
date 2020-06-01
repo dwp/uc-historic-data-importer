@@ -59,7 +59,8 @@ class HbaseClientTest {
 
         val dataFamily = "cf".toByteArray()
         val dataQualifier = "record".toByteArray()
-        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier)
+        val regionReplication = 2
+        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier, regionReplication)
         val newNamespace = "ns2"
         val newTableQualifier = "table2"
         val qualifiedTableName = "$newNamespace:$newTableQualifier"
@@ -73,6 +74,7 @@ class HbaseClientTest {
                         maxVersions = Int.MAX_VALUE
                         minVersions = 1
                     })
+            setRegionReplication(regionReplication)
         }
 
         verify(adm, times(1)).createTable(tableDescriptor)
@@ -99,7 +101,8 @@ class HbaseClientTest {
 
         val dataFamily = "cf".toByteArray()
         val dataQualifier = "record".toByteArray()
-        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier)
+        val regionReplication = 3
+        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier), regionReplication
         val newTableQualifier = "table2"
         val qualifiedTableName = "$namespace:$newTableQualifier"
         hbaseClient.ensureTable(qualifiedTableName)
@@ -112,6 +115,7 @@ class HbaseClientTest {
                         maxVersions = Int.MAX_VALUE
                         minVersions = 1
                     })
+            setRegionReplication(regionReplication)
         }
 
         verify(adm, times(1)).createTable(tableDescriptor)

@@ -11,13 +11,15 @@ import org.apache.hadoop.hbase.client.Put
 open class HbaseClient(
         val connection: Connection,
         private val dataFamily: ByteArray,
-        private val dataQualifier: ByteArray
+        private val dataQualifier: ByteArray,
+        private val regionReplication: Int
 ) {
     companion object {
         fun connect() = HbaseClient(
             ConnectionFactory.createConnection(HBaseConfiguration.create(Config.Hbase.config)),
             Config.Hbase.dataFamily.toByteArray(),
-            Config.Hbase.dataQualifier.toByteArray()
+            Config.Hbase.dataQualifier.toByteArray(),
+            Config.Hbase.regionReplication
         )
 
         val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(HbaseClient::class.toString())
@@ -63,6 +65,7 @@ open class HbaseClient(
                             maxVersions = Int.MAX_VALUE
                             minVersions = 1
                         })
+                    setRegionReplication(regionReplication)
                 })
             }
             catch (e: Exception) {
