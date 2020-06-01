@@ -9,7 +9,7 @@ fun getEnv(envVar: String): String? {
 
 val hBaseDataFamily = getEnv("K2HB_HBASE_DATA_FAMILY") ?: "cf"
 val hBaseDataQualifier = getEnv("K2HB_HBASE_DATA_QUALIFIER") ?: "record"
-val hbaseRegionReplication = getEnv("K2HB_HBASE_DATA_QUALIFIER")?.toIntOrNull() ?: 3
+val hbaseRegionReplication = getEnv("K2HB_HBASE_REGION_REPLICATION")?.toIntOrNull() ?: 3
 
 object Config {
     object Hbase {

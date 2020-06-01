@@ -59,7 +59,7 @@ class HbaseClientTest {
 
         val dataFamily = "cf".toByteArray()
         val dataQualifier = "record".toByteArray()
-        val regionReplication = 2
+        val regionReplication = 3
         val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier, regionReplication)
         val newNamespace = "ns2"
         val newTableQualifier = "table2"
