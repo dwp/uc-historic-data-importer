@@ -32,7 +32,7 @@ class HbaseClientTest {
             on { admin } doReturn adm
         }
 
-        val hbaseClient = HbaseClient(connection, "cf".toByteArray(), "record".toByteArray())
+        val hbaseClient = HbaseClient(connection, "cf".toByteArray(), "record".toByteArray(), 2)
         hbaseClient.ensureTable("$namespace:$tableQualifier")
         verify(adm, times(0)).createNamespace(any())
         verify(adm, times(0)).createTable(any())
@@ -59,7 +59,8 @@ class HbaseClientTest {
 
         val dataFamily = "cf".toByteArray()
         val dataQualifier = "record".toByteArray()
-        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier)
+        val hbaseRegionReplication = 3
+        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier, hbaseRegionReplication)
         val newNamespace = "ns2"
         val newTableQualifier = "table2"
         val qualifiedTableName = "$newNamespace:$newTableQualifier"
@@ -73,6 +74,7 @@ class HbaseClientTest {
                         maxVersions = Int.MAX_VALUE
                         minVersions = 1
                     })
+            setRegionReplication(hbaseRegionReplication)
         }
 
         verify(adm, times(1)).createTable(tableDescriptor)
@@ -99,7 +101,8 @@ class HbaseClientTest {
 
         val dataFamily = "cf".toByteArray()
         val dataQualifier = "record".toByteArray()
-        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier)
+        val hbaseRegionReplication = 3
+        val hbaseClient = HbaseClient(connection, dataFamily, dataQualifier, hbaseRegionReplication)
         val newTableQualifier = "table2"
         val qualifiedTableName = "$namespace:$newTableQualifier"
         hbaseClient.ensureTable(qualifiedTableName)
@@ -112,6 +115,7 @@ class HbaseClientTest {
                         maxVersions = Int.MAX_VALUE
                         minVersions = 1
                     })
+            setRegionReplication(hbaseRegionReplication)
         }
 
         verify(adm, times(1)).createTable(tableDescriptor)

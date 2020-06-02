@@ -9,9 +9,9 @@ fun getEnv(envVar: String): String? {
 
 val hBaseDataFamily = getEnv("K2HB_HBASE_DATA_FAMILY") ?: "cf"
 val hBaseDataQualifier = getEnv("K2HB_HBASE_DATA_QUALIFIER") ?: "record"
+val hbaseRegionReplication = getEnv("K2HB_HBASE_REGION_REPLICATION")?.toIntOrNull() ?: 3
 
 object Config {
-
     object Hbase {
         val config = Configuration().apply {
             // See also https://hbase.apache.org/book.html#hbase_default_configurations
@@ -23,6 +23,6 @@ object Config {
 
         val dataFamily = hBaseDataFamily
         val dataQualifier = hBaseDataQualifier
+        val regionReplication = hbaseRegionReplication
     }
-
 }
