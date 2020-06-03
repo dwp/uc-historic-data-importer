@@ -83,7 +83,7 @@ jobs:
             cd docker/gradle && docker build --tag dwp-gradle:latest . && cd -
 
             docker-compose build
-            docker-compose up -d hbase s3 dks-standalone-http dks-standalone-https
+            docker-compose up -d hbase s3
 
             S3_READY_REGEX=^Ready\.$
             while ! docker logs s3 2> /dev/null | grep -q $S3_READY_REGEX; do
@@ -91,6 +91,7 @@ jobs:
                 sleep 2
             done
 
+            docker-compose up -d dks-standalone-http dks-standalone-https
             docker-compose run s3-init
 
             if docker-compose run uc-historic-data-importer; then

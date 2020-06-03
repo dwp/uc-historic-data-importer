@@ -90,13 +90,14 @@ build-image: ancillary-images build-jar ## Build all ecosystem of images
 
 .PHONY: up-ancillary
 up-ancillary: ## Bring up supporting containers (hbase, aws, dks)
-	docker-compose up -d zookeeper hbase s3 dks-standalone-https dks-standalone-http
+	docker-compose up -d zookeeper hbase s3
 	@{ \
 		while ! docker logs s3 2> /dev/null | grep -q $(S3_READY_REGEX); do \
 		echo Waiting for s3.; \
 		sleep 2; \
 		done; \
 	}
+	docker-compose up -d dks-standalone-https dks-standalone-http
 	docker-compose up s3-init
 
 .PHONY: up
