@@ -15,6 +15,9 @@ if [[ $BUCKET_COUNT -eq 0 ]]; then
     aws_s3api put-bucket-acl --bucket "${S3_BUCKET}" --acl public-read
     aws_s3 mb "s3://${S3_MANIFEST_BUCKET}"
     aws_s3api put-bucket-acl --bucket "${S3_MANIFEST_BUCKET}" --acl public-read
+    aws_s3 mb "s3://dw-local-crl" --region "${AWS_REGION}"
+    aws_s3api put-bucket-acl --bucket "dw-local-crl" --acl public-read
+    aws_s3api put-object --bucket "dw-local-crl" --key crl/
 else
     stderr Not making bucket \'$S3_BUCKET\': already exists.
 fi
