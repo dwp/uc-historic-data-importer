@@ -72,10 +72,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install openjdk-8-jdk
             ./truststores.sh
-            cat gradle/wrapper/gradle-wrapper.properties | grep -v distributionUrl > tmp.txt
-            echo 'distributionUrl=https\://services.gradle.org/distributions/gradle-5.5.1-bin.zip' >> tmp.txt
-            mv tmp.txt gradle/wrapper/gradle-wrapper.properties
-            cat gradle/wrapper/gradle-wrapper.properties
             ./gradlew build
             cd docker/java && docker build --tag dwp-java:latest . && cd -
             cd docker/python && docker build --tag dwp-python:latest . && cd -
