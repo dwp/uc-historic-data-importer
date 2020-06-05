@@ -122,6 +122,54 @@ class S3ReaderTest {
     }
 
     @Test
+    fun shouldSkipZeroBytePairs() {
+        val pair1dataKey = "database1.collection1.0001.json.gz.enc"
+        val pair1dataSummary = mockS3ObjectSummary(pair1dataKey)
+        val pair1dataObject = mockS3Object()
+        given(s3Client.getObject(BUCKET_NAME, pair1dataKey)).willReturn(pair1dataObject)
+
+        val pair1metadataKey = "database1.collection1.0001.json.encryption.json"
+        val pair1metadataSummary = mockS3ObjectSummary(pair1metadataKey)
+        val pair1metadataObject = mockS3Object()
+        given(s3Client.getObject(BUCKET_NAME, pair1metadataKey)).willReturn(pair1metadataObject)
+
+        val pair2dataKey = "database1.collection1.0002.json.gz.enc"
+        val pair2dataSummary = mockS3ObjectSummary(pair2dataKey, 0L)
+        val pair2dataObject = mockS3Object()
+        given(s3Client.getObject(BUCKET_NAME, pair2dataKey)).willReturn(pair2dataObject)
+
+        val pair2metadataKey = "database1.collection1.0002.json.encryption.json"
+        val pair2metadataSummary = mockS3ObjectSummary(pair2metadataKey, 0L)
+        val pair2metadataObject = mockS3Object()
+        given(s3Client.getObject(BUCKET_NAME, pair2metadataKey)).willReturn(pair2metadataObject)
+
+        val pair3dataKey = "database1.collection1.0003.json.gz.enc"
+        val pair3dataSummary = mockS3ObjectSummary(pair3dataKey)
+        val pair3dataObject = mockS3Object()
+        given(s3Client.getObject(BUCKET_NAME, pair3dataKey)).willReturn(pair3dataObject)
+
+        val pair3metadataKey = "database1.collection1.0003.json.encryption.json"
+        val pair3metadataSummary = mockS3ObjectSummary(pair3metadataKey)
+        val pair3metadataObject = mockS3Object()
+        given(s3Client.getObject(BUCKET_NAME, pair3metadataKey)).willReturn(pair3metadataObject)
+
+        val results = mock<ListObjectsV2Result> {
+            on { objectSummaries } doReturn listOf(pair1dataSummary, pair1metadataSummary,
+                    pair2dataSummary, pair2metadataSummary, pair3dataSummary, pair3metadataSummary)
+            on { isTruncated } doReturn false
+        }
+
+        given(s3Client.listObjectsV2(any(ListObjectsV2Request::class.java))).willReturn(results)
+
+        val pair1 = s3Reader.read()
+        val pair2 = s3Reader.read()
+
+        assertEquals(pair1dataKey, pair1?.s3key)
+        assertEquals(pair3dataKey, pair2?.s3key)
+    }
+
+
+    @Test
     fun should_not_page_when_results_not_truncated() {
         val page1Object1Key = "database1.collection1.0001.json.gz.enc"
         val page1Object2Key = "database1.collection1.0001.json.encryption.json"
@@ -162,10 +210,13 @@ class S3ReaderTest {
         val s3ObjectSummary_1a = S3ObjectSummary()
         s3ObjectSummary_1a.bucketName = BUCKET_NAME
         s3ObjectSummary_1a.key = VALID_DATA_KEY_1
+        s3ObjectSummary_1a.size = 100L
 
         val s3ObjectSummary_1b = S3ObjectSummary()
         s3ObjectSummary_1b.bucketName = BUCKET_NAME
         s3ObjectSummary_1b.key = VALID_METADATA_KEY_1
+        s3ObjectSummary_1b.size = 100L
+
 
         listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1a)
         listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1b)
@@ -186,10 +237,12 @@ class S3ReaderTest {
         val s3ObjectSummary_2a = S3ObjectSummary()
         s3ObjectSummary_2a.bucketName = BUCKET_NAME
         s3ObjectSummary_2a.key = VALID_DATA_KEY_2
+        s3ObjectSummary_2a.size = 100L
 
         val s3ObjectSummary_2b = S3ObjectSummary()
         s3ObjectSummary_2b.bucketName = BUCKET_NAME
         s3ObjectSummary_2b.key = VALID_METADATA_KEY_2
+        s3ObjectSummary_2b.size = 100L
 
         listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_2a)
         listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_2b)
@@ -244,10 +297,12 @@ class S3ReaderTest {
         val s3ObjectSummary_1a = S3ObjectSummary()
         s3ObjectSummary_1a.bucketName = BUCKET_NAME
         s3ObjectSummary_1a.key = VALID_DATA_KEY_1
+        s3ObjectSummary_1a.size = 100L
 
         val s3ObjectSummary_1b = S3ObjectSummary()
         s3ObjectSummary_1b.bucketName = BUCKET_NAME
         s3ObjectSummary_1b.key = VALID_METADATA_KEY_1
+        s3ObjectSummary_1b.size = 100L
 
         listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1a)
         listObjectsV2Result_1.objectSummaries.add(s3ObjectSummary_1b)
@@ -347,8 +402,9 @@ class S3ReaderTest {
             on { objectContent } doReturn mock()
         }
 
-    private fun mockS3ObjectSummary(objectKey: String) =
-        mock<S3ObjectSummary> {
-            on { key } doReturn objectKey
-        }
+    private fun mockS3ObjectSummary(objectKey: String, objectSize: Long = 100L) =
+            mock<S3ObjectSummary> {
+                on { key } doReturn objectKey
+                on { size } doReturn objectSize
+            }
 }

@@ -3,7 +3,10 @@ package app.batch
 import app.configuration.S3Configuration
 import app.domain.InputStreamPair
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.*
+import com.amazonaws.services.s3.model.ListObjectsV2Request
+import com.amazonaws.services.s3.model.ListObjectsV2Result
+import com.amazonaws.services.s3.model.S3Object
+import com.amazonaws.services.s3.model.S3ObjectSummary
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.times
@@ -107,6 +110,7 @@ class S3ReaderRetryTest {
     private fun mockS3ObjectSummary(objectKey: String) =
         mock<S3ObjectSummary> {
             on { key } doReturn objectKey
+            on { size } doReturn 100L
         }
 
     private fun mockS3Object() =
