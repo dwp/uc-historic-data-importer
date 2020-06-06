@@ -97,16 +97,29 @@ class S3Reader(private val s3client: AmazonS3, private val keyPairGenerator: Key
         logger.info("Found objects in s3", "s3_objects_found", "s3://$bucketName/$fullPrefix", "s3_location", "${objectSummaries.size}")
         val objectSummaryKeyMap = objectSummaries.map { it.key to it }.toMap()
         val keyPairs =
-            keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },
-                fileNameFormat.toRegex(),
-                fileNameFormatDataExtension.toRegex(),
-                fileNameFormatMetadataExtension.toRegex())
+                keyPairGenerator.generateKeyPairs(objectSummaries.map { it.key },
+                        fileNameFormat.toRegex(),
+                        fileNameFormatDataExtension.toRegex(),
+                        fileNameFormatMetadataExtension.toRegex())
 
-        val pairs = keyPairs.map {
-            val obj = objectSummaryKeyMap[it.dataKey]
-            val meta = objectSummaryKeyMap[it.metadataKey]
-            S3ObjectSummaryPair(obj, meta)
-        }
+        val pairs = keyPairs
+                .map {
+                    val obj = objectSummaryKeyMap[it.dataKey]
+                    val meta = objectSummaryKeyMap[it.metadataKey]
+                    S3ObjectSummaryPair(obj, meta)
+                }
+                .filter { pair -> pair.data != null && pair.metadata != null }
+                .filter { pair ->
+                    val data = pair.data!!
+                    val metadata = pair.metadata!!
+                    if (data.size == 0L && metadata.size == 0L) {
+                        logger.info("Ignoring zero-byte pair", "data_key", data.key, "metadata_key", metadata.key)
+                        logger.info("Processed records in file", "records_processed", "0", "file_name", data.key)
+                    }
+
+                    data.size > 0 && metadata.size > 0
+                }
+
         logger.info("Found valid key pairs", "s3_keypairs_found", "${pairs.size}", "s3_location", "s3://$bucketName/$fullPrefix")
         return pairs
     }
