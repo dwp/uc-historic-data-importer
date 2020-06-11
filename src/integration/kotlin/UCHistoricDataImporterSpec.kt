@@ -1,3 +1,4 @@
+
 import app.batch.HbaseClient
 import app.configuration.S3DummyConfiguration
 import com.amazonaws.services.s3.AmazonS3
@@ -10,7 +11,6 @@ import io.kotlintest.spring.SpringListener
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.client.Scan
-import org.apache.log4j.Logger
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.Assert.assertEquals
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +35,6 @@ import javax.crypto.spec.SecretKeySpec
 class UCHistoricDataImporterSpec : FunSpec() {
 
     override fun listeners() = listOf(SpringListener)
-    private val logger = Logger.getLogger(UCHistoricDataImporterSpec::class.toString())
 
     @Autowired
     private lateinit var s3Client: AmazonS3
@@ -110,7 +109,6 @@ class UCHistoricDataImporterSpec : FunSpec() {
                         }
                     }
                 }
-
             }
         }
 
@@ -136,22 +134,6 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462002|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462003|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462004|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462005|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462006|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462007|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462008|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462009|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |database-1.collection-thirtyone.0001-1|1543676462009|database-1|collection|IMPORT|HDI|"{""$oid"":""database-1.collection-thirtyone.0001-1""}"|MONGO_IMPORT
-            |"{""createdDateTime"":""2010-01-01T00:00:00.000+0000"",""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462009|database-1|collection|IMPORT|HDI|"{""createdDateTime"":{""$date"":""2010-01-01T00:00:00.000Z""},""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1330897436000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
-            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462002|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
@@ -184,6 +166,22 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|$archivedTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462002|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462003|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462004|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462005|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462006|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462007|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462008|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462009|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |database-1.collection-thirtyone.0001-1|1543676462009|database-1|collection|IMPORT|HDI|"{""$oid"":""database-1.collection-thirtyone.0001-1""}"|MONGO_IMPORT
+            |"{""createdDateTime"":""2010-01-01T00:00:00.000+0000"",""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462009|database-1|collection|IMPORT|HDI|"{""createdDateTime"":{""$date"":""2010-01-01T00:00:00.000Z""},""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1330897436000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             """.trimMargin()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
@@ -196,9 +194,24 @@ class UCHistoricDataImporterSpec : FunSpec() {
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
-            assertEquals(4, fileCount)
             assertEquals(expected, joinedContent)
+        }
 
+        test("Manifest files names should match import file names") {
+            val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
+
+            val expected
+                    = listOf("db.agent_core.agentToDoArchive-000001.csv",
+                    "db.database-1.collection-1-000001.csv",
+                    "db.database-1.collection-1-000002.csv",
+                    "db.database-1.collection-thirtyone-000001.csv")
+            val actual = summaries
+                    .map { summary -> summary.key }
+                    .map { it.replace(s3ManifestPrefixFolder, "") }
+                    .map { it.replace("/", "") }
+                    .sorted()
+
+            assertEquals(expected, actual)
         }
     }
 
