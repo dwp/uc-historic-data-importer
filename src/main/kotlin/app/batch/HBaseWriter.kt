@@ -96,7 +96,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 val maxBatchVolume = maxBatchSizeBytes.toInt()
                 val groups = matchResult.groups
                 val database = groups[1]!!.value // can assert nun-null as it matched on the regex
-                var collection = coalesced(groups[2]!!.value)
+                val uncoalescedCollection = groups[2]!!.value
+                var collection = coalesced(uncoalescedCollection)
                 val fileNumber = groups[3]!!.value // ditto
                 val originalTableName = "$database:$collection".replace("-", "_")
                 val tableName = coalescedArchive(originalTableName)
@@ -110,7 +111,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                 var fileProcessedRecords = 0
                 val gson = GsonBuilder().serializeNulls().create()
                 val manifestWriter = StreamingManifestWriter()
-                val manifestOutputFile = "${manifestOutputDirectory}/${manifestWriter.topicName(database, collection)}-%06d.csv".format(fileNumber.toInt())
+                val manifestOutputFile =
+                        "${manifestOutputDirectory}/${manifestWriter.topicName(database, uncoalescedCollection)}-%06d.csv".format(fileNumber.toInt())
                 BufferedWriter(OutputStreamWriter(FileOutputStream(manifestOutputFile))).use { writer ->
                     var succeeded = false
                     var attempts = 0
