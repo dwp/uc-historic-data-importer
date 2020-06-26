@@ -3,6 +3,7 @@ package app.batch
 import app.domain.*
 import app.services.CipherService
 import app.services.KeyService
+import app.services.S3Service
 import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
@@ -42,6 +43,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     @Autowired
     private lateinit var cipherService: CipherService
+
+    @Autowired
+    private lateinit var s3Service: S3Service
 
     @Value("\${s3.manifest.retry.max.attempts:10}")
     private lateinit var maxManifestAttempts: String
@@ -251,7 +255,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 logger.error("Failed to stream file", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                             }
 
-                            inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
+                            inputStream = cipherService.decompressingDecryptingStream(s3Service.objectInputStream(s3bucket, fileName),
+                                                                                        input.key, input.iv)
                             batch = mutableListOf()
                             batchSizeBytes = 0
                         }
