@@ -3,10 +3,7 @@ package app.batch
 import app.domain.HBaseRecord
 import app.utils.logging.JsonLoggerWrapper
 import org.apache.hadoop.hbase.*
-import org.apache.hadoop.hbase.client.Connection
-import org.apache.hadoop.hbase.client.ConnectionFactory
-import org.apache.hadoop.hbase.client.Durability
-import org.apache.hadoop.hbase.client.Put
+import org.apache.hadoop.hbase.client.*
 
 open class HbaseClient(
         val connection: Connection,
@@ -37,6 +34,14 @@ open class HbaseClient(
             }
         }
     }
+
+    open fun exists(tableName: String, id: ByteArray, timestamp: Long) =
+        connection.getTable(TableName.valueOf(tableName)).use { table ->
+            table.exists(Get(id).apply {
+                addColumn(dataFamily, dataQualifier)
+                setTimeStamp(timestamp)
+            })
+        }
 
     @Synchronized
     fun ensureTable(tableName: String) {

@@ -76,13 +76,17 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${s3.bucket}")
     private lateinit var s3bucket: String
 
+    @Value("\${skip.existing:false}")
+    private lateinit var skipExistingRecords: String
+
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
 
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
         logger.info("System stats", "available_processors", "$cpus", "run_mode", runMode)
-
+        val skipExisting = skipExistingRecords.toBoolean()
+        logger.info("Skip existing records configuration", "skip_existing", skipExisting.toString())
         var processedFiles = 0
         var processedRecords = 0
 
@@ -211,8 +215,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
-                                        batchSizeBytes += messageWrapper.length
+                                        if (!skipExisting || !hbase.exists(tableName, formattedKey, lastModifiedTimestampLong)) {
+                                            batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
+                                            batchSizeBytes += messageWrapper.length
+                                        }
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
                                         val idForManifest = if (idIsString) id else messageUtils.sortJsonStringByKey(id)

@@ -166,7 +166,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(7)).doAppend(captor.capture())
+        verify(mockAppender, times(8)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Error processing record\", \"line_number\":\"1\", \"file_name\":\"adb.collection.0001.json.gz.enc\", \"error_message\":\"parse error"))
     }
@@ -206,7 +206,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(7)).doAppend(captor.capture())
+        verify(mockAppender, times(8)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error processing record\", \"line_number\":\"1\", \"file_name\":\"adb.collection.0001.json.gz.enc\", \"error_message\":\"parse error"))
@@ -244,7 +244,7 @@ class HbaseWriterTest {
         verify(cipherService, times(10)).decompressingDecryptingStream(any(), any(), any())
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(15)).doAppend(captor.capture())
+        verify(mockAppender, times(16)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error streaming file\", \"attempt_number\":\"1\", \"file_name\":\"$validFileName\", \"error_message\":\"RESET ERROR"))
