@@ -1,5 +1,6 @@
 package app.services.impl
 
+import app.batch.HBaseWriter
 import app.batch.HbaseClient
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertFalse
@@ -22,20 +23,64 @@ class FilterServiceImplTest {
     }
 
     @Test
-    fun testDoesNotPutIfTimestampEqualToEarlierThanFilterAndFilterExistingFalse() {
+    fun testDoesPutIfTimestampEqualToEarlierThanFilterAndFilterExistingFalse() {
         val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient, skipEarlierThan = "2020-10-01T12:00:00.000")
+        val filterService = filterService(hbaseClient,
+                skipExistingRecords = "false",
+                skipEarlierThan = "2020-10-01T12:00:00.000")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.000").time
         val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        assertTrue(doPut)
         verifyZeroInteractions(hbaseClient)
     }
 
     @Test
+    fun testDoesPutIfTimestampIsEpochAndLessThanEarlierThanFilterAndFilterExistingFalse() {
+        val hbaseClient = mock<HbaseClient>()
+        val filterService = filterService(hbaseClient,
+                skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "false")
+        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
+                .parse(HBaseWriter.EPOCH).time
+        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
+        assertTrue(doPut)
+        verifyZeroInteractions(hbaseClient)
+    }
+
+    @Test
+    fun testDoesNotPutIfTimestampIsEpochAndLessThanEarlierThanFilterAndFilterExistingTrueAndRecordExists() {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
+                .parse(HBaseWriter.EPOCH).time
+        val hbaseClient = mock<HbaseClient> {
+            on { exists(tableName, recordId, timestamp)} doReturn true
+        }
+        val filterService = filterService(hbaseClient,
+                skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "true")
+        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
+        assertFalse(doPut)
+        verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
+    }
+
+    @Test
+    fun testDoesPutIfTimestampIsEpochAndLessThanEarlierThanFilterAndFilterExistingTrueAndRecordDoesNotExist() {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
+                .parse(HBaseWriter.EPOCH).time
+        val hbaseClient = mock<HbaseClient> {
+            on { exists(tableName, recordId, timestamp)} doReturn false
+        }
+        val filterService = filterService(hbaseClient,
+                skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "true")
+        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
+        assertTrue(doPut)
+        verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
+    }
+
+
+    @Test
     fun testDoesPutIfTimestampGreaterThanEarlierThanFilterAndFilterExistingFalse() {
         val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient, skipEarlierThan = "2020-10-01T12:00:00.000")
+        val filterService = filterService(hbaseClient,
+                skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "false")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.001").time
         val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
@@ -56,19 +101,23 @@ class FilterServiceImplTest {
 
     @Test
     fun testDoesNotPutIfTimestampEqualToLaterThanFilterAndFilterExistingFalse() {
-        val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient, skipLaterThan = "2020-10-01T12:00:00.000")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.000").time
+        val hbaseClient = mock<HbaseClient>()
+        val filterService = filterService(hbaseClient,
+                skipExistingRecords = "false",
+                skipLaterThan = "2020-10-01T12:00:00.000")
         val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        assertTrue(doPut)
         verifyZeroInteractions(hbaseClient)
     }
 
     @Test
     fun testDoesPutIfTimestampEarlierThanLaterThanFilterAndFilterExistingFalse() {
         val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient, skipLaterThan = "2020-10-01T12:00:00.001")
+        val filterService = filterService(hbaseClient,
+                skipLaterThan = "2020-10-01T12:00:00.001",
+                skipExistingRecords = "false")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.000").time
         val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
@@ -90,16 +139,18 @@ class FilterServiceImplTest {
     }
 
     @Test
-    fun testDoesNotPutIfTimestampEqualToEarlierThanFilterAndFilterExistingTrue() {
-        val hbaseClient = mock<HbaseClient>()
+    fun testDoesPutIfTimestampEqualToEarlierThanFilterAndFilterExistingTrue() {
+        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
+                .parse("2020-10-01T12:00:00.000").time
+        val hbaseClient = mock<HbaseClient> {
+            on { exists(tableName, recordId, timestamp) } doReturn false
+        }
         val filterService = filterService(hbaseClient,
                 skipEarlierThan = "2020-10-01T12:00:00.000",
                 skipExistingRecords = "true")
-        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
-                .parse("2020-10-01T12:00:00.000").time
         val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
-        verifyZeroInteractions(hbaseClient)
+        assertTrue(doPut)
+        verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
     @Test
@@ -146,16 +197,18 @@ class FilterServiceImplTest {
     }
 
     @Test
-    fun testDoesNotPutIfTimestampEqualToLaterThanFilterAndFilterExistingTrue() {
-        val hbaseClient = mock<HbaseClient>()
+    fun testDoesPutIfTimestampEqualToLaterThanFilterAndFilterExistingTrue() {
+        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
+                .parse("2020-10-01T12:00:00.000").time
+        val hbaseClient = mock<HbaseClient> {
+            on { exists(tableName, recordId, timestamp) } doReturn false
+        }
         val filterService = filterService(hbaseClient,
                 skipLaterThan = "2020-10-01T12:00:00.000",
                 skipExistingRecords = "true")
-        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
-                .parse("2020-10-01T12:00:00.000").time
         val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
-        verifyZeroInteractions(hbaseClient)
+        assertTrue(doPut)
+        verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
     @Test
@@ -247,7 +300,7 @@ class FilterServiceImplTest {
     @Test
     fun testDoesPutIfSkipExistingFalse() {
         val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient)
+        val filterService = filterService(hbaseClient, skipExistingRecords = "false")
         val doPut = filterService.shouldPutRecord(tableName, recordId, defaultTimestamp)
         assertTrue(doPut)
         verifyZeroInteractions(hbaseClient)
@@ -281,7 +334,7 @@ class FilterServiceImplTest {
     private fun filterService(hbaseClient: HbaseClient,
                               skipEarlierThan: String = "",
                               skipLaterThan: String = "",
-                              skipExistingRecords: String = "false")
+                              skipExistingRecords: String = "true")
          = FilterServiceImpl(hbaseClient).also {
                     ReflectionTestUtils.setField(it, "skipEarlierThan", skipEarlierThan)
                     ReflectionTestUtils.setField(it, "skipLaterThan", skipLaterThan)

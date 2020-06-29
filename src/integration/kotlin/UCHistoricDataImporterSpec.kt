@@ -57,7 +57,7 @@ class UCHistoricDataImporterSpec : FunSpec() {
     init {
         Security.addProvider(BouncyCastleProvider())
 
-        test("Messages in Hbase should match the count 4") {
+        test("Expected counts in each table") {
             val hbase = HbaseClient.connect()
             val t1count = tableCount(hbase.connection, "database_1:collection_1")
             t1count shouldBe 6
@@ -65,6 +65,20 @@ class UCHistoricDataImporterSpec : FunSpec() {
             t2count shouldBe 3
             val t3count = tableCount(hbase.connection, "agent_core:agentToDo")
             t3count shouldBe 3
+        }
+
+        test("Expected tables exist in hbase and no others") {
+            val hbase = HbaseClient.connect()
+
+            val tables = hbase.connection.admin.listTables().map {
+                it.nameAsString
+            }
+
+            tables.size shouldBe 3
+
+            tables.contains("database_1:collection_1") shouldBe true
+            tables.contains("database_1:collection") shouldBe true
+            tables.contains("agent_core:agentToDo") shouldBe true
         }
 
         test("Messages in Hbase are decipherable") {
@@ -115,6 +129,8 @@ class UCHistoricDataImporterSpec : FunSpec() {
         test("Should match  manifest file count, content  generated in S3") {
             val removedTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse("2012-03-04T21:43:56.000Z").time
             val archivedTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse("2014-03-02T12:34:56.000Z").time
+            val earlyTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse("2000-01-01T12:34:56.000Z").time
+            val lateTimestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ").parse("2020-06-29T12:34:56.000+0000").time
             val oid ="\$oid"
             val date ="\$date"
             val expected = """
@@ -133,6 +149,8 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|1330897436000|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|$earlyTimestamp|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|$lateTimestamp|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|agent_core|agentToDo|IMPORT|HDI|"{""declarationId"":""agent_core.agentToDoArchive.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
@@ -149,6 +167,8 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1330897436000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|$earlyTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|$lateTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
@@ -165,6 +185,8 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|$removedTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|$archivedTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|$earlyTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|$lateTimestamp|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection-1|IMPORT|HDI|"{""declarationId"":""database-1.collection-1.0002-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1543676462001|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
@@ -181,16 +203,17 @@ class UCHistoricDataImporterSpec : FunSpec() {
             |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1330897436000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1393763696000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_DELETE
             |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|1426854205183|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|$earlyTimestamp|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
+            |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|$lateTimestamp|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             |"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|315532800000|database-1|collection|IMPORT|HDI|"{""declarationId"":""database-1.collection-thirtyone.0001-1"",""someId"":""RANDOM_GUID""}"|MONGO_IMPORT
             """.trimMargin()
 
             val summaries = s3Client.listObjectsV2(s3BucketName, s3ManifestPrefixFolder).objectSummaries
-            val fileCount = summaries.size
             val list = summaries.map { summary ->
                 val objectContent = s3Client.getObject(summary.bucketName, summary.key).objectContent
                 val fileContent = BufferedReader(InputStreamReader(objectContent) as Reader).use { it.readText() }
                 val noOfRecordsPerFile = fileContent.trim().split("\n").size
-                assertEquals(16, noOfRecordsPerFile)
+                assertEquals(18, noOfRecordsPerFile)
                 fileContent.trim()
             }
             val joinedContent = list.joinToString("\n")
