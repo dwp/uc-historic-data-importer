@@ -109,6 +109,18 @@ def generate_dump_file(args, batch_nos, data_key_service, i, collection_override
         jso = json.loads(record)
         del jso['_lastModifiedDateTime']
         contents = contents + json.dumps(jso) + "\n"
+    if args.add_early_records:
+        print("Adding early record.")
+        record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+        jso = json.loads(record)
+        jso['_lastModifiedDateTime'] = {"$date": "2000-01-01T12:34:56.000Z"}
+        contents = contents + json.dumps(jso) + "\n"
+    if args.add_late_records:
+        print("Adding late record.")
+        record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
+        jso = json.loads(record)
+        jso['_lastModifiedDateTime'] = {"$date": "2020-06-29T12:34:56.000Z"}
+        contents = contents + json.dumps(jso) + "\n"
     if args.record_with_no_timestamps:
         print("Adding record with no timestamps.")
         record = db_object_json(f'{batch}.{batch_nos[batch]:04d}', j)
@@ -231,8 +243,12 @@ def command_line_args():
                         help='Encrypt the data.')
     parser.add_argument('-f', '--coalesced-archive', action='store_true',
                         help='Add a file from a collection with a coalesced archive.')
+    parser.add_argument('-g', '--add-early-records', action='store_true',
+                        help='Add an old records that should be filtered out.')
     parser.add_argument('-i', '--record-with-no-id', action='store_true',
-                        help='Add a record with no id to each file.')
+                        help='Add an record with no id to each file.')
+    parser.add_argument('-j', '--add-late-records', action='store_true',
+                        help='Add new records that should be filtered out on.')
     parser.add_argument('-k', '--data-key-service',
                         help='Use the specified data key service.')
     parser.add_argument('-m', '--malformed-input', action='store_true',

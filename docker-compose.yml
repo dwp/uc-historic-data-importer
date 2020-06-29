@@ -100,6 +100,9 @@ services:
       --spring.profiles.active=localS3,secureHttpClient,batchRun,hbase,weakRng,hbaseWriter
       --s3.manifest.prefix.folder=test-manifest-exporter
       --s3.manifest.bucket=manifestbucket
+      --skip.existing.records=true
+      --skip.earlier.than=2000-01-02T12:34:56.000Z
+      --skip.later.than=2020-06-28T12:34:56.000Z
     environment:
       - ENVIRONMENT=local-docker
       - APPLICATION=historic_data_importer
