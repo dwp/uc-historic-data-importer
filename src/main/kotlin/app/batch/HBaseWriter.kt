@@ -220,7 +220,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        if (filterService.putRecord(tableName, formattedKey, lastModifiedTimestampLong)) {
+                                        if (filterService.shouldPutRecord(tableName, formattedKey, lastModifiedTimestampLong)) {
                                             addToBatch(batch, formattedKey, messageWrapper, lastModifiedTimestampLong)
                                             batchSizeBytes += messageWrapper.length
                                         }

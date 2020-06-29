@@ -94,7 +94,7 @@ class HBaseWriterFilterTests {
         val data = listOf(dumpLine)
         val inputStreams = mutableListOf(inputStream(data, validFileName))
         ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
-        whenever(filterService.putRecord(any(), any(), any())).thenReturn(false)
+        whenever(filterService.shouldPutRecord(any(), any(), any())).thenReturn(false)
         hBaseWriter.write(inputStreams)
         verify(hBaseWriter, times(0)).addToBatch(any(), any(), any(), any())
     }
@@ -131,7 +131,7 @@ class HBaseWriterFilterTests {
         val data = listOf(dumpLine)
         val inputStreams = mutableListOf(inputStream(data, validFileName))
         ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
-        whenever(filterService.putRecord(any(), any(), any())).thenReturn(true)
+        whenever(filterService.shouldPutRecord(any(), any(), any())).thenReturn(true)
         hBaseWriter.write(inputStreams)
         verify(hBaseWriter, times(1)).addToBatch(any(), any(), any(), any())
     }

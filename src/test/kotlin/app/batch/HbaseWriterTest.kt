@@ -2287,7 +2287,7 @@ class HbaseWriterTest {
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
         doNothing().whenever(hBaseWriter).ensureTable(any())
         ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
-        given(filterService.putRecord(any(), any(), any())).willReturn(true)
+        given(filterService.shouldPutRecord(any(), any(), any())).willReturn(true)
         hBaseWriter.write(items)
         verify(hBaseWriter, times(100)).putBatch(any(), any())
     }
