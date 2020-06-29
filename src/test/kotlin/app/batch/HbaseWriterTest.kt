@@ -6,6 +6,7 @@ import app.domain.EncryptionResult
 import app.domain.HBaseRecord
 import app.services.CipherService
 import app.services.KeyService
+import app.services.S3Service
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.amazonaws.services.s3.AmazonS3
@@ -66,6 +67,9 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var messageUtils: MessageUtils
+
+    @MockBean
+    private lateinit var s3Service: S3Service
 
     @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
@@ -229,7 +233,7 @@ class HbaseWriterTest {
             on { objectContent } doReturn s3InputStream
         }
 
-        given(s3.getObject("bucket", validFileName)).willReturn(s3Object)
+        given(s3Service.objectInputStream("bucket", validFileName)).willReturn(s3InputStream)
         //whenever(hBaseWriter.getBufferedReader(any())).thenThrow(RuntimeException("wtf"))
         doThrow(RuntimeException("RESET ERROR")).whenever(hBaseWriter).getBufferedReader(any())
         doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
