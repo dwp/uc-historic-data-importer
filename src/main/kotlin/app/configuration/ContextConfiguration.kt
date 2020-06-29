@@ -16,6 +16,7 @@ class ContextConfiguration {
     @Bean
     fun maxSize() = maxSize.toLong()
 
+
     @Bean
     fun cipherInstanceProvider(): CipherInstanceProvider {
         return object : CipherInstanceProvider {

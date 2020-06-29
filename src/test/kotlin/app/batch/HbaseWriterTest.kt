@@ -5,6 +5,7 @@ import app.domain.DecompressedStream
 import app.domain.EncryptionResult
 import app.domain.HBaseRecord
 import app.services.CipherService
+import app.services.FilterService
 import app.services.KeyService
 import app.services.S3Service
 import ch.qos.logback.classic.spi.ILoggingEvent
@@ -27,6 +28,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.util.ReflectionTestUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.security.Key
@@ -52,6 +54,9 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var filterService: FilterService
 
     @MockBean
     private lateinit var s3: AmazonS3
@@ -171,7 +176,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(8)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Error processing record\", \"line_number\":\"1\", \"file_name\":\"adb.collection.0001.json.gz.enc\", \"error_message\":\"parse error"))
     }
@@ -211,7 +216,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(8)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error processing record\", \"line_number\":\"1\", \"file_name\":\"adb.collection.0001.json.gz.enc\", \"error_message\":\"parse error"))
@@ -244,7 +249,7 @@ class HbaseWriterTest {
         verify(cipherService, times(10)).decompressingDecryptingStream(any(), any(), any())
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(16)).doAppend(captor.capture())
+        verify(mockAppender, times(15)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error streaming file\", \"attempt_number\":\"1\", \"file_name\":\"$validFileName\", \"error_message\":\"RESET ERROR"))
@@ -2281,6 +2286,8 @@ class HbaseWriterTest {
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
         doNothing().whenever(hBaseWriter).ensureTable(any())
+        ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
+        given(filterService.putRecord(any(), any(), any())).willReturn(true)
         hBaseWriter.write(items)
         verify(hBaseWriter, times(100)).putBatch(any(), any())
     }

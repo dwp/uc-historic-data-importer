@@ -2,6 +2,7 @@ package app.batch
 
 import app.domain.*
 import app.services.CipherService
+import app.services.FilterService
 import app.services.KeyService
 import app.services.S3Service
 import app.utils.logging.JsonLoggerWrapper
@@ -47,6 +48,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var s3Service: S3Service
 
+    @Autowired
+    private lateinit var filterService: FilterService
+
     @Value("\${s3.manifest.retry.max.attempts:10}")
     private lateinit var maxManifestAttempts: String
 
@@ -80,8 +84,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${s3.bucket}")
     private lateinit var s3bucket: String
 
-    @Value("\${skip.existing:false}")
-    private lateinit var skipExistingRecords: String
 
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
@@ -89,8 +91,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
         logger.info("System stats", "available_processors", "$cpus", "run_mode", runMode)
-        val skipExisting = skipExistingRecords.toBoolean()
-        logger.info("Skip existing records configuration", "skip_existing", skipExisting.toString())
         var processedFiles = 0
         var processedRecords = 0
 
@@ -131,6 +131,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             batchSizeBytes = 0
                             val reader = getBufferedReader(inputStream)
                             reader.forEachLine { lineFromDump ->
+
                                 if (attempts > 1 && reader.lineNumber < fileProcessedRecords) {
                                     return@forEachLine
                                 }
@@ -219,8 +220,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        if (!skipExisting || !hbase.exists(tableName, formattedKey, lastModifiedTimestampLong)) {
-                                            batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
+                                        if (filterService.putRecord(tableName, formattedKey, lastModifiedTimestampLong)) {
+                                            addToBatch(batch, formattedKey, messageWrapper, lastModifiedTimestampLong)
                                             batchSizeBytes += messageWrapper.length
                                         }
                                     }
@@ -295,6 +296,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
 
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
+    }
+
+    fun addToBatch(batch: MutableList<HBaseRecord>, formattedKey: ByteArray, messageWrapper: String, lastModifiedTimestampLong: Long) {
+        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
     }
 
     fun coalesced(collection: String): String {

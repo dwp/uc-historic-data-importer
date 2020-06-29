@@ -4,6 +4,7 @@ import app.domain.DataKeyResult
 import app.domain.DecompressedStream
 import app.domain.EncryptionResult
 import app.services.CipherService
+import app.services.FilterService
 import app.services.KeyService
 import app.services.S3Service
 import com.amazonaws.services.s3.AmazonS3
@@ -41,6 +42,9 @@ class HBaseWriterFilterTests {
     private lateinit var s3: AmazonS3
 
     @MockBean
+    private lateinit var filterService: FilterService
+
+    @MockBean
     private lateinit var cipherService: CipherService
 
     @MockBean
@@ -59,7 +63,7 @@ class HBaseWriterFilterTests {
     private lateinit var hBaseWriter: HBaseWriter
 
     @Test
-    fun shouldNotCheckForExistenceIfSkipExistingFalse() {
+    fun shouldNotAddToBatchIfFiltered() {
         val date = "\$date"
         val validJson = """{
                 |    "_id": {
@@ -89,14 +93,14 @@ class HBaseWriterFilterTests {
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
         val data = listOf(dumpLine)
         val inputStreams = mutableListOf(inputStream(data, validFileName))
-        ReflectionTestUtils.setField(hBaseWriter, "skipExistingRecords", "false")
         ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
+        whenever(filterService.putRecord(any(), any(), any())).thenReturn(false)
         hBaseWriter.write(inputStreams)
-        verify(hbaseClient, times(0)).exists(any(), any(), any())
+        verify(hBaseWriter, times(0)).addToBatch(any(), any(), any(), any())
     }
 
     @Test
-    fun shouldCheckForExistenceIfSkipExistingTrue() {
+    fun shouldAddToBatchIfNotFiltered() {
         val date = "\$date"
         val validJson = """{
                 |    "_id": {
@@ -126,10 +130,10 @@ class HBaseWriterFilterTests {
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
         val data = listOf(dumpLine)
         val inputStreams = mutableListOf(inputStream(data, validFileName))
-        ReflectionTestUtils.setField(hBaseWriter, "skipExistingRecords", "true")
         ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
+        whenever(filterService.putRecord(any(), any(), any())).thenReturn(true)
         hBaseWriter.write(inputStreams)
-        verify(hbaseClient, times(1)).exists(any(), any(), any())
+        verify(hBaseWriter, times(1)).addToBatch(any(), any(), any(), any())
     }
 
     private fun inputStream(data1: List<String>, fileName: String): DecompressedStream {
