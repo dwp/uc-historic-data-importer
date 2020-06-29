@@ -10,7 +10,6 @@ import app.services.S3Service
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.beust.klaxon.JsonObject
 import com.google.gson.Gson
@@ -41,7 +40,8 @@ import java.text.SimpleDateFormat
     "hbase.retry.max.attempts=5",
     "hbase.retry.initial.backoff=1",
     "hbase.retry.backoff.multiplier=1",
-    "max.batch.size.bytes=100"
+    "max.batch.size.bytes=100",
+    "run-mode=import_and_manifest"
 ])
 class HbaseWriterTest {
 
@@ -73,6 +73,7 @@ class HbaseWriterTest {
 
     @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
+
 
     @Test
     fun shouldUpdateObjectPriorToEncryption() {
@@ -229,12 +230,7 @@ class HbaseWriterTest {
         val inputStream = ByteArrayInputStream("""{ "_id": {"key": "value"}}""".toByteArray())
         val s3InputStream = mock<S3ObjectInputStream>()
 
-        val s3Object = mock<S3Object> {
-            on { objectContent } doReturn s3InputStream
-        }
-
         given(s3Service.objectInputStream("bucket", validFileName)).willReturn(s3InputStream)
-        //whenever(hBaseWriter.getBufferedReader(any())).thenThrow(RuntimeException("wtf"))
         doThrow(RuntimeException("RESET ERROR")).whenever(hBaseWriter).getBufferedReader(any())
         doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
@@ -2301,5 +2297,3 @@ class HbaseWriterTest {
         return DecompressedStream(inputStream, fileName, key, "")
     }
 }
-
-
