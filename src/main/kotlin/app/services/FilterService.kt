@@ -1,5 +1,11 @@
 package app.services
 
 interface FilterService {
-    fun shouldPutRecord(tableName: String, key: ByteArray, timestamp: Long): Boolean
+
+    fun filterStatus(tableName: String, key: ByteArray, timestamp: Long): FilterStatus
+
+    enum class FilterStatus {
+        DoNotFilter, FilterTooEarly, FilterTooLate, FilterExists
+    }
+
 }
