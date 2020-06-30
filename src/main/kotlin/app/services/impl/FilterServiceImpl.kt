@@ -10,25 +10,28 @@ import java.text.SimpleDateFormat
 @Service
 class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
 
-    override fun shouldPutRecord(tableName: String, key: ByteArray, timestamp: Long) =
+    override fun filterStatus(tableName: String, key: ByteArray, timestamp: Long): FilterService.FilterStatus =
             when {
                 // timestamp == epoch means a record with no last modified date
                 // so put these in as a precaution as they may be recent.
                 timestamp < earlierThan && timestamp != epoch -> {
-                    false
+                    FilterService.FilterStatus.FilterTooEarly
                 }
                 timestamp > laterThan -> {
-                    false
+                    FilterService.FilterStatus.FilterTooLate
                 }
                 !skipExisting -> {
-                    true
+                    FilterService.FilterStatus.DoNotFilter
                 }
                 else -> {
-                    !hbase.exists(tableName, key, timestamp)
+                    if (hbase.exists(tableName, key, timestamp)) {
+                        FilterService.FilterStatus.FilterExists
+                    }
+                    else {
+                        FilterService.FilterStatus.DoNotFilter
+                    }
                 }
             }
-
-
 
     private val skipExisting: Boolean by lazy {
         skipExistingRecords.toBoolean()

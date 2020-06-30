@@ -93,8 +93,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         logger.info("System stats", "available_processors", "$cpus", "run_mode", runMode)
         var processedFiles = 0
         var processedRecords = 0
-
         items.forEach { input ->
+            var numFilteredExisting = 0
+            var numFilteredTooEarly = 0
+            var numFilteredTooLate = 0
+            var numNotFiltered = 0
+
             logger.info("Processing file", "s3_location", input.fileName)
             val fileName = input.fileName
             val matchResult = filenameRegex.find(fileName)
@@ -220,9 +224,24 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        if (filterService.shouldPutRecord(tableName, formattedKey, lastModifiedTimestampLong)) {
+                                        val filterStatus = filterService.filterStatus(tableName, formattedKey, lastModifiedTimestampLong)
+                                        if (filterStatus == FilterService.FilterStatus.DoNotFilter) {
                                             addToBatch(batch, formattedKey, messageWrapper, lastModifiedTimestampLong)
                                             batchSizeBytes += messageWrapper.length
+                                        }
+                                        when (filterStatus) {
+                                            FilterService.FilterStatus.DoNotFilter -> {
+                                                numNotFiltered++
+                                            }
+                                            FilterService.FilterStatus.FilterExists -> {
+                                                numFilteredExisting++
+                                            }
+                                            FilterService.FilterStatus.FilterTooEarly -> {
+                                                numFilteredTooEarly++
+                                            }
+                                            FilterService.FilterStatus.FilterTooLate -> {
+                                                numFilteredTooLate++
+                                            }
                                         }
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
@@ -291,7 +310,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     manifestWriter.sendManifest(s3, File(manifestOutputFile), manifestBucket, manifestPrefix, maxManifestAttempts.toInt())
                 }
 
-                logger.info("Processed records in file", "records_processed", "$fileProcessedRecords", "file_name", fileName)
+                logger.info("Processed records in file",
+                        "records_processed", "$fileProcessedRecords", "file_name", fileName,
+                        "put_count", "$numNotFiltered",
+                        "filtered_existing", "$numFilteredExisting",
+                        "filtered_too_early", "$numFilteredTooEarly",
+                        "filtered_too_late", "$numFilteredTooLate")
             }
         }
 
