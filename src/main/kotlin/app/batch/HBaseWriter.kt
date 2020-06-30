@@ -2,7 +2,9 @@ package app.batch
 
 import app.domain.*
 import app.services.CipherService
+import app.services.FilterService
 import app.services.KeyService
+import app.services.S3Service
 import app.utils.logging.JsonLoggerWrapper
 import com.amazonaws.services.s3.AmazonS3
 import com.google.gson.Gson
@@ -43,6 +45,12 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Autowired
     private lateinit var cipherService: CipherService
 
+    @Autowired
+    private lateinit var s3Service: S3Service
+
+    @Autowired
+    private lateinit var filterService: FilterService
+
     @Value("\${s3.manifest.retry.max.attempts:10}")
     private lateinit var maxManifestAttempts: String
 
@@ -76,13 +84,13 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${s3.bucket}")
     private lateinit var s3bucket: String
 
+
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
 
     override fun write(items: MutableList<out DecompressedStream>) {
         val cpus = Runtime.getRuntime().availableProcessors()
         logger.info("System stats", "available_processors", "$cpus", "run_mode", runMode)
-
         var processedFiles = 0
         var processedRecords = 0
 
@@ -123,6 +131,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                             batchSizeBytes = 0
                             val reader = getBufferedReader(inputStream)
                             reader.forEachLine { lineFromDump ->
+
                                 if (attempts > 1 && reader.lineNumber < fileProcessedRecords) {
                                     return@forEachLine
                                 }
@@ -211,8 +220,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
-                                        batchSizeBytes += messageWrapper.length
+                                        if (filterService.shouldPutRecord(tableName, formattedKey, lastModifiedTimestampLong)) {
+                                            addToBatch(batch, formattedKey, messageWrapper, lastModifiedTimestampLong)
+                                            batchSizeBytes += messageWrapper.length
+                                        }
                                     }
                                     if (runMode != RUN_MODE_IMPORT) {
                                         val idForManifest = if (idIsString) id else messageUtils.sortJsonStringByKey(id)
@@ -232,6 +243,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     }
                                 }
                                 catch (e: Exception) {
+                                    e.printStackTrace()
                                     logger.error("Error processing record", e, "line_number", "${reader.lineNumber}", "file_name", fileName, "error_message", "${e.message}")
                                 }
                             }
@@ -251,7 +263,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                 logger.error("Failed to stream file", "batch_records", "${batch.size}", "batch_bytes", "$batchSizeBytes", "topic_name", "db.$database.$collection", "file_name", fileName)
                             }
 
-                            inputStream = cipherService.decompressingDecryptingStream(s3.getObject(s3bucket, fileName).objectContent, input.key, input.iv)
+                            inputStream = cipherService.decompressingDecryptingStream(s3Service.objectInputStream(s3bucket, fileName),
+                                                                                        input.key, input.iv)
                             batch = mutableListOf()
                             batchSizeBytes = 0
                         }
@@ -283,6 +296,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         }
 
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
+    }
+
+    fun addToBatch(batch: MutableList<HBaseRecord>, formattedKey: ByteArray, messageWrapper: String, lastModifiedTimestampLong: Long) {
+        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
     }
 
     fun coalesced(collection: String): String {

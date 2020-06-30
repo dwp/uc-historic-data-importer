@@ -5,11 +5,12 @@ import app.domain.DecompressedStream
 import app.domain.EncryptionResult
 import app.domain.HBaseRecord
 import app.services.CipherService
+import app.services.FilterService
 import app.services.KeyService
+import app.services.S3Service
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.Appender
 import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.services.s3.model.S3ObjectInputStream
 import com.beust.klaxon.JsonObject
 import com.google.gson.Gson
@@ -27,6 +28,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.util.ReflectionTestUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.security.Key
@@ -40,7 +42,8 @@ import java.text.SimpleDateFormat
     "hbase.retry.max.attempts=5",
     "hbase.retry.initial.backoff=1",
     "hbase.retry.backoff.multiplier=1",
-    "max.batch.size.bytes=100"
+    "max.batch.size.bytes=100",
+    "run-mode=import_and_manifest"
 ])
 class HbaseWriterTest {
 
@@ -51,6 +54,9 @@ class HbaseWriterTest {
 
     @MockBean
     private lateinit var keyService: KeyService
+
+    @MockBean
+    private lateinit var filterService: FilterService
 
     @MockBean
     private lateinit var s3: AmazonS3
@@ -67,8 +73,12 @@ class HbaseWriterTest {
     @MockBean
     private lateinit var messageUtils: MessageUtils
 
+    @MockBean
+    private lateinit var s3Service: S3Service
+
     @SpyBean
     private lateinit var hBaseWriter: HBaseWriter
+
 
     @Test
     fun shouldUpdateObjectPriorToEncryption() {
@@ -166,7 +176,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(7)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
         assertTrue(formattedMessages.contains("Error processing record\", \"line_number\":\"1\", \"file_name\":\"adb.collection.0001.json.gz.enc\", \"error_message\":\"parse error"))
     }
@@ -206,7 +216,7 @@ class HbaseWriterTest {
         hBaseWriter.write(inputStreams)
 
         val captor = argumentCaptor<ILoggingEvent>()
-        verify(mockAppender, times(7)).doAppend(captor.capture())
+        verify(mockAppender, times(6)).doAppend(captor.capture())
         val formattedMessages = captor.allValues.map { it.formattedMessage }
 
         assertTrue(formattedMessages.contains("Error processing record\", \"line_number\":\"1\", \"file_name\":\"adb.collection.0001.json.gz.enc\", \"error_message\":\"parse error"))
@@ -225,12 +235,7 @@ class HbaseWriterTest {
         val inputStream = ByteArrayInputStream("""{ "_id": {"key": "value"}}""".toByteArray())
         val s3InputStream = mock<S3ObjectInputStream>()
 
-        val s3Object = mock<S3Object> {
-            on { objectContent } doReturn s3InputStream
-        }
-
-        given(s3.getObject("bucket", validFileName)).willReturn(s3Object)
-        //whenever(hBaseWriter.getBufferedReader(any())).thenThrow(RuntimeException("wtf"))
+        given(s3Service.objectInputStream("bucket", validFileName)).willReturn(s3InputStream)
         doThrow(RuntimeException("RESET ERROR")).whenever(hBaseWriter).getBufferedReader(any())
         doNothing().whenever(hBaseWriter).ensureTable("adb:collection")
         doNothing().whenever(hBaseWriter).putBatch(any(), any())
@@ -2281,6 +2286,8 @@ class HbaseWriterTest {
         given(messageUtils.parseJson(any())).willReturn(JsonObject(mapOf(Pair("key", "value"))))
         given(messageUtils.generateKeyFromRecordBody(any())).willReturn("FORMATTED_KEY".toByteArray())
         doNothing().whenever(hBaseWriter).ensureTable(any())
+        ReflectionTestUtils.setField(hBaseWriter, "runMode", "import")
+        given(filterService.shouldPutRecord(any(), any(), any())).willReturn(true)
         hBaseWriter.write(items)
         verify(hBaseWriter, times(100)).putBatch(any(), any())
     }
@@ -2297,5 +2304,3 @@ class HbaseWriterTest {
         return DecompressedStream(inputStream, fileName, key, "")
     }
 }
-
-
