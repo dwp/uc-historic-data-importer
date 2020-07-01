@@ -2,9 +2,9 @@ package app.services.impl
 
 import app.batch.HBaseWriter
 import app.batch.HbaseClient
+import app.services.FilterService
 import com.nhaarman.mockitokotlin2.*
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.springframework.test.util.ReflectionTestUtils
 import java.text.SimpleDateFormat
@@ -17,8 +17,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient, skipEarlierThan = "2020-10-01T12:00:00.000")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T11:59:59.999").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterTooEarly, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -30,8 +30,8 @@ class FilterServiceImplTest {
                 skipEarlierThan = "2020-10-01T12:00:00.000")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.000").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -42,8 +42,8 @@ class FilterServiceImplTest {
                 skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "false")
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ")
                 .parse(HBaseWriter.EPOCH).time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -56,8 +56,8 @@ class FilterServiceImplTest {
         }
         val filterService = filterService(hbaseClient,
                 skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterExists, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -70,8 +70,8 @@ class FilterServiceImplTest {
         }
         val filterService = filterService(hbaseClient,
                 skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -83,8 +83,8 @@ class FilterServiceImplTest {
                 skipEarlierThan = "2020-10-01T12:00:00.000", skipExistingRecords = "false")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.001").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -94,8 +94,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient, skipLaterThan = "2020-10-01T12:00:00.000")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.001").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterTooLate, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -107,8 +107,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipExistingRecords = "false",
                 skipLaterThan = "2020-10-01T12:00:00.000")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -120,8 +120,8 @@ class FilterServiceImplTest {
                 skipExistingRecords = "false")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.000").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -133,8 +133,8 @@ class FilterServiceImplTest {
                 skipExistingRecords = "true")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T11:59:59.999").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterTooEarly, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -148,8 +148,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipEarlierThan = "2020-10-01T12:00:00.000",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -163,8 +163,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipEarlierThan = "2020-10-01T12:00:00.000",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -178,8 +178,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipEarlierThan = "2020-10-01T12:00:00.000",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterExists, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -191,8 +191,8 @@ class FilterServiceImplTest {
                 skipExistingRecords = "true")
         val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
                 .parse("2020-10-01T12:00:00.001").time
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterTooLate, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -206,8 +206,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipLaterThan = "2020-10-01T12:00:00.000",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -223,8 +223,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipLaterThan = "2020-10-01T12:00:00.001",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -240,8 +240,8 @@ class FilterServiceImplTest {
         val filterService = filterService(hbaseClient,
                 skipLaterThan = "2020-10-01T12:00:00.001",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterExists, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -258,8 +258,8 @@ class FilterServiceImplTest {
                 skipEarlierThan = "2020-10-01T11:59:59.999",
                 skipLaterThan = "2020-10-01T12:00:00.001",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.FilterExists, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -276,8 +276,8 @@ class FilterServiceImplTest {
                 skipEarlierThan = "2020-10-01T11:59:59.999",
                 skipLaterThan = "2020-10-01T12:00:00.001",
                 skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, timestamp)
     }
 
@@ -292,8 +292,8 @@ class FilterServiceImplTest {
                 skipEarlierThan = "2020-10-01T11:59:59.999",
                 skipLaterThan = "2020-10-01T12:00:00.001",
                 skipExistingRecords = "false")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, timestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -301,8 +301,8 @@ class FilterServiceImplTest {
     fun testDoesPutIfSkipExistingFalse() {
         val hbaseClient = mock<HbaseClient>()
         val filterService = filterService(hbaseClient, skipExistingRecords = "false")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, defaultTimestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, defaultTimestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verifyZeroInteractions(hbaseClient)
     }
 
@@ -312,8 +312,8 @@ class FilterServiceImplTest {
             on { exists(tableName, recordId, defaultTimestamp) } doReturn true
         }
         val filterService = filterService(hbaseClient, skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, defaultTimestamp)
-        assertFalse(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, defaultTimestamp)
+        assertEquals(FilterService.FilterStatus.FilterExists, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, defaultTimestamp)
         verifyNoMoreInteractions(hbaseClient)
     }
@@ -324,8 +324,8 @@ class FilterServiceImplTest {
             on { exists(tableName, recordId, defaultTimestamp) } doReturn false
         }
         val filterService = filterService(hbaseClient, skipExistingRecords = "true")
-        val doPut = filterService.shouldPutRecord(tableName, recordId, defaultTimestamp)
-        assertTrue(doPut)
+        val filterStatus = filterService.filterStatus(tableName, recordId, defaultTimestamp)
+        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
         verify(hbaseClient, times(1)).exists(tableName, recordId, defaultTimestamp)
         verifyNoMoreInteractions(hbaseClient)
     }
