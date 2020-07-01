@@ -2,10 +2,12 @@ package app.services.impl
 
 import app.batch.HbaseClient
 import app.services.FilterService
+import app.utils.logging.JsonLoggerWrapper
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
+import java.util.*
 
 @Service
 class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
@@ -24,7 +26,10 @@ class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
                     FilterService.FilterStatus.DoNotFilter
                 }
                 else -> {
-                    if (hbase.exists(tableName, key, timestamp)) {
+                    logger.info("Before existence check")
+                    val exists = hbase.exists(tableName, key, timestamp)
+                    logger.info("Existence check", "exists", "$exists")
+                    if (exists) {
                         FilterService.FilterStatus.FilterExists
                     }
                     else {
@@ -79,5 +84,6 @@ class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
         const val alternateDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         val epoch = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ").parse("1980-01-01T00:00:00.000+0000").time
         val alternateDateFormatPattern = Regex("""Z$""")
+        val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(FilterServiceImpl::class.toString())
     }
 }
