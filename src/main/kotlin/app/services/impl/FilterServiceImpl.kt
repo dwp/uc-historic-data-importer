@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
+import java.util.*
 
 @Service
 class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
@@ -25,6 +26,7 @@ class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
                     FilterService.FilterStatus.DoNotFilter
                 }
                 else -> {
+                    logger.info("Before existence check")
                     val exists = hbase.exists(tableName, key, timestamp)
                     logger.info("Existence check", "exists", "$exists")
                     if (exists) {
