@@ -3,12 +3,12 @@ package app.batch
 import com.nhaarman.mockitokotlin2.*
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HTableDescriptor
-import org.junit.Test
-
 import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Admin
 import org.apache.hadoop.hbase.client.Connection
+import org.apache.hadoop.hbase.io.compress.Compression
+import org.junit.Test
 import java.nio.ByteBuffer
 
 class HbaseClientTest {
@@ -73,8 +73,10 @@ class HbaseClientTest {
                     .apply {
                         maxVersions = Int.MAX_VALUE
                         minVersions = 1
+                        compactionCompressionType = Compression.Algorithm.GZ
+                        compressionType = Compression.Algorithm.GZ
                     })
-            setRegionReplication(hbaseRegionReplication)
+            regionReplication = hbaseRegionReplication
         }
 
         verify(adm, times(1)).createTable(tableDescriptor)
@@ -114,6 +116,8 @@ class HbaseClientTest {
                     .apply {
                         maxVersions = Int.MAX_VALUE
                         minVersions = 1
+                        compactionCompressionType = Compression.Algorithm.GZ
+                        compressionType = Compression.Algorithm.GZ
                     })
             setRegionReplication(hbaseRegionReplication)
         }

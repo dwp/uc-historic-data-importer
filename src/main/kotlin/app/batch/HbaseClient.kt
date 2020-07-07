@@ -4,6 +4,7 @@ import app.domain.HBaseRecord
 import app.utils.logging.JsonLoggerWrapper
 import org.apache.hadoop.hbase.*
 import org.apache.hadoop.hbase.client.*
+import org.apache.hadoop.hbase.io.compress.Compression
 
 open class HbaseClient(
         val connection: Connection,
@@ -69,6 +70,8 @@ open class HbaseClient(
                         .apply {
                             maxVersions = Int.MAX_VALUE
                             minVersions = 1
+                            compressionType = Compression.Algorithm.GZ
+                            compactionCompressionType = Compression.Algorithm.GZ
                         })
                     setRegionReplication(hbaseRegionReplication)
                 })
