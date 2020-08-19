@@ -16,28 +16,32 @@ The historic data ingestion is a one time process and will not need to be repeat
 
 ### Row level data transforms
 
-The data transformations performed are stored in the following Jira epic: https://projects.ucd.gpn.gov.uk/browse/DW-3769.
+The data transformations performed are stored in detail in the following Jira epic: https://projects.ucd.gpn.gov.uk/browse/DW-3769.
 
 Below is a table listing the transformations that are performed on the historic data on a row by row basis.
 For details see the stories in the above Epic.
+
+In general, as a rough description but not always, the pre-transform example matches what we see in the UC Data Dumps (and thus what goes to Crown currently directly from them), and the Post-transform examples match what we would see in the Kafka feed.
 
 | Data Transformation Type | Pre-Transform Example | Post-Transform Example |
 | ------------------- | --------------------- | ---------------------- |
 | Strip dates with `$date` fields | `{ "_lastModifiedDateTime": {"$date": "2019-01-01T01:01:01.000Z" }}` | `{ "_lastModifiedDateTime": "2019-01-01T01:01:01.000+0000" }` |
 | Strip ids with `$oid` fields | `{ "_id": {"$oid": "guid1" }}` | `{ "_id": "guid1" }` |
-| Heirarchy for `_lastModifiedDateTime` | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
+| Hierarchy for `_lastModifiedDateTime` | `{ "_lastModifiedDateTime": "", "createdDateTime": "date1" }` | `{ "_lastModifiedDateTime": "date1", "createdDateTime": "date1" }` |
 | Re-structure `_removed` records | `{ "_id": {"$oid": "guid1" }}, "_removed": "[entire record]"` | `{ [entire record] }` |
 | Re-structure `_archived` records | `{ "_id": {"$oid": "guid1" }}, "_archived": "[entire record]"` | `{ [entire record] }` |
 | Flatten date objects within `_ids`| `{ "_id": { "idField": "idValue", "createdDateTime": { "$date": "2019-01-01T01:01:01.000Z" } } }` | `{ "_id": { "idField": "idValue", "createdDateTime": "2019-01-01T01:01:01.000+0000" } }` |
 
 ### Database and Collections Transforms
 
-Below is a table listing the transformations that are performed on the historic data on a Collection level. As UC have some very large data sets, they have both fixed Archives and also split some tarball deliverables into files as if they are pseudo-collections numbered 0001-1000. 
+Below is a table listing the transformations that are performed on the historic data on a Collection level. 
+
+As UC have some very large data sets, they have both fixed Archives and also split some tarball deliverables into files as if they are pseudo-collections numbered 0001-1000. 
 
 | Collection Transformation Type | Transform |
 | ------------------- | ---------------------- |
-| Coalesce split collections | Put all data for source files `dump.aa.bb-1.gz`, `dump.aa.bb-2.gz` into table `aa:bb` |
-| Coalesce agentToDoArchive into agentToDo | put all data for source files `dump.agentToDoArchive.xx-1,2,3.gz` into table `agentToDo:xx |
+| Coalesce split collections `aa.bb-1` thru `aa.bb-N` | Put all data for source files `dump.aa.bb-1.gz`, `dump.aa.bb-2.gz` into table `aa:bb` |
+| Coalesce `agentToDoArchive` into `agentToDo` | put all data for source files `dump.agentToDoArchive.xx-1,2,3.gz` into table `agentToDo:xx |
 
 
 ## Transformation details and reasoning
