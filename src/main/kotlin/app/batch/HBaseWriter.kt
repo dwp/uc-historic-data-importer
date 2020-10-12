@@ -79,7 +79,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     private lateinit var manifestPrefix: String
 
     @Value("\${s3.manifest.bucket}")
-    private lateinit var manifestBucket: StringE
+    private lateinit var manifestBucket: String
 
 
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
