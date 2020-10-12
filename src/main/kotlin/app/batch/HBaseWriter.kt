@@ -79,10 +79,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     private lateinit var manifestPrefix: String
 
     @Value("\${s3.manifest.bucket}")
-    private lateinit var manifestBucket: String
-
-    @Value("\${s3.bucket}")
-    private lateinit var s3bucket: String
+    private lateinit var manifestBucket: StringE
 
 
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
@@ -527,7 +524,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     return Pair(outgoingValue, false)
                 }
                 else -> {
-                    logger.warn("Invalid $name object", "incoming_value", "$incomingDateTime", "outgoing_value", "")
+                    logger.debug("Invalid $name object", "incoming_value", "$incomingDateTime", "outgoing_value", "")
                     return Pair("", true)
                 }
             }
