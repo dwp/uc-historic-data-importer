@@ -5,17 +5,17 @@ ignore:
   SNYK-JAVA-COMGOOGLEPROTOBUF-173761:
     - '*':
         reason: Exposed by a transient dependency of hbase client 1.4. EMR v1.4 requires hbase client 1.4 libraries so we can't move to 1.5 as suggested.
-        expires: 2020-07-20T00:00:00.000Z
+        expires: 2020-10-20T00:00:00.000Z
   SNYK-JAVA-ORGAPACHEHADOOP-174573:
     - '*':
         reason: Exposed by a transient dependency of hbase client 1.4. EMR v1.4 requires hbase client 1.4 libraries so we can't move to 1.5 as suggested..
-        expires: 2020-07-20T00:00:00.000Z
+        expires: 2020-10-20T00:00:00.000Z
   SNYK-JAVA-ORGAPACHEHADOOP-32047:
     - '*':
         reason: Exposed by a transient dependency of hbase client 1.4. EMR v1.4 requires hbase client 1.4 libraries so we can't move to 1.5 as suggested..
-        expires: 2020-07-20T00:00:00.000Z
+        expires: 2020-10-20T00:00:00.000Z
   SNYK-JAVA-LOG4J-572732:
     - '*':
         reason: Exposed by a transient dependency of hbase client 1.4. EMR v1.4 requires hbase client 1.4 libraries so we can't move to 1.5 as suggested..
-        expires: 2020-07-20T00:00:00.000Z
+        expires: 2020-10-20T00:00:00.000Z
 patch: {}
