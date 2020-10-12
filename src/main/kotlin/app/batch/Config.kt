@@ -24,5 +24,6 @@ object Config {
         val dataFamily = hBaseDataFamily
         val dataQualifier = hBaseDataQualifier
         val regionReplication = hbaseRegionReplication
+        val skipWal = (System.getenv("HBASE_SKIP_WAL") ?: "true").toBoolean()
     }
 }
