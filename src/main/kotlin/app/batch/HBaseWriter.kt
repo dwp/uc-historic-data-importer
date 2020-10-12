@@ -81,6 +81,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${s3.manifest.bucket}")
     private lateinit var manifestBucket: String
 
+    @Value("\${s3.bucket}")
+    private lateinit var s3bucket: String
 
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
