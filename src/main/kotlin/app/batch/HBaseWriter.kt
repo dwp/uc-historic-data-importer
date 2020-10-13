@@ -84,7 +84,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
     @Value("\${s3.bucket}")
     private lateinit var s3bucket: String
 
-
     private val filenamePattern = """(?<database>[\w-]+)\.(?<collection>[[\w-]+]+)\.(?<filenumber>[0-9]+)\.json\.gz\.enc$"""
     private val filenameRegex = Regex(filenamePattern, RegexOption.IGNORE_CASE)
 
@@ -527,7 +526,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                     return Pair(outgoingValue, false)
                 }
                 else -> {
-                    logger.warn("Invalid $name object", "incoming_value", "$incomingDateTime", "outgoing_value", "")
+                    logger.debug("Invalid $name object", "incoming_value", "$incomingDateTime", "outgoing_value", "")
                     return Pair("", true)
                 }
             }
