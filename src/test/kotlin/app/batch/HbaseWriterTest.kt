@@ -18,6 +18,7 @@ import com.google.gson.JsonPrimitive
 import com.nhaarman.mockitokotlin2.*
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldThrow
+import org.apache.hadoop.hbase.client.Table
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -2257,6 +2258,16 @@ class HbaseWriterTest {
         catch (e: Exception) {
             verify(hbaseClient, times(5)).putBatch(any(), any())
         }
+    }
+
+    @Test
+    fun testPutBatchCallsFilterService() {
+        val payload = (0..99).map {
+            HBaseRecord("$it".toByteArray(), "$it-body".toByteArray(), it.toLong() + 100)
+        }
+
+        hBaseWriter.putBatch("database:collection", payload)
+        verify(filterService, times(1)).nonExistent("database:collection", payload)
     }
 
     @Test

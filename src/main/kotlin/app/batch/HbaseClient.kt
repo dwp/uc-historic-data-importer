@@ -6,12 +6,11 @@ import org.apache.hadoop.hbase.*
 import org.apache.hadoop.hbase.client.*
 import org.apache.hadoop.hbase.io.compress.Compression
 
-open class HbaseClient(
-        val connection: Connection,
-        private val dataFamily: ByteArray,
-        private val dataQualifier: ByteArray,
-        private val hbaseRegionReplication: Int
-) {
+open class HbaseClient(val connection: Connection,
+                        private val dataFamily: ByteArray,
+                        private val dataQualifier: ByteArray,
+                        private val hbaseRegionReplication: Int) {
+
     companion object {
         fun connect() = HbaseClient(
             ConnectionFactory.createConnection(HBaseConfiguration.create(Config.Hbase.config)),
@@ -40,6 +39,17 @@ open class HbaseClient(
             }
         }
     }
+
+    open fun nonExistent(tableName: String, inserts: List<HBaseRecord>)=
+        connection.getTable(TableName.valueOf(tableName)).use {
+            inserts.zip(it.existsAll(inserts.map { record ->
+                Get(record.key).apply {
+                    isCheckExistenceOnly = true
+                    addColumn(dataFamily, dataQualifier)
+                    setTimeStamp(record.version)
+                }
+            }).asIterable()).asSequence().filter { pair -> !pair.second }.map(Pair<HBaseRecord, Boolean>::first).toList()
+        }
 
     open fun exists(tableName: String, id: ByteArray, timestamp: Long) =
         connection.getTable(TableName.valueOf(tableName)).use { table ->
