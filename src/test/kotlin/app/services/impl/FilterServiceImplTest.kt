@@ -265,7 +265,7 @@ class FilterServiceImplTest {
 
         val hbaseClient = mock<HbaseClient>()
         val filterService = filterService(hbaseClient, skipExistingRecords = "true")
-        val filtered = filterService.nonExistent("database:collection", payload)
+        filterService.nonExistent("database:collection", payload)
         verify(hbaseClient, times(1)).nonExistent(any(), any())
     }
 
