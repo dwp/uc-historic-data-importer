@@ -582,7 +582,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         var exception: Exception? = null
         while (!success && attempts < maxAttempts.toInt()) {
             try {
-                hbase.putBatch(table, filterService.nonExistent(table, records))
+                logger.info("Before filtering", "size", "${records.size}")
+                val filtered = filterService.nonExistent(table, records)
+                logger.info("After filtering", "size", "${filtered.size}")
+                hbase.putBatch(table, filtered)
                 success = true
             }
             catch (e: Exception) {
