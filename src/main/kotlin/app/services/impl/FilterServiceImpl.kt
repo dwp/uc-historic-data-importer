@@ -37,6 +37,7 @@ class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
             }
 
     private val skipExisting: Boolean by lazy {
+        logger.info("Skip existing", "value", "${skipExistingRecords.toBoolean()}")
         skipExistingRecords.toBoolean()
     }
 
