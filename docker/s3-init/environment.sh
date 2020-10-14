@@ -60,7 +60,7 @@ aws_clear_down() {
 }
 
 aws_s3_endpoint() {
-  echo http://s3:4572
+  echo http://s3:4566
 }
 
 aws_s3_prefix() {
