@@ -1,6 +1,7 @@
 package app.services.impl
 
 import app.batch.HbaseClient
+import app.domain.HBaseRecord
 import app.services.FilterService
 import app.utils.logging.JsonLoggerWrapper
 import org.apache.commons.lang3.StringUtils
@@ -11,6 +12,14 @@ import java.util.*
 
 @Service
 class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
+    override fun nonExistent(tableName: String, records: List<HBaseRecord>): List<HBaseRecord> =
+        if (skipExisting) {
+            hbase.nonExistent(tableName, records)
+        }
+        else {
+            records
+        }
+
 
     override fun filterStatus(tableName: String, key: ByteArray, timestamp: Long): FilterService.FilterStatus =
             when {
@@ -22,19 +31,8 @@ class FilterServiceImpl(private val hbase: HbaseClient) : FilterService {
                 timestamp > laterThan -> {
                     FilterService.FilterStatus.FilterTooLate
                 }
-                !skipExisting -> {
-                    FilterService.FilterStatus.DoNotFilter
-                }
                 else -> {
-                    logger.info("Before existence check")
-                    val exists = hbase.exists(tableName, key, timestamp)
-                    logger.info("Existence check", "exists", "$exists")
-                    if (exists) {
-                        FilterService.FilterStatus.FilterExists
-                    }
-                    else {
-                        FilterService.FilterStatus.DoNotFilter
-                    }
+                    FilterService.FilterStatus.DoNotFilter
                 }
             }
 

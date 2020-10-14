@@ -582,7 +582,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         var exception: Exception? = null
         while (!success && attempts < maxAttempts.toInt()) {
             try {
-                hbase.putBatch(table, records)
+                hbase.putBatch(table, filterService.nonExistent(table, records))
                 success = true
             }
             catch (e: Exception) {

@@ -1,5 +1,6 @@
 package app.batch
 
+import app.domain.HBaseRecord
 import com.nhaarman.mockitokotlin2.*
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HTableDescriptor
@@ -7,11 +8,40 @@ import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.hbase.TableName
 import org.apache.hadoop.hbase.client.Admin
 import org.apache.hadoop.hbase.client.Connection
+import org.apache.hadoop.hbase.client.Table
 import org.apache.hadoop.hbase.io.compress.Compression
 import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 import java.nio.ByteBuffer
 
 class HbaseClientTest {
+
+    @Test
+    fun testFilters() {
+        val existsArray = (0..99).map { (it % 2) == 0 }.toBooleanArray()
+
+        val payload = (0..99).map {
+            HBaseRecord("$it".toByteArray(), "$it-body".toByteArray(), it.toLong() + 100)
+        }
+
+        val table  = mock<Table> {
+            on { existsAll(any()) } doReturn existsArray
+        }
+
+        val hbaseConnection = mock<Connection> {
+            on { getTable(any()) } doReturn table
+        }
+
+        val client = HbaseClient(hbaseConnection, "cf".toByteArray(), "record".toByteArray(), 2)
+
+        val nonExistent = client.nonExistent("database:collection", payload)
+
+        assertEquals(50, nonExistent.size)
+
+        nonExistent.forEachIndexed { index, record ->
+            assertEquals("${index * 2 + 1}", "${String(record.key)}")
+        }
+    }
 
     @Test
     fun ensureTableNotCreated() {
