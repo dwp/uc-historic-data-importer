@@ -29,8 +29,11 @@ open class HbaseClient(
                 it.put(inserts.map { record ->
                     Put(record.key).apply {
                         this.addColumn(dataFamily, dataQualifier, record.version, record.body)
-                        if (Config.Hbase.skipWal) {
-                            this.durability = Durability.SKIP_WAL
+                        this.durability = if (Config.Hbase.skipWal) {
+                            Durability.SKIP_WAL
+                        }
+                        else {
+                            Durability.SYNC_WAL
                         }
                     }
                 })
