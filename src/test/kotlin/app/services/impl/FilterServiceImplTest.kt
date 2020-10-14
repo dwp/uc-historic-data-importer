@@ -163,18 +163,6 @@ class FilterServiceImplTest {
         verifyZeroInteractions(hbaseClient)
     }
 
-    @Test
-    fun testDoesPutIfTimestampGreaterThanEarlierThanFilterAndFilterExistingTrueAndRecordDoesExist() {
-        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
-                .parse("2020-10-01T12:00:00.001").time
-        val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient,
-                skipEarlierThan = "2020-10-01T12:00:00.000",
-                skipExistingRecords = "true")
-        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
-        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
-        verifyZeroInteractions(hbaseClient)
-    }
 
     @Test
     fun testDoesNotPutIfTimestampAfterLaterThanFilterAndFilterExistingTrue() {
@@ -217,19 +205,6 @@ class FilterServiceImplTest {
         verifyZeroInteractions(hbaseClient)
     }
 
-    @Test
-    fun testDoesPutIfTimestampEarlierThanLaterThanFilterAndFilterExistingTrueAndRecordDoesExist() {
-        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
-                .parse("2020-10-01T12:00:00.000").time
-
-        val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient,
-                skipLaterThan = "2020-10-01T12:00:00.001",
-                skipExistingRecords = "true")
-        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
-        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
-        verifyZeroInteractions(hbaseClient)
-    }
 
     @Test
     fun testDoesPutIfTimestampBetweenFiltersAndFilterExistingTrueAndRecordDoesExist() {
@@ -247,21 +222,6 @@ class FilterServiceImplTest {
         verifyZeroInteractions(hbaseClient)
     }
 
-    @Test
-    fun testDoesPutIfTimestampBetweenFiltersAndFilterExistingTrueAndRecordDoesNotExist() {
-        val timestamp = SimpleDateFormat(FilterServiceImpl.dateFormat)
-                .parse("2020-10-01T12:00:00.000").time
-
-        val hbaseClient = mock<HbaseClient>()
-
-        val filterService = filterService(hbaseClient,
-                skipEarlierThan = "2020-10-01T11:59:59.999",
-                skipLaterThan = "2020-10-01T12:00:00.001",
-                skipExistingRecords = "true")
-        val filterStatus = filterService.filterStatus(tableName, recordId, timestamp)
-        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
-        verifyZeroInteractions(hbaseClient)
-    }
 
     @Test
     fun testDoesPutIfTimestampBetweenFiltersAndFilterExistingFalse() {
@@ -290,15 +250,6 @@ class FilterServiceImplTest {
 
     @Test
     fun testDoesPutIfSkipExistingTrueAndRecordExists() {
-        val hbaseClient = mock<HbaseClient>()
-        val filterService = filterService(hbaseClient, skipExistingRecords = "true")
-        val filterStatus = filterService.filterStatus(tableName, recordId, defaultTimestamp)
-        assertEquals(FilterService.FilterStatus.DoNotFilter, filterStatus)
-        verifyZeroInteractions(hbaseClient)
-    }
-
-    @Test
-    fun testDoesPutIfSkipExistingTrueAndRecordDoesNotExist() {
         val hbaseClient = mock<HbaseClient>()
         val filterService = filterService(hbaseClient, skipExistingRecords = "true")
         val filterStatus = filterService.filterStatus(tableName, recordId, defaultTimestamp)
