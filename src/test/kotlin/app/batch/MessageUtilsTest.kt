@@ -12,6 +12,7 @@ import org.junit.Test
 import java.text.ParseException
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertEquals
+import java.text.ParseException
 
 
 class MessageUtilsTest {
@@ -19,7 +20,7 @@ class MessageUtilsTest {
     val messageUtils = MessageUtils()
 
     @Test
-    fun valid_input_converts_to_json() {
+    fun validInputConvertsToJson() {
         val jsonString = "{\"testOne\":\"test1\", \"testTwo\":2}"
         val json: JsonObject = messageUtils.parseJson(jsonString)
 
@@ -29,7 +30,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun valid_nested_input_converts_to_json() {
+    fun validNestedInputConvertsToJson() {
         val jsonString = "{\"testOne\":{\"testTwo\":2}}"
         val json: JsonObject = messageUtils.parseJson(jsonString)
         val jsonTwo: JsonObject = json.obj("testOne") as JsonObject
@@ -39,7 +40,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun invalid_nested_input_throws_exception() {
+    fun invalidNestedInputThrowsException() {
         val jsonString = "{\"testOne\":"
 
         shouldThrow<KlaxonException> {
@@ -48,7 +49,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun sorts_json_by_key_name() {
+    fun sortsJsonByKeyName() {
         val jsonStringUnsorted = "{\"testA\":\"test1\", \"testC\":2, \"testB\":true}"
         val jsonObjectUnsorted: JsonObject = messageUtils.parseJson(jsonStringUnsorted)
         val jsonStringSorted = "{\"testA\":\"test1\",\"testB\":true,\"testC\":2}"
@@ -59,7 +60,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun sorts_json_by_key_name_case_sensitively() {
+    fun sortsJsonByKeyNameCaseSensitively() {
         val jsonStringUnsorted = "{\"testb\":true, \"testA\":\"test1\", \"testC\":2}"
         val jsonObjectUnsorted: JsonObject = messageUtils.parseJson(jsonStringUnsorted)
         val jsonStringSorted = "{\"testA\":\"test1\",\"testC\":2,\"testb\":true}"
@@ -70,7 +71,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun checksums_are_different_with_different_inputs() {
+    fun checksumsAreDifferentWithDifferentInputs() {
         val jsonStringOne = "{\"testOne\":\"test1\", \"testTwo\":2}"
         val jsonStringTwo = "{\"testOne\":\"test2\", \"testTwo\":2}"
         val checksum = messageUtils.generateFourByteChecksum(jsonStringOne)
@@ -80,7 +81,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun can_generate_consistent_checksums_from_json() {
+    fun canGenerateConsistentChecksumsFromJson() {
         val jsonString = "{\"testOne\":\"test1\", \"testTwo\":2}"
         val json: JsonObject = messageUtils.parseJson(jsonString)
         val checksumOne = messageUtils.generateFourByteChecksum(json.toString())
@@ -90,7 +91,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_checksums_are_four_bytes() {
+    fun generatedChecksumsAreFourBytes() {
         assertAll { input: String ->
             val checksum = messageUtils.generateFourByteChecksum(input)
             checksum.size shouldBe 4
@@ -98,44 +99,44 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun valid_timestamp_format_in_the_message_gets_parsed_as_long_correctly() {
+    fun validTimestampFormatInTheMessageGetsParsedAsLongCorrectly() {
         val timeStampAsLong = messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000Z")
         timeStampAsLong shouldBe 1544799662000
     }
 
     @Test
-    fun Invalid_timestamp_format_in_the_message_throws_Exception() {
+    fun invalidTimestampFormatInTheMessageThrowsException() {
         shouldThrow<ParseException> {
             messageUtils.getTimestampAsLong("2018-12-14")
         }
     }
 
     @Test
-    fun valid_dates_without_timezone_parses_without_exception() {
+    fun validDatesWithoutTimezoneParseCorrectly() {
         1544799662000L shouldBe messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000Z")
     }
 
     @Test
-    fun valid_date_with_timezone_parses_without_exception() {
+    fun validDatesWithTimezoneParseCorrectly() {
         1544799662000L shouldBe messageUtils.getTimestampAsLong("2018-12-14T15:01:02.000+0000")
     }
 
     @Test
-    fun Invalid_json_with_lastModifiedDateTime_attribute_value_as_empty_throws_Exception() {
+    fun invalidJsonWithLastModifiedDateTimeAttributeValueAsEmptyThrowsException() {
         shouldThrow<ParseException> {
             messageUtils.getTimestampAsLong("")
         }
     }
 
     @Test
-    fun Invalid_json_with_lastModifiedDateTime_attribute_value_as_blank_throws_Exception() {
+    fun invalidJsonWithLastModifiedDateTimeAttributeValueAsBlankThrowsException() {
         shouldThrow<ParseException> {
             messageUtils.getTimestampAsLong("   ")
         }
     }
 
     @Test
-    fun generated_keys_are_consistent_for_identical_inputs() {
+    fun generatedKeysAreConsistentForIdenticalInputs() {
 
         val json: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
 
@@ -146,7 +147,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_are_different_for_different_inputs() {
+    fun generatedKeysAreDifferentForDifferentInputs() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":3}")
@@ -158,7 +159,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_are_consistent_for_identical_inputs_regardless_of_order() {
+    fun generatedKeysAreConsistentForIdenticalInputsRegardlessOfOrder() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testTwo\":2, \"testOne\":\"test1\"}")
@@ -170,7 +171,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_are_consistent_for_identical_inputs_regardless_of_whitespace() {
+    fun generatedKeysAreConsistentForIdenticalInputsRegardlessOfWhitespace() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{    \"testOne\":              \"test1\",            \"testTwo\":  2}")
@@ -182,7 +183,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_are_consistent_for_identical_inputs_regardless_of_order_and_whitespace() {
+    fun generatedKeysAreConsistentForIdenticalInputsRegardlessOfOrderAndWhitespace() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{    \"testTwo\":              2,            \"testOne\":  \"test1\"}")
@@ -194,7 +195,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_will_vary_given_values_with_different_whitespace() {
+    fun generatedKeysWilVaryGivenValueWithDifferentWhitespace() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testOne\":\"test 1\", \"testTwo\":2}")
@@ -206,7 +207,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_will_vary_given_values_that_are_string_and_int_in_each_input() {
+    fun generatedKeysWilVaryGivenValuesThatAreStringAndIntInEachInput() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":\"2\"}")
@@ -218,7 +219,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_will_vary_given_values_that_are_string_and_float_in_each_input() {
+    fun generatedKeysWilVaryGivenValuesThatAreStringAndFloatInEachInput() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":2.0}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":\"2.0\"}")
@@ -230,7 +231,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_will_vary_given_values_that_are_string_and_boolean_in_each_input() {
+    fun generatedKeysWilVaryGivenValuesThatAreStringAndBooleanInEachInput() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":false}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":\"false\"}")
@@ -242,7 +243,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_keys_will_vary_given_values_that_are_string_and_null_in_each_input() {
+    fun generatedKeysWilVaryGivenValuesThatAreStringAndNullInEachInput() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":null}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"testOne\":\"test1\", \"testTwo\":\"null\"}")
@@ -254,7 +255,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun id_is_returned_from_valid_json() {
+    fun idIsReturnedFromValidJson() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":{\"test_key\":\"test_value\"}}}")
         val idString = "{\"test_key\":\"test_value\"}"
@@ -265,7 +266,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun null_is_returned_from_json_where_message_does_not_exist() {
+    fun nullIsReturnedFromValidJsonWhereMessageDoesNotExist() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"test_object\":{\"_id\":{\"test_key\":\"test_value\"}}}")
         val idJson: JsonObject? = messageUtils.getId(jsonOne)
@@ -274,7 +275,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun null_is_returned_from_json_where_message_is_not_an_object() {
+    fun nullIsReturnedFromValidJsonWhereMessageIsNotAnObject() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":\"test_value\"}")
         val idJson: JsonObject? = messageUtils.getId(jsonOne)
@@ -283,7 +284,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun null_is_returned_from_json_where_id_is_missing() {
+    fun nullIsReturnedFromValidJsonWhereIdIsMissing() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"test_object\":{\"test_key\":\"test_value\"}}}")
         val idJson: JsonObject? = messageUtils.getId(jsonOne)
@@ -293,7 +294,7 @@ class MessageUtilsTest {
 
 
     @Test
-    fun altered_id_is_returned_from_json_where_id_is_not_an_object() {
+    fun alteredIdIsReturnedFromValidJsonWhereIdIsNotAnObject() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("""{"message":{"_id":"test_value"}}""")
         val idJson: JsonObject? = messageUtils.getId(jsonOne)
@@ -302,7 +303,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun generated_key_is_consistent_for_identical_record_body_independant_of_key_order_and_whitespace() {
+    fun generatedKeyIsConsistentForIdenticalRecordBodyIndependantOfKeyOrderAndWhitespace() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":{\"test_key_a\":\"test_value_a\",\"test_key_b\"    :\"test_value_b\"}}}")
         val jsonTwo: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":{\"test_key_b\":     \"test_value_b\",\"test_key_a\":\"test_value_a\"}}}")
@@ -316,7 +317,7 @@ class MessageUtilsTest {
 
 
     @Test
-    fun empty_is_returned_from_record_body_key_generation_where_message_does_not_exist() {
+    fun emptyIsReturnedFromRecordBodyKeyGenerationWhereMessageDoesNotExist() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"test_object\":{\"_id\":{\"test_key\":\"test_value\"}}}")
         val key: ByteArray = messageUtils.generateKeyFromRecordBody(jsonOne)
@@ -325,7 +326,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun empty_is_returned_from_record_body_key_generation_where_message_is_not_an_object() {
+    fun emptyIsReturnedFromRecordBodyKeyGenerationWhereMessageIsNotAnObject() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":\"test_value\"}")
         val key: ByteArray = messageUtils.generateKeyFromRecordBody(jsonOne)
@@ -334,7 +335,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun empty_is_returned_from_record_body_key_generation_where_id_is_missing() {
+    fun emptyIsReturnedFromRecordBodyKeyGenerationWhereIdIsMissing() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"test_object\":{\"test_key\":\"test_value\"}}}")
         val key: ByteArray = messageUtils.generateKeyFromRecordBody(jsonOne)
@@ -343,7 +344,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun empty_is_returned_from_record_body_key_generation_where_id_is_not_an_object() {
+    fun emptyIsReturnedFromRecordBodyKeyGenerationWhereIdIsNotAnObject() {
 
         val jsonOne: JsonObject = messageUtils.parseJson("{\"message\":{\"_id\":\"test_value\"}}")
         val key: ByteArray = messageUtils.generateKeyFromRecordBody(jsonOne)
@@ -353,7 +354,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun type_is_returned_from_valid_input() {
+    fun typeIsReturnedFromValidInput() {
         val jsonString = """{
             "message": {
                "@type": "MONGO_IMPORT_TWO",
@@ -365,7 +366,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun default_type_is_returned_from_invalid_input() {
+    fun defaultTypeIsReturnedFromInvalidInput() {
         val jsonString = """{
             "message": {
                "notype": "HDI",
@@ -377,7 +378,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun should_sort_json_by_key_name() {
+    fun shouldSortJsonByKeyName() {
         val jsonStringUnsorted = "{\"testA\":\"test1\", \"testC\":2, \"testB\":true}"
         val jsonStringSorted = "{\"testA\":\"test1\",\"testB\":true,\"testC\":2}"
 
@@ -387,7 +388,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun should_sort_json_by_key_name_for_single_key() {
+    fun shouldSortJsonByKeyNameForSingleKey() {
         val jsonStringUnsorted = "{\"\$oid\":\"test1\"}"
         val jsonStringSorted = "{\"\$oid\":\"test1\"}"
 
@@ -397,7 +398,7 @@ class MessageUtilsTest {
     }
 
     @Test
-    fun should_sort_json_by_key_name_case_sensitively() {
+    fun shouldSortJsonByKeyNameCaseSensitively() {
         val jsonStringUnsorted = "{\"testb\":true, \"testA\":\"test1\", \"testC\":2}"
         val jsonStringSorted = "{\"testA\":\"test1\",\"testC\":2,\"testb\":true}"
 
@@ -412,12 +413,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_IMPORT"
         val removedDate = "2000-01-01T00:00:00.000Z"
         val archivedDate = "2005-01-01T00:00:00.000Z"
-        val expected = 978307200000L
-        given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
         val actual = messageUtils.getVersion(innerType, lastModifiedDate, removedDate,
                 archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
+        assertEquals(lastModifiedDate, actual)
     }
 
     @Test
@@ -426,12 +424,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_INSERT"
         val removedDate = "2000-01-01T00:00:00.000Z"
         val archivedDate = "2005-01-01T00:00:00.000Z"
-        val expected = 978307200000L
-        given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
         val actual = messageUtils.getVersion(innerType, lastModifiedDate, removedDate,
                 archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
+        assertEquals(lastModifiedDate, actual)
     }
 
     @Test
@@ -440,12 +435,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_IMPORT"
         val removedDate = "NON PARSEABLE REMOVED DATE"
         val archivedDate = "NON PARSEABLE ARCHIVED DATE"
-        val expected = 978307200000L
-        given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
         val actual = messageUtils.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
+        assertEquals(lastModifiedDate, actual)
     }
 
     @Test
@@ -454,13 +446,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_DELETE"
         val removedDate = "2000-01-01T00:00:00.000Z"
         val archivedDate = "2005-01-01T00:00:00.000Z"
-
-        val expected = 946684800000L
-        given(messageUtils.getTimestampAsLong(removedDate)).willReturn(expected)
         val actual = messageUtils.getVersion(innerType, lastModifiedDate, removedDate,
                 archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
+        assertEquals(removedDate, actual)
     }
 
     @Test
@@ -469,13 +457,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_DELETE"
         val removedDate = ""
         val archivedDate = "2005-01-01T00:00:00.000Z"
-        val expected = 1104537600000L
-        given(messageUtils.getTimestampAsLong(archivedDate)).willReturn(expected)
-
         val actual = messageUtils.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
+        assertEquals(archivedDate, actual)
     }
 
     @Test
@@ -484,13 +468,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_DELETE"
         val removedDate = ""
         val archivedDate = ""
-        val expected = 978307200000L
-        given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
-
         val actual = messageUtils.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
+        assertEquals(lastModifiedDate, actual)
     }
 
     @Test
@@ -499,15 +479,9 @@ class MessageUtilsTest {
         val innerType = "MONGO_DELETE"
         val removedDate = "BADLY_FORMATTED_DATE"
         val archivedDate = "2005-01-01T00:00:00.000Z"
-        val expected = 978307200000L
-        given(messageUtils.getTimestampAsLong(removedDate)).willThrow(ParseException("BAD DATE", 10))
-        given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
-
         val actual = messageUtils.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
-        verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
+        assertEquals(lastModifiedDate, actual)
     }
 
     @Test
@@ -516,14 +490,8 @@ class MessageUtilsTest {
         val innerType = "MONGO_DELETE"
         val removedDate = ""
         val archivedDate = "BADLY_FORMATTED_DATE"
-        val expected = 978307200000L
-        given(messageUtils.getTimestampAsLong(archivedDate)).willThrow(ParseException("BAD ARCHIVE DATE", 10))
-        given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
-
         val actual = messageUtils.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
-        assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
-        verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
+        assertEquals(lastModifiedDate, actual)
     }
 }

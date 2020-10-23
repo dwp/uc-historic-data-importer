@@ -46,22 +46,22 @@ class MessageUtils {
             when (innerType) {
                 MONGO_DELETE -> {
                     if (StringUtils.isNotBlank(removedDateTime)) {
-                        getTimestampAsLong(removedDateTime)
+                        removedDateTime
                     }
                     else if (StringUtils.isNotBlank(archivedDateTime)) {
-                        getTimestampAsLong(archivedDateTime)
+                        archivedDateTime
                     }
                     else {
-                        getTimestampAsLong(lastModifiedTimestamp)
+                        lastModifiedTimestamp
                     }
                 }
                 else -> {
-                    getTimestampAsLong(lastModifiedTimestamp)
+                    lastModifiedTimestamp
                 }
             }
         }
         catch (e: ParseException) {
-            getTimestampAsLong(lastModifiedTimestamp)
+            lastModifiedTimestamp
         }
 
     fun getType(json: JsonObject?): String {

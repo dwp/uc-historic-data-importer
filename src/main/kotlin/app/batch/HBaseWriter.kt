@@ -207,7 +207,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
 
                                     val innerType = messageUtils.getType(messageJsonObject)
-                                    val version = messageUtils.getVersion(innerType, lastModifiedDateTime, removedDateTime, archivedDateTime)
+                                    val versionString = messageUtils.getVersion(innerType, lastModifiedDateTime, removedDateTime, archivedDateTime)
+                                    val version = messageUtils.getTimestampAsLong(versionString)
                                             
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                                     if (runMode != RUN_MODE_MANIFEST) {

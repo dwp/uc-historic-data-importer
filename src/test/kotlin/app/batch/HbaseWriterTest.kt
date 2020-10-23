@@ -111,7 +111,8 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(dumpLine)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn(100)
+        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn("100")
+        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""",
                 false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, false, false, false, encryptionResult, dataKeyResult, "adb",
@@ -160,7 +161,8 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(validJson)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn(100)
+        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn("100")
+        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", 
                 false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, false, false, false, encryptionResult, dataKeyResult, "adb",
@@ -199,7 +201,8 @@ class HbaseWriterTest {
         whenever(messageUtils.parseGson(validJsonWithoutId)).thenReturn(com.google.gson.JsonObject())
         whenever(messageUtils.getId(jsonObject)).thenReturn(null)
         whenever(messageUtils.getId(jsonObject)).thenReturn(null)
-        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn(100)
+        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn("100")
+        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", 
                 false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, false, false, false, encryptionResult, dataKeyResult, "adb",
