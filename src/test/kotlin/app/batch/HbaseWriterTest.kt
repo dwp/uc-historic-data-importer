@@ -111,7 +111,7 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(dumpLine)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
+        whenever(hBaseWriter).getVersion(any(), any(), any(), any()).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""",
                 false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, false, false, false, encryptionResult, dataKeyResult, "adb",
@@ -160,7 +160,7 @@ class HbaseWriterTest {
         whenever(messageUtils.parseJson(validJson)).thenReturn(jsonObject)
         whenever(messageUtils.getId(jsonObject)).thenReturn(jsonObject)
 
-        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
+        whenever(hBaseWriter).getVersion(any(), any(), any(), any()).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{ "key": "value" }""", 
                 false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, false, false, false, encryptionResult, dataKeyResult, "adb",
@@ -200,7 +200,7 @@ class HbaseWriterTest {
         whenever(messageUtils.getId(jsonObject)).thenReturn(null)
         whenever(messageUtils.getId(jsonObject)).thenReturn(null)
 
-        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
+        whenever(hBaseWriter).getVersion(any(), any(), any(), any()).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(com.google.gson.JsonObject(), """{"key": "value"}""", 
                 false, false, """{ "key": "value" }""", "_lastModifiedDateTime", false, false, false, false, false, encryptionResult, dataKeyResult, "adb",
@@ -1091,11 +1091,9 @@ class HbaseWriterTest {
         val archivedDate = "NON PARSEABLE ARCHIVED DATE"
         val expected = 978307200000L
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
-        given(messageUtils.getTimestampAsLong(removedDate)).willThrow(ParseException("BAD DATE", 10))
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
         assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
     }
 
@@ -1174,7 +1172,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
         assertEquals(expected, actual)
-        verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
+        verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
     }
 

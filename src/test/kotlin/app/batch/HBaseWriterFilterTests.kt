@@ -84,7 +84,7 @@ class HBaseWriterFilterTests {
         whenever(messageUtils.parseGson(any())).thenReturn(json)
         whenever(messageUtils.parseJson(any())).thenReturn(jsonObject)
         whenever(messageUtils.getId(any())).thenReturn(jsonObject)
-        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
+        whenever(hBaseWriter).getVersion(any(), any(), any(), any()).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(message)
         val formattedKey = "0000-0000-00001"
@@ -121,7 +121,7 @@ class HBaseWriterFilterTests {
         whenever(messageUtils.parseGson(any())).thenReturn(json)
         whenever(messageUtils.parseJson(any())).thenReturn(jsonObject)
         whenever(messageUtils.getId(any())).thenReturn(jsonObject)
-        whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
+        whenever(hBaseWriter).getVersion(any(), any(), any(), any()).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(message)
         val formattedKey = "0000-0000-00001"
