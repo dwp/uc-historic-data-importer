@@ -1056,7 +1056,7 @@ class HbaseWriterTest {
     }
 
     @Test
-    fun testGetVersionUsesLastModifiedWhenMongImport() {
+    fun testGetVersionUsesLastModifiedWhenMongoImport() {
         val lastModifiedDate = "2001-01-01T00:00:00.000Z"
         val innerType = "MONGO_IMPORT"
         val removedDate = "2000-01-01T00:00:00.000Z"
@@ -1064,7 +1064,7 @@ class HbaseWriterTest {
         val expected = 978307200000L
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate, removedDate,
-                archivedDate, createdDate)
+                archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
     }
@@ -1078,7 +1078,7 @@ class HbaseWriterTest {
         val expected = 978307200000L
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate, removedDate,
-                archivedDate, createdDate)
+                archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
     }
@@ -1093,7 +1093,7 @@ class HbaseWriterTest {
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
         given(messageUtils.getTimestampAsLong(removedDate)).willThrow(ParseException("BAD DATE", 10))
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate, createdDate)
+                removedDate, archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
@@ -1109,7 +1109,7 @@ class HbaseWriterTest {
         val expected = 946684800000L
         given(messageUtils.getTimestampAsLong(removedDate)).willReturn(expected)
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate, removedDate,
-                archivedDate, createdDate)
+                archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
     }
@@ -1124,7 +1124,7 @@ class HbaseWriterTest {
         given(messageUtils.getTimestampAsLong(archivedDate)).willReturn(expected)
 
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate, createdDate)
+                removedDate, archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(archivedDate)
     }
@@ -1139,7 +1139,7 @@ class HbaseWriterTest {
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
 
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate, createdDate)
+                removedDate, archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
     }
@@ -1155,7 +1155,7 @@ class HbaseWriterTest {
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
 
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate, createdDate)
+                removedDate, archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
@@ -1172,12 +1172,12 @@ class HbaseWriterTest {
         given(messageUtils.getTimestampAsLong(lastModifiedDate)).willReturn(expected)
 
         val actual = hBaseWriter.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate, createdDate)
+                removedDate, archivedDate)
         assertEquals(expected, actual)
         verify(messageUtils, times(1)).getTimestampAsLong(removedDate)
         verify(messageUtils, times(1)).getTimestampAsLong(lastModifiedDate)
     }
-    
+
     @Test
     fun testCoalesced() {
         val dumplist = setOf("accessCodeThrottle",
