@@ -84,6 +84,7 @@ class HBaseWriterFilterTests {
         whenever(messageUtils.parseGson(any())).thenReturn(json)
         whenever(messageUtils.parseJson(any())).thenReturn(jsonObject)
         whenever(messageUtils.getId(any())).thenReturn(jsonObject)
+        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn("100")
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(message)
@@ -121,6 +122,7 @@ class HBaseWriterFilterTests {
         whenever(messageUtils.parseGson(any())).thenReturn(json)
         whenever(messageUtils.parseJson(any())).thenReturn(jsonObject)
         whenever(messageUtils.getId(any())).thenReturn(jsonObject)
+        whenever(messageUtils.getVersion(any(), any(), any(), any())).thenReturn("100")
         whenever(messageUtils.getTimestampAsLong(any())).thenReturn(100)
         val message = "message"
         whenever(messageProducer.produceMessage(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(message)

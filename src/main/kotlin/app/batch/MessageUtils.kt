@@ -10,11 +10,13 @@ import java.nio.ByteBuffer
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.zip.CRC32
+import org.apache.commons.lang3.StringUtils
 
 @Component
 class MessageUtils {
     val logger: JsonLoggerWrapper = JsonLoggerWrapper.getLogger(MessageUtils::class.toString())
-    val typeDefault = "MONGO_IMPORT"
+    val MONGO_IMPORT = "MONGO_IMPORT"
+    val MONGO_DELETE = "MONGO_DELETE"
 
     fun parseGson(line: String): com.google.gson.JsonObject =
         Gson().fromJson(line, com.google.gson.JsonObject::class.java)
@@ -38,6 +40,26 @@ class MessageUtils {
         throw ParseException("Unparseable date: '$timeStampAsStr'", 0)
     }
 
+    fun getVersion(innerType: String, lastModifiedTimestamp: String,
+                          removedDateTime: String,
+                          archivedDateTime: String) = 
+        when (innerType) {
+            MONGO_DELETE -> {
+                if (StringUtils.isNotBlank(removedDateTime)) {
+                    removedDateTime
+                }
+                else if (StringUtils.isNotBlank(archivedDateTime)) {
+                    archivedDateTime
+                }
+                else {
+                    lastModifiedTimestamp
+                }
+            }
+            else -> {
+                lastModifiedTimestamp
+            }
+        }
+
     fun getType(json: JsonObject?): String {
         val type = json?.lookup<String?>("message.@type")?.get(0)
 
@@ -45,8 +67,8 @@ class MessageUtils {
             return type
         }
 
-        logger.warn("No @type in message so using default", "default_type", typeDefault)
-        return typeDefault
+        logger.warn("No @type in message so using default", "default_type", MONGO_IMPORT)
+        return MONGO_IMPORT
     }
 
     fun generateKeyFromRecordBody(body: JsonObject?): ByteArray {
