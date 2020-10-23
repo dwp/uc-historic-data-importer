@@ -11,6 +11,7 @@ import io.kotlintest.shouldThrow
 import org.junit.Test
 import java.text.ParseException
 import com.nhaarman.mockitokotlin2.*
+import org.junit.Assert.assertEquals
 
 
 class MessageUtilsTest {
@@ -372,7 +373,7 @@ class MessageUtilsTest {
         }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        messageUtils.getType(json) shouldBe messageUtils.typeDefault
+        messageUtils.getType(json) shouldBe "MONGO_INSERT"
     }
 
     @Test

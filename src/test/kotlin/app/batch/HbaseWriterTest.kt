@@ -1052,6 +1052,7 @@ class HbaseWriterTest {
         val actual = hBaseWriter.optionalDateTime(Gson(), fieldName, message)
         val expected = Pair("", false)
         assertEquals(expected, actual)
+    }
 
     @Test
     fun testCoalesced() {
