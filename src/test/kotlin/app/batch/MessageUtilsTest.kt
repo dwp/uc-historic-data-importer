@@ -373,7 +373,7 @@ class MessageUtilsTest {
         }"""
 
         val json: JsonObject = messageUtils.parseJson(jsonString)
-        messageUtils.getType(json) shouldBe "MONGO_INSERT"
+        messageUtils.getType(json) shouldBe "MONGO_IMPORT"
     }
 
     @Test
@@ -467,28 +467,6 @@ class MessageUtilsTest {
         val innerType = "MONGO_DELETE"
         val removedDate = ""
         val archivedDate = ""
-        val actual = messageUtils.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate)
-        assertEquals(lastModifiedDate, actual)
-    }
-
-    @Test
-    fun testGetVersionUsesLastModifiedWhenMongoDeleteButUnparseableRemovedDate() {
-        val lastModifiedDate = "2001-01-01T00:00:00.000Z"
-        val innerType = "MONGO_DELETE"
-        val removedDate = "BADLY_FORMATTED_DATE"
-        val archivedDate = "2005-01-01T00:00:00.000Z"
-        val actual = messageUtils.getVersion(innerType, lastModifiedDate,
-                removedDate, archivedDate)
-        assertEquals(lastModifiedDate, actual)
-    }
-
-    @Test
-    fun testGetVersionUsesLastModifiedWhenMongoDeleteAndEmptyRemovedDateAndUnparseableArchivedDate() {
-        val lastModifiedDate = "2001-01-01T00:00:00.000Z"
-        val innerType = "MONGO_DELETE"
-        val removedDate = ""
-        val archivedDate = "BADLY_FORMATTED_DATE"
         val actual = messageUtils.getVersion(innerType, lastModifiedDate,
                 removedDate, archivedDate)
         assertEquals(lastModifiedDate, actual)

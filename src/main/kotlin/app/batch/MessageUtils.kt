@@ -42,26 +42,22 @@ class MessageUtils {
 
     fun getVersion(innerType: String, lastModifiedTimestamp: String,
                           removedDateTime: String,
-                          archivedDateTime: String) = try {
-            when (innerType) {
-                MONGO_DELETE -> {
-                    if (StringUtils.isNotBlank(removedDateTime)) {
-                        removedDateTime
-                    }
-                    else if (StringUtils.isNotBlank(archivedDateTime)) {
-                        archivedDateTime
-                    }
-                    else {
-                        lastModifiedTimestamp
-                    }
+                          archivedDateTime: String) = 
+        when (innerType) {
+            MONGO_DELETE -> {
+                if (StringUtils.isNotBlank(removedDateTime)) {
+                    removedDateTime
                 }
-                else -> {
+                else if (StringUtils.isNotBlank(archivedDateTime)) {
+                    archivedDateTime
+                }
+                else {
                     lastModifiedTimestamp
                 }
             }
-        }
-        catch (e: ParseException) {
-            lastModifiedTimestamp
+            else -> {
+                lastModifiedTimestamp
+            }
         }
 
     fun getType(json: JsonObject?): String {
