@@ -207,7 +207,7 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
 
                                     val innerType = messageUtils.getType(messageJsonObject)
-                                    val version = getVersion(innerType, lastModifiedDateTime, removedDateTime, archivedDateTime)
+                                    val version = messageUtils.getVersion(innerType, lastModifiedDateTime, removedDateTime, archivedDateTime)
                                             
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                                     if (runMode != RUN_MODE_MANIFEST) {
@@ -333,30 +333,6 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
             if (coalescedNames[tableName] != null) coalescedNames[tableName] ?: "" else tableName
 
     private val coalescedNames = mapOf("agent_core:agentToDoArchive" to "agent_core:agentToDo")
-
-    fun getVersion(innerType: String, lastModifiedTimestamp: String,
-                          removedDateTime: String,
-                          archivedDateTime: String) = try {
-            when (innerType) {
-                MONGO_DELETE -> {
-                    if (StringUtils.isNotBlank(removedDateTime)) {
-                        messageUtils.getTimestampAsLong(removedDateTime)
-                    }
-                    else if (StringUtils.isNotBlank(archivedDateTime)) {
-                        messageUtils.getTimestampAsLong(archivedDateTime)
-                    }
-                    else {
-                        messageUtils.getTimestampAsLong(lastModifiedTimestamp)
-                    }
-                }
-                else -> {
-                    messageUtils.getTimestampAsLong(lastModifiedTimestamp)
-                }
-            }
-        }
-        catch (e: ParseException) {
-            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
-        }
 
     fun reformatRemoved(recordFromDump: String): Pair<JsonObject, Boolean> {
         val record = messageUtils.parseGson(recordFromDump)
