@@ -205,7 +205,10 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                             collection)
 
                                     val messageJsonObject = messageUtils.parseJson(messageWrapper)
-                                    val lastModifiedTimestampLong = messageUtils.getTimestampAsLong(lastModifiedDateTime)
+
+                                    val innerType = messageUtils.getType(messageJsonObject)
+                                    val version = getVersion(innerType, lastModifiedDateTime, removedDateTime, archivedDateTime)
+                                            
                                     val formattedKey = messageUtils.generateKeyFromRecordBody(messageJsonObject)
                                     if (runMode != RUN_MODE_MANIFEST) {
                                         if (batchSizeBytes + messageWrapper.length >= maxBatchVolume && batch.size > 0) {
@@ -223,9 +226,9 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                                 fileProcessedRecords = reader.lineNumber
                                             }
                                         }
-                                        val filterStatus = filterService.filterStatus(tableName, formattedKey, lastModifiedTimestampLong)
+                                        val filterStatus = filterService.filterStatus(tableName, formattedKey, version)
                                         if (filterStatus == FilterService.FilterStatus.DoNotFilter) {
-                                            addToBatch(batch, formattedKey, messageWrapper, lastModifiedTimestampLong)
+                                            addToBatch(batch, formattedKey, messageWrapper, version)
                                             batchSizeBytes += messageWrapper.length
                                         }
                                         when (filterStatus) {
@@ -247,15 +250,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
                                         val idForManifest = if (idIsString) id else messageUtils.sortJsonStringByKey(id)
                                         val incomingId = if (idWasModified) incomingId(gson, originalId) else idForManifest
                                         val outerType = messageJsonObject["@type"]?.toString() ?: "TYPE_NOT_SET"
-                                        val innerType = messageUtils.getType(messageJsonObject)
 
-                                        val timestampForManifest =
-                                                manifestTimestamp(innerType, lastModifiedTimestampLong,
-                                                        removedDateTime = removedDateTime,
-                                                        archivedDateTime = archivedDateTime,
-                                                        createdDateTime = createdDateTime)
-
-                                        val manifestRecord = ManifestRecord(idForManifest, timestampForManifest,
+                                        val manifestRecord = ManifestRecord(idForManifest, version,
                                                 database, collection, "IMPORT", outerType, innerType, incomingId)
                                         writer.write(manifestWriter.csv(manifestRecord))
                                     }
@@ -321,8 +317,8 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
         logger.info("Processed records and files", "records_processed", "$processedRecords", "files_processed", "$processedFiles")
     }
 
-    fun addToBatch(batch: MutableList<HBaseRecord>, formattedKey: ByteArray, messageWrapper: String, lastModifiedTimestampLong: Long) {
-        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), lastModifiedTimestampLong))
+    fun addToBatch(batch: MutableList<HBaseRecord>, formattedKey: ByteArray, messageWrapper: String, version: Long) {
+        batch.add(HBaseRecord(formattedKey, messageWrapper.toByteArray(), version))
     }
 
     fun coalesced(collection: String): String {
@@ -338,37 +334,28 @@ class HBaseWriter : ItemWriter<DecompressedStream> {
 
     private val coalescedNames = mapOf("agent_core:agentToDoArchive" to "agent_core:agentToDo")
 
-    fun manifestTimestamp(innerType: String, lastModifiedTimestampLong: Long,
+    fun getVersion(innerType: String, lastModifiedTimestamp: String,
                           removedDateTime: String,
-                          archivedDateTime: String,
-                          createdDateTime: String) = try {
-        when (innerType) {
-            MONGO_DELETE -> {
-                if (StringUtils.isNotBlank(removedDateTime)) {
-                    messageUtils.getTimestampAsLong(removedDateTime)
+                          archivedDateTime: String) = try {
+            when (innerType) {
+                MONGO_DELETE -> {
+                    if (StringUtils.isNotBlank(removedDateTime)) {
+                        messageUtils.getTimestampAsLong(removedDateTime)
+                    }
+                    else if (StringUtils.isNotBlank(archivedDateTime)) {
+                        messageUtils.getTimestampAsLong(archivedDateTime)
+                    }
+                    else {
+                        messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+                    }
                 }
-                else if (StringUtils.isNotBlank(archivedDateTime)) {
-                    messageUtils.getTimestampAsLong(archivedDateTime)
-                }
-                else {
-                    lastModifiedTimestampLong
-                }
-            }
-            MONGO_INSERT -> {
-                if (StringUtils.isNotBlank(createdDateTime)) {
-                    messageUtils.getTimestampAsLong(createdDateTime)
-                }
-                else {
-                    lastModifiedTimestampLong
+                else -> {
+                    messageUtils.getTimestampAsLong(lastModifiedTimestamp)
                 }
             }
-            else -> {
-                lastModifiedTimestampLong
-            }
-        }
         }
         catch (e: ParseException) {
-            lastModifiedTimestampLong
+            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
         }
 
     fun reformatRemoved(recordFromDump: String): Pair<JsonObject, Boolean> {
