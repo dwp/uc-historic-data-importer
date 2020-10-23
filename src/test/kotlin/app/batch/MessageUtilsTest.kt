@@ -12,7 +12,6 @@ import org.junit.Test
 import java.text.ParseException
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertEquals
-import java.text.ParseException
 
 
 class MessageUtilsTest {
