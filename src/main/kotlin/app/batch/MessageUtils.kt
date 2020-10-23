@@ -10,6 +10,7 @@ import java.nio.ByteBuffer
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.zip.CRC32
+import org.apache.commons.lang3.StringUtils
 
 @Component
 class MessageUtils {
@@ -45,22 +46,22 @@ class MessageUtils {
             when (innerType) {
                 MONGO_DELETE -> {
                     if (StringUtils.isNotBlank(removedDateTime)) {
-                        messageUtils.getTimestampAsLong(removedDateTime)
+                        getTimestampAsLong(removedDateTime)
                     }
                     else if (StringUtils.isNotBlank(archivedDateTime)) {
-                        messageUtils.getTimestampAsLong(archivedDateTime)
+                        getTimestampAsLong(archivedDateTime)
                     }
                     else {
-                        messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+                        getTimestampAsLong(lastModifiedTimestamp)
                     }
                 }
                 else -> {
-                    messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+                    getTimestampAsLong(lastModifiedTimestamp)
                 }
             }
         }
         catch (e: ParseException) {
-            messageUtils.getTimestampAsLong(lastModifiedTimestamp)
+            getTimestampAsLong(lastModifiedTimestamp)
         }
 
     fun getType(json: JsonObject?): String {
