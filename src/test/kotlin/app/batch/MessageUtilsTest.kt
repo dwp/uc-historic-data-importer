@@ -10,6 +10,7 @@ import io.kotlintest.shouldNotBe
 import io.kotlintest.shouldThrow
 import org.junit.Test
 import java.text.ParseException
+import com.nhaarman.mockitokotlin2.*
 
 
 class MessageUtilsTest {
