@@ -31,7 +31,6 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Run Gradle
-        working_directory: ~/repo
         run: |
             set +o pipefail
             LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
