@@ -22,7 +22,6 @@ jobs:
       # Download and cache dependencies
       - name: Download cache
         uses: actions/cache@v3
-        working_directory: ~/repo
         with:
           path: |
             ~/.gradle/caches
