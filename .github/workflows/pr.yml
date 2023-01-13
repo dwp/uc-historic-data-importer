@@ -34,7 +34,9 @@ jobs:
       - name: Run Gradle
         working_directory: ~/repo
           run: |
+            set +o pipefail
             LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            set +o pipefail
             [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
             VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
             sed -i s/version=.*/version=$VERSION/ gradle.properties
