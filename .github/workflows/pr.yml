@@ -37,6 +37,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
       - name: Run Gradle
         run: |
             set +o pipefail
@@ -44,7 +47,6 @@ jobs:
             [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
             VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
             sed -i s/version=.*/version=$VERSION/ gradle.properties
-            gradle build
             mkdir artifacts
             cp build/libs/uc-historic-data-importer-*.jar ./artifacts/
 
