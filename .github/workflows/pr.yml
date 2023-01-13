@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: openjdk-8-jdk
     env:
       JAVA_OPTS: "-Xmx3200m"
     steps:
@@ -33,8 +33,7 @@ jobs:
 
       - name: Run Gradle
         working_directory: ~/repo
-          run: |
-            sudo apt-get install openjdk-8-jdk
+        run: |
             set +o pipefail
             LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
             set +o pipefail
