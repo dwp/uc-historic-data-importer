@@ -198,7 +198,8 @@ class LoggerUtilsTest {
     @Test
     fun testMakeLoggerStaticDataTuples_WillCreatePartialJson_WhenCalled() {
         overrideLoggerStaticFieldsForTests("a-host", "b-env", "c-app", "d-version", "e-component", "9876543000", "test2")
-        val expected = """"hostname":"a-host", "environment":"b-env", "application":"c-app", "app_version":"d-version", "component":"e-component", "correlation_id":"test2", "data_family":"cf"""
+        val expected = """{ "hostname":"a-host", "environment":"b-env", "application":"c-app", "app_version":"d-version", "component":"e-component", "correlation_id":"test2", "data_family":"cf" } 
+        """
         assertEquals(expected, makeLoggerStaticDataTuples())
     }
 
