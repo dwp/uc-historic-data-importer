@@ -179,6 +179,7 @@ class LoggerUtilsTest {
             "\t... 53 common frames omitted\n"
 
         val throwableStr = ThrowableProxyUtil.asString(stubThrowable)
+        System.out.println(throwableStr)
         assertEquals(trace, throwableStr)
 
         val result = inlineStackTrace(throwableStr)
@@ -199,7 +200,8 @@ class LoggerUtilsTest {
     fun testMakeLoggerStaticDataTuples_WillCreatePartialJson_WhenCalled() {
         overrideLoggerStaticFieldsForTests("a-host", "b-env", "c-app", "d-version", "e-component", "9876543000", "test2")
         val expected = """{ "hostname":"a-host", "environment":"b-env", "application":"c-app", "app_version":"d-version", "component":"e-component", "correlation_id":"test2", "data_family":"cf" } 
-        """
+    """
+        System.out.println(makeLoggerStaticDataTuples())
         assertEquals(expected, makeLoggerStaticDataTuples())
     }
 
@@ -217,7 +219,7 @@ class LoggerUtilsTest {
         whenever(mockEvent.throwableProxy).thenReturn(stubThrowable as IThrowableProxy)
 
         val result = throwableProxyEventToString(mockEvent)
-
+        System.out.println(result)
         assertEquals("\"exception\":\"java.lang.RuntimeException: boom1 - \\/:'!@\\u00A3\$%^&*() |  at app.utils.logging.LoggerUtilsTest\$MakeStacktrace2.callMe2(LoggerUtilsTest.kt:69) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:43) |  ... 53 common frames omitted | \", ", result)
     }
 
@@ -315,6 +317,7 @@ class LoggerUtilsTest {
         val expected = """{ "timestamp":"1970-04-25T07:29:03.210", "log_level":"WARN", "message":"some message about stuff", "exception":"java.lang.RuntimeException: boom1 - \/:'!@\u00A3$%^&*() |  at app.utils.logging.LoggerUtilsTest${"$"}MakeStacktrace2.callMe2(LoggerUtilsTest.kt:69) |  at app.utils.logging.LoggerUtilsTest.catchMe2(LoggerUtilsTest.kt:43) |  ... 53 common frames omitted | ", "thread":"my.thread.is.betty", "logger":"logger.name.is.mavis", "duration_in_milliseconds":"210", "hostname":"test-host", "environment":"test-env", "application":"my-app", "app_version":"v1", "component":"tests", "correlation_id":"test1", "data_family":"cf" }
 """
         val result = LoggerLayoutAppender().doLayout(mockEvent)
+        System.out.println(result)
         assertEquals("The standard logger should add exception messages", expected, result)
     }
 
