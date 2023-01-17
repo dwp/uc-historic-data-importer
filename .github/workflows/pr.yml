@@ -41,14 +41,10 @@ jobs:
             mkdir artifacts
             cp build/libs/uc-historic-data-importer-*.jar ./artifacts/
 
-      - name: Remote Docker
-        uses: friendsofgo/remote-docker-action@v1.0.0
-
       - name: Integration tests
         run: | 
           sudo pip3 install docker-compose
           sudo apt-get update
-          sudo apt-get install openjdk-8-jdk
           ./truststores.sh
           ./gradlew build
           cd docker/java && docker build --tag dwp-java:latest . && cd -
@@ -56,7 +52,7 @@ jobs:
           cp settings.gradle.kts gradle.properties docker/gradle
           cd docker/gradle && docker build --tag dwp-gradle:latest . && cd -
 
-          docker-compose build
+          docker-compose -f "docker-compose.yml" up -d --build
           docker-compose up -d hbase s3
 
           S3_READY_REGEX=^Ready\.$
@@ -75,55 +71,3 @@ jobs:
           if docker-compose run uc-historic-data-importer; then
             docker-compose run integration-test
           fi
-
-
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
-      - name: Run Gradle
-        run: |
-            set +o pipefail
-            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-            sed -i s/version=.*/version=$VERSION/ gradle.properties
-            gradle build 
-            mkdir artifacts
-            cp build/libs/uc-historic-data-importer-*.jar ./artifacts/
-
-      - name: Remote Docker
-        uses: friendsofgo/remote-docker-action@v1.0.0
-
-      - name: Integration tests
-        run: | 
-          sudo pip3 install docker-compose
-          sudo apt-get update
-          sudo apt-get install openjdk-8-jdk
-          ./truststores.sh
-          ./gradlew build
-          cd docker/java && docker build --tag dwp-java:latest . && cd -
-          cd docker/python && docker build --tag dwp-python:latest . && cd -
-          cp settings.gradle.kts gradle.properties docker/gradle
-          cd docker/gradle && docker build --tag dwp-gradle:latest . && cd -
-
-          docker-compose build
-          docker-compose up -d hbase s3
-
-          S3_READY_REGEX=^Ready\.$
-          while ! docker logs s3 2> /dev/null | grep -q $S3_READY_REGEX; do
-              sleep 2
-          done
-
-          docker-compose up -d dks-standalone-http dks-standalone-https
-
-          while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
-            sleep 2
-          done
-
-          docker-compose run s3-init
-
-          if docker-compose run uc-historic-data-importer; then
-            docker-compose run integration-test
-          fi
-
