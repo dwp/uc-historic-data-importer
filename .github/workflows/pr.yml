@@ -63,7 +63,9 @@ jobs:
 
           docker-compose up -d dks-standalone-http dks-standalone-https
 
-          while ! docker exec dks-standalone-http cat /opt/data-key-service/logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
+          docker exec dks-standalone-http ls -la logs
+
+          while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
             sleep 2
           done
 
