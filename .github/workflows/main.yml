@@ -46,25 +46,39 @@ jobs:
   
   
   build-and-publish-github-release:
-    runs-on: openjdk:8-jdk
+    runs-on: ubuntu-latest
     needs: [get-publish-version]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          java-package: jdk
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
 
       - name: install dependencies
         run: |
-            mkdir artifacts
-            sudo pip install -r requirements.txt -t artifacts
-            cp main.py artifacts
-            cd artifacts
-            set +o pipefail
-            LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-            set -o pipefail
-            [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
-            VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-            VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
-            zip -r kafka-producer.zip *
+          set +o pipefail
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          set -o pipefail
+          [  -z "$LATEST_VERSION" ] && LATEST_VERSION="0.0.0"
+          VERSION=$(echo $LATEST_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+          VERSION_NUMBER=$(echo $VERSION | sed 's/^v\(.*\)$/\1/')
+          gradle build 
+          mkdir artifacts
+          cp build/libs/uc-historic-data-importer-*.jar ./artifacts/
+          ls artifacts
       
       - name: Create Release
         id: create_release
@@ -83,6 +97,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/uc-historic-data-importer.jar
+          asset_path: ./artifacts/uc-historic-data-importer-0.0.0.jar
           asset_name: uc-historic-data-importer-${{ needs.get-publish-version.outputs.publish-version }}.jar
           asset_content_type: application/gzip

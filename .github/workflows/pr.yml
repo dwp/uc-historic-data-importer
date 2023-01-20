@@ -53,7 +53,7 @@ jobs:
           cp settings.gradle.kts gradle.properties docker/gradle
           cd docker/gradle && docker build --tag dwp-gradle:latest . && cd -
 
-          docker-compose -f "docker-compose.yml" up -d --build
+          docker-compose -f "docker-compose.yml" up -d --build --verbose
           docker-compose up -d hbase s3
 
           S3_READY_REGEX=^Ready\.$
