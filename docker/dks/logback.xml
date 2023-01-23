@@ -1,0 +1,37 @@
+<configuration>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${dks.log.directory}/dks.out</file>
+        <append>true</append>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="uk.gov.dwp.dataworks.logging.LoggerLayoutAppender" />
+        </encoder>
+    </appender>
+
+    <appender name="HEALTHCHECK-FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${dks.log.directory}/healthcheck.log</file>
+        <append>true</append>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="uk.gov.dwp.dataworks.logging.LoggerLayoutAppender" />
+        </encoder>
+    </appender>
+
+    <!--
+    The org.apache http library is used by the aws sdk to perform http requests with the aws backend.
+    This library (the http one) outputs as debug the body of all the responses that come back from aws.
+    If these responses contain sensitive information that will be written to the logs if debug mode is
+    enabled. This occurred when a call to the aws library was executed to get a password out of the
+    parameter store. The following config silences the http library.
+    -->
+    <logger name="org.apache" level="ERROR" additivity="true">
+        <appender-ref ref="FILE" />
+    </logger>
+
+    <logger name="healthcheck">
+        <appender-ref ref="HEALTHCHECK-FILE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
