@@ -18,6 +18,7 @@ RUN ls -la *.jar
 
 RUN chmod a+rwx -R /opt/data-key-service
 COPY application-secure.properties ./
+COPY logback.xml ./
 COPY dks*.jks  ./
 RUN ls -la ./*
 
