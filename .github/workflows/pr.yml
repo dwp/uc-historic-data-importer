@@ -55,7 +55,7 @@ jobs:
           cp settings.gradle.kts gradle.properties docker/gradle
           cd docker/gradle && docker build --tag dwp-gradle:latest . && cd -
 
-          docker-compose -f "docker-compose.yml" up -d --build --verbose
+          docker-compose -f "docker-compose.yml" up -d --build
           docker-compose up -d hbase s3
 
           S3_READY_REGEX=^Ready\.$
@@ -64,8 +64,6 @@ jobs:
           done
 
           docker-compose up -d dks-standalone-http dks-standalone-https
-
-          docker exec dks-standalone-http ls -la logs
 
           while ! docker exec dks-standalone-http cat logs/dks.out | fgrep -q "Started DataKeyServiceApplication"; do
             sleep 2
