@@ -101,4 +101,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./artifacts/uc-historic-data-importer-0.0.0.jar
           asset_name: uc-historic-data-importer-${{ needs.get-publish-version.outputs.publish-version }}.jar
-          asset_content_type: application/gzip
+          asset_content_type: application/java-archive
