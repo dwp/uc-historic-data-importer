@@ -18,6 +18,7 @@ RUN ls -la *.jar
 
 RUN chmod a+rwx -R /opt/data-key-service
 COPY application-secure.properties ./
+COPY logback.xml ./
 COPY dks*.jks  ./
 RUN ls -la ./*
 
@@ -25,4 +26,4 @@ RUN chown -R ${USER}.${USER} ${INSTALL_DIR}
 RUN chmod +x *.jar && ls -l
 USER ${USER}
 
-ENTRYPOINT ["sh", "-c", "java -Dlogging.level.root=INFO -Ddks.log.directory=${INSTALL_DIR}/logs -jar dks-latest.jar \"$@\"", "--"]
+ENTRYPOINT ["sh", "-c", "java -Dlogging.config=logback.xml -Ddks.log.directory=${INSTALL_DIR}/logs -jar dks-latest.jar \"$@\"", "--"]
