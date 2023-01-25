@@ -12,6 +12,7 @@ plugins {
 
 group = "uc-historic-data-importer"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
+version="0.0.0"
 
 repositories {
         mavenCentral()
