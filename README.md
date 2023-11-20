@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # uc-historic-data-importer
 
 Import UC mongo backup into hbase.
